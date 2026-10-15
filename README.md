@@ -1,6 +1,6 @@
 # Wedding RSVP
 
-Foundation for a Wedding RSVP SaaS, built with the official Laravel Vue starter kit. Product features have not been added.
+Wedding RSVP SaaS foundation built with the official Laravel Vue starter kit. The current product milestone provides customer workspaces and wedding detail management; website templates, guest management, and RSVP features are not implemented yet.
 
 ## Stack
 
@@ -68,7 +68,7 @@ For an auto-format pass, run `vendor\bin\pint` and `npm.cmd run format`.
 
 ## Structure
 
-- `app/`, `routes/`, `database/`, `tests/`: Laravel application, routes, migrations, and tests
+- `app/`, `routes/`, `database/`, `tests/`: Laravel application, customer accounts, wedding management, routes, migrations, and tests
 - `resources/js/pages/`: Inertia Vue pages
 - `resources/js/components/`, `layouts/`, `composables/`, `types/`: shared frontend code
 - `resources/css/`, `vite.config.ts`: Tailwind and Vite setup

@@ -40,4 +40,24 @@ export interface User {
     updated_at: string;
 }
 
+export interface AccountSummary {
+    id: number;
+    name: string;
+}
+
+export interface WeddingSummary {
+    id: number;
+    partner_one_name: string;
+    partner_two_name: string;
+    wedding_date: string | null;
+    status: string;
+}
+
+export interface WeddingDetails extends WeddingSummary {
+    wedding_time: string | null;
+    ceremony_venue: string | null;
+    reception_venue: string | null;
+    public_slug: string;
+}
+
 export type BreadcrumbItemType = BreadcrumbItem;

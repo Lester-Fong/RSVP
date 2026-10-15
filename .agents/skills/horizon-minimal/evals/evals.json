@@ -1,0 +1,304 @@
+{
+  "skill_name": "horizon-minimal",
+  "version": 1,
+  "description": "Visual and interaction quality gate for Horizon Church V2 frontend work.",
+  "pass_threshold": 90,
+  "scoring": {
+    "hard_fail": "Any failed hard_fail rule blocks completion regardless of score.",
+    "score_formula": "Sum weights for passed scored rules / total applicable scored-rule weight * 100.",
+    "not_applicable": "Rules outside the changed surface may be marked N/A and excluded from the denominator."
+  },
+  "hard_fail_rules": [
+    {
+      "id": "HM-HARD-001",
+      "rule": "No arbitrary chromatic accent color is introduced for routine UI emphasis.",
+      "applies_to": [
+        "all frontend work"
+      ]
+    },
+    {
+      "id": "HM-HARD-002",
+      "rule": "Short create/edit CRUD forms use an accessible modal/dialog rather than rendering inline above/below the management list unless explicitly approved.",
+      "applies_to": [
+        "CRUD management screens"
+      ]
+    },
+    {
+      "id": "HM-HARD-003",
+      "rule": "Every modal/drawer is keyboard operable, Escape-closeable when safe, focus-trapped, and restores focus to its trigger.",
+      "applies_to": [
+        "modals",
+        "drawers"
+      ]
+    },
+    {
+      "id": "HM-HARD-004",
+      "rule": "The page has no document-level horizontal overflow at 390px viewport width.",
+      "applies_to": [
+        "responsive screens"
+      ]
+    },
+    {
+      "id": "HM-HARD-005",
+      "rule": "All interactive controls have visible keyboard focus and icon-only controls have accessible names.",
+      "applies_to": [
+        "all interactive frontend work"
+      ]
+    },
+    {
+      "id": "HM-HARD-006",
+      "rule": "No business behavior, authorization rule, or locked product decision is changed merely to satisfy the visual system.",
+      "applies_to": [
+        "all frontend work"
+      ]
+    },
+    {
+      "id": "HM-HARD-007",
+      "rule": "No secret/private backend credential is exposed to browser code while implementing UI/theme work.",
+      "applies_to": [
+        "all frontend work"
+      ]
+    },
+    {
+      "id": "HM-HARD-008",
+      "rule": "Reduced-motion preferences are respected for nonessential animation.",
+      "applies_to": [
+        "animated screens/components"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "HM-COLOR-001",
+      "category": "color",
+      "weight": 5,
+      "rule": "Routine interface is monochrome and uses semantic background/ink/gray tokens."
+    },
+    {
+      "id": "HM-COLOR-002",
+      "category": "color",
+      "weight": 3,
+      "rule": "Primary action uses inversion rather than accent color."
+    },
+    {
+      "id": "HM-COLOR-003",
+      "category": "color",
+      "weight": 2,
+      "rule": "Status meaning is conveyed by text/iconography and not color alone."
+    },
+    {
+      "id": "HM-TYPE-001",
+      "category": "typography",
+      "weight": 4,
+      "rule": "Geist or approved UI fallback is used consistently for body/UI typography."
+    },
+    {
+      "id": "HM-TYPE-002",
+      "category": "typography",
+      "weight": 3,
+      "rule": "Mono micro-label treatment is used selectively for metadata, section markers, table headers, or statuses."
+    },
+    {
+      "id": "HM-TYPE-003",
+      "category": "typography",
+      "weight": 2,
+      "rule": "Display/pixel typography is restrained and not used for ordinary body/form/table text."
+    },
+    {
+      "id": "HM-LAYOUT-001",
+      "category": "layout",
+      "weight": 4,
+      "rule": "Whitespace and alignment provide structure; the screen is not dominated by nested cards."
+    },
+    {
+      "id": "HM-LAYOUT-002",
+      "category": "layout",
+      "weight": 3,
+      "rule": "Management content uses an appropriate wide measure rather than a narrow reading column."
+    },
+    {
+      "id": "HM-LAYOUT-003",
+      "category": "layout",
+      "weight": 3,
+      "rule": "Page header has clear hierarchy and primary action placement."
+    },
+    {
+      "id": "HM-NAV-001",
+      "category": "navigation",
+      "weight": 4,
+      "rule": "Active sidebar item uses ink/marker/weight rather than a large tinted rectangle."
+    },
+    {
+      "id": "HM-NAV-002",
+      "category": "navigation",
+      "weight": 2,
+      "rule": "Sidebar groups/user area use hairlines or spacing rather than heavy cards."
+    },
+    {
+      "id": "HM-COMP-001",
+      "category": "components",
+      "weight": 3,
+      "rule": "Borders are predominantly one-pixel hairlines using semantic gray tokens."
+    },
+    {
+      "id": "HM-COMP-002",
+      "category": "components",
+      "weight": 3,
+      "rule": "Radius usage follows a coherent 16/12/8/6-style ladder."
+    },
+    {
+      "id": "HM-COMP-003",
+      "category": "components",
+      "weight": 2,
+      "rule": "Shadows are soft and restrained; dark mode relies more on borders."
+    },
+    {
+      "id": "HM-BTN-001",
+      "category": "buttons",
+      "weight": 3,
+      "rule": "Primary, secondary, ghost, and destructive actions have clear hierarchy without decorative gradients."
+    },
+    {
+      "id": "HM-FORM-001",
+      "category": "forms",
+      "weight": 4,
+      "rule": "Inputs have minimal borders/fills, readable labels, concise helper/error copy, and visible focus."
+    },
+    {
+      "id": "HM-MODAL-001",
+      "category": "modals",
+      "weight": 5,
+      "rule": "Modal uses restrained dim/blur overlay, centered soft-radius panel, and compact actions."
+    },
+    {
+      "id": "HM-TABLE-001",
+      "category": "tables",
+      "weight": 5,
+      "rule": "Management tables use hairline row separation, compact headers, readable primary/secondary text, and restrained hover."
+    },
+    {
+      "id": "HM-TABLE-002",
+      "category": "tables",
+      "weight": 3,
+      "rule": "Secondary row actions use an ellipsis/action menu when this reduces button clutter."
+    },
+    {
+      "id": "HM-EMPTY-001",
+      "category": "empty-state",
+      "weight": 4,
+      "rule": "Empty state is concise and does not default to a huge bordered box."
+    },
+    {
+      "id": "HM-TEXTURE-001",
+      "category": "texture",
+      "weight": 2,
+      "rule": "Halftone texture is used sparingly and never as dense-content wallpaper."
+    },
+    {
+      "id": "HM-THEME-001",
+      "category": "theme",
+      "weight": 4,
+      "rule": "Light/dark/system behavior uses semantic token remapping."
+    },
+    {
+      "id": "HM-THEME-002",
+      "category": "theme",
+      "weight": 2,
+      "rule": "Explicit theme choice persists and defaults to system."
+    },
+    {
+      "id": "HM-MOTION-001",
+      "category": "motion",
+      "weight": 2,
+      "rule": "Motion is brief, eased, non-bouncy, and subordinate to usability."
+    },
+    {
+      "id": "HM-A11Y-001",
+      "category": "accessibility",
+      "weight": 5,
+      "rule": "Semantic landmarks, form labels, dialog labelling, contrast, and keyboard navigation are preserved."
+    },
+    {
+      "id": "HM-RESP-001",
+      "category": "responsive",
+      "weight": 4,
+      "rule": "Desktop, tablet transition, and 390px mobile remain legible and usable."
+    },
+    {
+      "id": "HM-LOGIN-001",
+      "category": "login",
+      "weight": 2,
+      "rule": "Login stays calm and monochrome, with halftone/typography carrying brand character."
+    },
+    {
+      "id": "HM-HORIZON-001",
+      "category": "product-fit",
+      "weight": 5,
+      "rule": "The result feels like a practical church operations product, not a portfolio mockup or generic SaaS dashboard."
+    }
+  ],
+  "scenario_evals": [
+    {
+      "id": "HM-SCENARIO-LIFE-GROUPS",
+      "prompt": "Restyle the Horizon Life Groups management page and convert create/edit to the Horizon Minimal interaction system.",
+      "expected": [
+        "monochrome page",
+        "compact page header",
+        "black/inverted New Life Group primary action",
+        "hairline management table/list",
+        "create/edit modal",
+        "archive confirmation modal",
+        "no inline form pushing list downward",
+        "readable Admin and Leader states",
+        "mobile-safe layout"
+      ]
+    },
+    {
+      "id": "HM-SCENARIO-MEMBERS",
+      "prompt": "Build a Members management list and create-member flow using Horizon Minimal.",
+      "expected": [
+        "wide management layout",
+        "table/list with hairline separators",
+        "quiet search/filter controls",
+        "Life Group visible in create form",
+        "create form in modal unless complexity justifies dedicated page",
+        "row actions consolidated",
+        "no accent-color drift"
+      ]
+    },
+    {
+      "id": "HM-SCENARIO-LOGIN",
+      "prompt": "Restyle the Horizon login screen using Horizon Minimal.",
+      "expected": [
+        "monochrome split or focused layout",
+        "Geist typography hierarchy",
+        "limited halftone brand accent",
+        "black primary sign-in button",
+        "minimal panel chrome",
+        "dark mode compatibility"
+      ]
+    },
+    {
+      "id": "HM-SCENARIO-MOBILE",
+      "prompt": "Verify the authenticated shell and a management page at 390x844.",
+      "expected": [
+        "no document horizontal overflow",
+        "accessible navigation drawer",
+        "focus trap and Escape behavior",
+        "usable modal sizing",
+        "table overflow contained locally when necessary"
+      ]
+    }
+  ],
+  "report_template": {
+    "required": [
+      "hard_fail_results",
+      "weighted_score",
+      "desktop_visual_check",
+      "mobile_visual_check",
+      "keyboard_overlay_check",
+      "theme_check_if_applicable",
+      "remaining_visual_deviations"
+    ]
+  }
+}

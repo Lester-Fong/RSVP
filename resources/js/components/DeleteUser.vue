@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 // Components
 import HeadingSmall from '@/components/HeadingSmall.vue';
@@ -24,6 +24,7 @@ const passwordInput = ref<HTMLInputElement | null>(null);
 const form = useForm({
     password: '',
 });
+const accountDeletionError = computed(() => (form.errors as Record<string, string | undefined>).account_deletion);
 
 const deleteUser = (e: Event) => {
     e.preventDefault();
@@ -44,7 +45,7 @@ const closeModal = () => {
 
 <template>
     <div class="space-y-6">
-        <HeadingSmall title="Delete account" description="Delete your account and all of its resources" />
+        <HeadingSmall title="Delete account" description="Delete your profile and remove your access to wedding workspaces" />
         <div class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
             <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
                 <p class="font-medium">Warning</p>
@@ -59,10 +60,12 @@ const closeModal = () => {
                         <DialogHeader class="space-y-3">
                             <DialogTitle>Are you sure you want to delete your account?</DialogTitle>
                             <DialogDescription>
-                                Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your
-                                password to confirm you would like to permanently delete your account.
+                                Your profile and workspace access will be deleted. Wedding workspaces with another owner will remain available to
+                                them. Enter your password to confirm.
                             </DialogDescription>
                         </DialogHeader>
+
+                        <InputError :message="accountDeletionError" />
 
                         <div class="grid gap-2">
                             <Label for="password" class="sr-only">Password</Label>
