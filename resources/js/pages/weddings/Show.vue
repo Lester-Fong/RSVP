@@ -2,12 +2,14 @@
 import { Head, Link } from '@inertiajs/vue3';
 
 import { Button } from '@/components/ui/button';
+import PublicationPanel from '@/components/wedding/PublicationPanel.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { AccountSummary, BreadcrumbItem, WeddingDetails } from '@/types';
+import type { AccountSummary, BreadcrumbItem, WeddingDetails, WeddingPublicationSummary } from '@/types';
 
 defineProps<{
     account: AccountSummary;
     wedding: WeddingDetails;
+    publication: WeddingPublicationSummary;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -29,9 +31,11 @@ const formatDate = (date: string | null) => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-6">
             <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+                <div class="min-w-0">
                     <p class="text-sm text-muted-foreground">{{ account.name }}</p>
-                    <h1 class="mt-1 text-2xl font-semibold tracking-tight">{{ wedding.partner_one_name }} &amp; {{ wedding.partner_two_name }}</h1>
+                    <h1 class="mt-1 break-words text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
+                        {{ wedding.partner_one_name }} &amp; {{ wedding.partner_two_name }}
+                    </h1>
                     <p class="mt-2 text-sm text-muted-foreground">{{ formatDate(wedding.wedding_date) }}</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -48,6 +52,8 @@ const formatDate = (date: string | null) => {
                     </Button>
                 </div>
             </header>
+
+            <PublicationPanel :account-id="account.id" :wedding-id="wedding.id" :publication="publication" />
 
             <section class="rounded-xl border bg-card p-5 sm:p-7">
                 <div class="mb-5 flex items-center justify-between gap-4">

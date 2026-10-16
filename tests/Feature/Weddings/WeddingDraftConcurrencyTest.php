@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\User;
 use App\Models\WebsiteDraft;
 use App\Services\WeddingHeroPhotoProcessor;
+use App\Services\WeddingPublication;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
@@ -47,7 +48,7 @@ class WeddingDraftConcurrencyTest extends TestCase
             $connection = DB::connection('cms_mysql_test');
             $this->assertSame($database, $connection->selectOne('SELECT DATABASE() AS name')->name);
 
-            foreach (['users', 'accounts', 'account_members', 'weddings', 'website_drafts'] as $table) {
+            foreach (['users', 'accounts', 'account_members', 'weddings', 'website_drafts', 'website_revisions'] as $table) {
                 if (! $connection->getSchemaBuilder()->hasTable($table)) {
                     $this->markTestSkipped('The disposable MySQL database needs the existing project migrations; these tests never provision or reset schema.');
                 }
@@ -79,15 +80,16 @@ class WeddingDraftConcurrencyTest extends TestCase
         parent::tearDown();
     }
 
-    /** @return array<string, array{int, bool}> */
+    /** @return array<string, array<int, int|bool>> */
     public static function draftVersions(): array
     {
         return ['simultaneous first saves' => [0, false], 'simultaneous existing draft updates' => [1, false],
-            'simultaneous first photo saves' => [0, true], 'simultaneous photo replacements' => [1, true]];
+            'simultaneous first photo saves' => [0, true], 'simultaneous photo replacements' => [1, true],
+            'simultaneous first publications' => [1, false, true], 'simultaneous republications' => [2, false, true]];
     }
 
     #[DataProvider('draftVersions')]
-    public function test_same_version_concurrent_requests_allow_exactly_one_complete_save(int $expectedVersion, bool $withPhoto): void
+    public function test_same_version_concurrent_requests_allow_exactly_one_complete_save(int $expectedVersion, bool $withPhoto, bool $publishing = false): void
     {
         $owner = User::factory()->create();
         $account = null;
@@ -104,6 +106,7 @@ class WeddingDraftConcurrencyTest extends TestCase
             $wedding = $account->weddings()->create([
                 'partner_one_name' => 'Concurrency', 'partner_two_name' => 'Test',
                 'public_slug' => 'cms-concurrency-'.Str::uuid(),
+                'wedding_date' => '2027-05-12',
             ]);
             $originalWedding = $wedding->fresh()->getAttributes();
 
@@ -119,13 +122,26 @@ class WeddingDraftConcurrencyTest extends TestCase
                 $photoBytes = [$fixture(1), $fixture(2)];
             }
 
-            if ($expectedVersion === 1) {
+            if ($expectedVersion === 1 || $publishing) {
                 $draft = WebsiteDraft::factory()->for($wedding)->create();
                 if ($withPhoto) {
                     $oldPhoto = 'accounts/'.$account->id.'/weddings/'.$wedding->id.'/hero/'.Str::uuid().'.webp';
                     Storage::disk('wedding_photos')->put($oldPhoto, app(WeddingHeroPhotoProcessor::class)->normalize(UploadedFile::fake()->createWithContent('initial.jpg', $photoBytes[0])));
                     $draft->update(['hero_photo_disk' => 'wedding_photos', 'hero_photo_path' => $oldPhoto]);
                 }
+            }
+
+            $publicationPayload = null;
+            if ($publishing) {
+                $publication = app(WeddingPublication::class);
+                if ($expectedVersion === 2) {
+                    $publication->publish($wedding, ['draft_version' => 1, 'publication_version' => 0, 'snapshot_token' => $publication->fingerprint($wedding, $draft)]);
+                    $content = $draft->content;
+                    $content['introduction_message'] = 'New saved publication';
+                    $draft->update(['lock_version' => 2, 'content' => $content]);
+                }
+                $publicationPayload = ['draft_version' => $expectedVersion, 'publication_version' => $expectedVersion - 1,
+                    'snapshot_token' => $publication->fingerprint($wedding->fresh(), $draft->fresh())];
             }
 
             $contents = [
@@ -141,6 +157,7 @@ class WeddingDraftConcurrencyTest extends TestCase
                     'owner_id' => $owner->id, 'account_id' => $account->id, 'wedding_id' => $wedding->id,
                     'content' => $content, 'draft_version' => $expectedVersion,
                     'photo_root' => $photoRoot, 'photo' => $withPhoto ? base64_encode($photoBytes[$index]) : null,
+                    'operation' => $publishing ? 'publish' : 'draft', 'publication' => $publicationPayload,
                 ], JSON_THROW_ON_ERROR));
                 $process->setTimeout(30);
                 $processes[] = $process;
@@ -180,14 +197,21 @@ class WeddingDraftConcurrencyTest extends TestCase
             $this->assertSame([302, 422], $statuses);
             $winner = $results[0]['status'] === 302 ? 0 : 1;
             $loser = 1 - $winner;
-            $this->assertSame('This draft was saved in another window. Copy your changes, then reload before saving again.', $results[$loser]['body']['errors']['draft_version'][0]);
+            $this->assertSame($publishing ? 'Publication changed in another window. Reload before trying again.' : 'This draft was saved in another window. Copy your changes, then reload before saving again.', $results[$loser]['body']['errors'][$publishing ? 'publication' : 'draft_version'][0]);
 
             $this->assertSame(1, $wedding->websiteDraft()->count());
             $draft = $wedding->websiteDraft()->sole();
-            $this->assertSame($expectedVersion + 1, $draft->lock_version);
+            $this->assertSame($publishing ? $expectedVersion : $expectedVersion + 1, $draft->lock_version);
             $this->assertSame(1, $draft->schema_version);
-            $this->assertSame(Arr::sortRecursive($contents[$winner]), Arr::sortRecursive($draft->content));
-            $this->assertSame($originalWedding, $wedding->fresh()->getAttributes());
+            if ($publishing) {
+                $this->assertSame($expectedVersion, $wedding->websiteRevisions()->count());
+                $this->assertSame(Arr::sortRecursive($draft->content), Arr::sortRecursive($wedding->fresh()->publishedRevision->content));
+                $this->assertSame($expectedVersion, $wedding->fresh()->publication_version);
+                $this->assertSame(Arr::except($originalWedding, ['published_revision_id', 'publication_version', 'updated_at']), Arr::except($wedding->fresh()->getAttributes(), ['published_revision_id', 'publication_version', 'updated_at']));
+            } else {
+                $this->assertSame(Arr::sortRecursive($contents[$winner]), Arr::sortRecursive($draft->content));
+                $this->assertSame($originalWedding, $wedding->fresh()->getAttributes());
+            }
             if ($withPhoto) {
                 $storage = Storage::disk('wedding_photos');
                 $this->assertSame('wedding_photos', $draft->hero_photo_disk);
@@ -208,6 +232,10 @@ class WeddingDraftConcurrencyTest extends TestCase
                 $blocker->rollBack();
             }
 
+            if ($publishing && $wedding !== null) {
+                $wedding->published_revision_id = null;
+                $wedding->save();
+            }
             $wedding?->delete();
             $account?->delete();
             $owner->delete();

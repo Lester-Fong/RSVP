@@ -1,0 +1,17 @@
+html {
+    color-scheme: light;
+}
+
+body {
+    margin: 0;
+}
+
+body .invitation-page {
+    min-height: 100svh;
+}
+
+*,
+::before,
+::after {
+    box-sizing: border-box;
+}

@@ -1,6 +1,6 @@
 # Wedding RSVP SaaS Architecture
 
-This document combines the implemented account/wedding foundation and Milestone 2B draft CMS with explicitly labeled future proposals. The conceptual ERD is not a list of implemented tables. D-010 limits current delivery to Modern Classic; template catalogs, registries, and switching remain deferred.
+This document combines the implemented foundation, draft CMS, private photo and Milestone 2C.2 publication with explicitly labeled future proposals. The conceptual ERD is not a list of implemented tables. D-010 limits delivery to Modern Classic; template catalogs, registries, and switching remain deferred.
 
 ## 1. Executive overview
 
@@ -17,7 +17,7 @@ This document combines the implemented account/wedding foundation and Milestone 
 
 Use a **shared-database modular monolith**. A customer account is the commercial and access grouping; an account can contain one or more weddings and multiple members. Users join accounts through memberships. Every private wedding record is scoped to its account and wedding, with Laravel policies enforcing access. Internal staff access is explicit, limited to a customer or wedding, and audited.
 
-The implemented CMS stores one mutable, schema-versioned JSON draft per wedding (section 7). Future publication can copy validated draft content into immutable published revisions. Published pointers, history, rollback, and public rendering remain unimplemented. Public pages will need server-readable metadata; the hosting/rendering choice remains open.
+The CMS stores one mutable JSON draft per wedding and immutable publication snapshots of validated content, wedding facts and media references (section 7). A transaction changes the published pointer. Public Laravel HTML delivers metadata and primary content, enhanced by the existing Vue renderer. No SSR process is required. History/rollback interfaces and production hosting remain deferred.
 
 Keep Laravel's standard app structure while the product is small. Use conventional controllers, Form Requests, policies, models, and focused domain actions where a multi-step operation needs one. Organize Vue pages by user-facing area and reusable website sections by section type. Introduce deeper domain folders only when actual code volume or team ownership justifies them.
 
@@ -28,7 +28,7 @@ Keep Laravel's standard app structure while the product is small. Use convention
 - At launch, each wedding has one public slug on the platform's domain. Custom domains are a later option.
 - Public wedding content is intentionally public after publication. Guest lists, contact details, and individual RSVP answers remain private to authorized wedding members.
 - Each invited guest responds individually, allowing partial attendance within an invitation group.
-- The public page needs social preview metadata. Server-side rendering (SSR) is recommended for the public site; hosting must be checked for support before that milestone. Do not add SSR infrastructure before confirming the deployment target.
+- Laravel delivers public sharing metadata and invitation HTML with Vue enhancement and shared Modern Classic styles. A future full Inertia SSR process or hosting infrastructure needs separate justification and approval.
 
 ## 2. High-level system diagram
 
@@ -42,9 +42,7 @@ flowchart LR
     Laravel --> Inertia[Inertia responses]
     Inertia --> Vue[Vue pages and reusable components]
     Vue --> Browser
-    Laravel --> SSR[Inertia SSR process for public pages, if hosting supports it]
-    SSR --> Laravel
-    Laravel --> GuestHTML[Server-rendered public HTML]
+    Laravel --> GuestHTML[Published HTML and metadata with Vue enhancement]
 ```
 
 The diagram shows logical responsibilities, not separate services. Laravel remains the application boundary and MySQL remains the initial system of record. Wedding images should use Laravel's storage abstraction so a production object store can be configured later without coupling content records to a storage vendor.
@@ -83,16 +81,16 @@ Suggested frontend page areas, when implemented, are `accounts/`, `weddings/`, `
 
 ## 4. Main domain boundaries
 
-| Area | Responsibility | Likely records and behavior |
-| --- | --- | --- |
-| Accounts and access | Customer ownership, collaboration, staff support | Accounts, account memberships, roles, scoped staff access grants, audit events |
-| Weddings and websites | Event identity and website lifecycle | Wedding, slug, selected template, draft and published revision pointers |
-| Templates and content | Supported appearance and structured content | Template catalog/version metadata, section schema, revision validation, preview and publication |
-| Invitations and guests | Who is invited and how to reach their invitation | Invitation groups, individual guests, invitation delivery state, secret link lifecycle |
-| RSVPs | Each guest's response and attendance details | Per-guest response, response timestamp, dietary/accessibility notes where approved |
-| Seating | Physical tables and guest placements | Wedding tables, capacity, one active seat assignment per guest |
-| Orders and payments | Commercial order and manual payment reconciliation | Orders, PHP amounts, manual payment entries, evidence references, verification history |
-| Internal administration | Support and operational workflows | Staff-only pages, scoped access, audit trail; built on account/wedding data rather than a parallel copy |
+| Area                    | Responsibility                                     | Likely records and behavior                                                                             |
+| ----------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Accounts and access     | Customer ownership, collaboration, staff support   | Accounts, account memberships, roles, scoped staff access grants, audit events                          |
+| Weddings and websites   | Event identity and website lifecycle               | Wedding, slug, selected template, draft and published revision pointers                                 |
+| Templates and content   | Supported appearance and structured content        | Template catalog/version metadata, section schema, revision validation, preview and publication         |
+| Invitations and guests  | Who is invited and how to reach their invitation   | Invitation groups, individual guests, invitation delivery state, secret link lifecycle                  |
+| RSVPs                   | Each guest's response and attendance details       | Per-guest response, response timestamp, dietary/accessibility notes where approved                      |
+| Seating                 | Physical tables and guest placements               | Wedding tables, capacity, one active seat assignment per guest                                          |
+| Orders and payments     | Commercial order and manual payment reconciliation | Orders, PHP amounts, manual payment entries, evidence references, verification history                  |
+| Internal administration | Support and operational workflows                  | Staff-only pages, scoped access, audit trail; built on account/wedding data rather than a parallel copy |
 
 These are responsibility boundaries, not a requirement for separate Laravel packages or services. Keep the first implementation in normal Laravel conventions; separate code by domain only after repeated complexity makes the boundary useful.
 
@@ -275,14 +273,14 @@ Use account-level roles as a starting point. If product requirements later estab
 
 `website_drafts` is the smallest draft-only subset of the proposed revision architecture:
 
-| Column | Contract |
-| --- | --- |
-| `id` | Internal primary key |
-| `wedding_id` | Unique, non-null foreign key to `weddings`, cascading on wedding deletion |
-| `schema_version` | Server-controlled content schema version, currently `1` |
-| `lock_version` | Save counter; clients submit their last observed version as `draft_version` (`0` before the first save) |
-| `content` | Validated JSON: `introduction_message`, `closing_message`, and `sections: { ceremony, reception, closing }` |
-| `created_at`, `updated_at` | Draft creation and last-save timestamps |
+| Column                     | Contract                                                                                                    |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`                       | Internal primary key                                                                                        |
+| `wedding_id`               | Unique, non-null foreign key to `weddings`, cascading on wedding deletion                                   |
+| `schema_version`           | Server-controlled content schema version, currently `1`                                                     |
+| `lock_version`             | Save counter; clients submit their last observed version as `draft_version` (`0` before the first save)     |
+| `content`                  | Validated JSON: `introduction_message`, `closing_message`, and `sections: { ceremony, reception, closing }` |
+| `created_at`, `updated_at` | Draft creation and last-save timestamps                                                                     |
 
 Both messages are required plain text of at most 500 characters; line breaks are supported, angle brackets/markup rejected, and Vue interpolations escape all rendered values. Section values must be JSON booleans. Unknown root, content, and section keys are rejected. No account IDs, wedding facts, template IDs, publication flags, or ownership values are accepted from the form.
 
@@ -292,9 +290,9 @@ The unique wedding key gives each wedding an independent mutable draft without c
 
 `Wedding::presentationData()` supplies the existing six wedding facts to both preview surfaces. The editor receives a separate typed `InvitationCustomization`, edits a local reactive copy, and passes that copy to the existing `ModernClassicInvitation` component. The standalone authenticated preview loads only the saved draft. Without a draft both routes use the original messages and all sections enabled; loading defaults does not create a record. Hidden sections retain their messages and relational venue data. Portal light/dark/system appearance never changes the invitation's Modern Classic colors or typography.
 
-Routes: authenticated `GET /accounts/{account}/weddings/{wedding}/invitation/edit` and `PUT /accounts/{account}/weddings/{wedding}/invitation`; existing `GET .../preview` remains private. Foreign-account owners receive the existing policy's 403; mismatched nested parents receive 404. There is no public wedding route.
+Routes: authenticated `GET /accounts/{account}/weddings/{wedding}/invitation/edit` and `PUT /accounts/{account}/weddings/{wedding}/invitation`; existing `GET .../preview` remains private. Foreign-account owners receive the existing policy's 403; mismatched nested parents receive 404. Milestone 2B added no public wedding route; 2C.2 adds the published-only surface below.
 
-This deliberately uses a standalone mutable draft rather than introducing `website_revisions`, published pointers, revision numbers, or template foreign keys now. Later publishing must snapshot validated content and decide how wedding facts enter a published snapshot; schema version and save counter are not publication history. That later contract is not approved by this milestone.
+Milestone 2B deliberately used a standalone mutable draft without publication history or template foreign keys. Milestone 2C.2 adds immutable snapshots separately; the draft schema/save counter remain distinct from publication revisions and their state counter.
 
 ### Implemented — Milestone 2C.1 private hero photo
 
@@ -306,7 +304,35 @@ Multipart saves JSON-encode the existing content so strict booleans survive tran
 
 Normalization precedes the wedding lock; durable writes follow the locked schema/counter checks. Reference/content/counter updates share one transaction. After confirmed commit, superseded files are deleted only after a primary-database reference recheck under the wedding lock. Rollback/uncertain-commit cleanup uses that same safeguard. Cleanup failure leaves an orphan for the dry-run-first `wedding-photos:prune --delete` operator command (generated, unreferenced objects older than 24 hours); incompatible-schema weddings are skipped.
 
-This is draft-only ownership, not a general media lifecycle. Before publishing, snapshot media references and extend replacement/pruning checks to retain all published references. Production local storage must be persistent/backed up; adopting private S3-compatible storage later requires its adapter/configuration and object migration separately.
+Milestone 2C.2 extends draft replacement/pruning checks to retain references in every immutable revision, including history after unpublishing. Production local storage must be persistent/backed up; adopting private S3-compatible storage later requires its adapter/configuration and object migration separately.
+
+### Implemented — Milestone 2C.2 publication
+
+The additive `2026_10_16_075658_create_website_revisions_table` migration creates snapshot rows and adds nullable `weddings.published_revision_id` plus unsigned `publication_version` (default 0). Existing weddings start unpublished. MySQL DDL was reviewed with `--pretend`, applied to development without resets, and checked with Boost. No existing invitation was published automatically.
+
+| Record                                            | Contract                                                                                     |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `website_drafts`                                  | Existing mutable version-1 CMS, photo reference and save counter                             |
+| `website_revisions.wedding_id`, `revision_number` | Wedding ownership and unique per-wedding sequence                                            |
+| `schema_version`, `wedding_facts`, `content`      | Supported version, six wedding facts and validated CMS snapshots                             |
+| `hero_photo_disk`, `hero_photo_path`              | Nullable immutable private media reference; indexed together for cleanup checks              |
+| `fingerprint`, `published_at`                     | Canonical SHA-256 source fingerprint and publication time                                    |
+| `weddings.published_revision_id`                  | Nullable foreign key; publisher/resolver also require the revision to belong to this wedding |
+| `weddings.publication_version`                    | Monotonic counter across publish/republish/unpublish, preventing stale and ABA requests      |
+
+`WeddingPublication` locks the same wedding row used by draft saves, reloads the saved draft, checks schema, draft/publication counters and source fingerprint, validates facts/content/media, inserts a revision, and changes pointer/counter in one transaction. Require a saved draft, both names and a date; time/venues are optional. `WebsiteDraft::contentRules()` shares existing strict CMS validation. The fingerprint includes facts, schema, content and photo reference, detecting wedding-detail changes as well as draft edits. Clients never submit snapshot content or pointers. An identical current snapshot with fresh counters is a no-op; stale repeated requests fail validation.
+
+Snapshots reject Eloquent updates/deletions and have no mutation endpoint. Unpublishing clears only the pointer and increments its counter, retaining draft/history/files. The pointer foreign key restricts deleting a referenced revision; a future wedding-deletion workflow must clear that pointer before cascading deletion. Administrators can bypass model guards; there is no general revision editor, history browser or rollback feature.
+
+Public `GET /w/{slug}` resolves only the active, same-wedding, supported revision, never live draft content or live wedding facts. `GET /w/{slug}/photo/{photo}` streams only its matching generated WebP after disk/prefix/identifier checks. Missing, unpublished, unsupported or wrong-wedding pages/media return 404. Draft images still require owner authorization. Replacement/removal/pruning recheck all revision references under the wedding lock, retaining active and historical media. No public disk, symlink or bearer URL is introduced.
+
+A dedicated Blade document/Vite entry delivers escaped invitation HTML and title/description/canonical/Open Graph/Twitter metadata. `ModernClassicInvitation.vue` enhances it. Both share `resources/css/modern-classic.css`, extracted without changing declarations; explicit stylesheet entries also style no-JavaScript output. Tradeoff: the small fallback markup must stay in parity with Vue, covered by browser JavaScript/no-JavaScript checks. No additional SSR server or dependency is needed.
+
+Only public presentation props are embedded, excluding authentication/accounts, numeric IDs, payments, schema/counters, paths and fingerprints. Disabled section venues/closing text are also stripped from public props. Blade/Vue escape text; `Js::encode` safely embeds JSON. Portal overview controls provide explicit confirmation, state/timestamp, republish/unpublish and URL actions. Opt-in overlay styling affects only publication dialogs; existing defaults and invitation design remain intact.
+
+The recommended conservative default is implemented as `noindex, nofollow, noarchive` in HTML/headers, with private/no-store caching for page/photo responses. Confirm indexing preference during owner QA. This is public content: downloaded copies and third-party preview caches cannot be recalled. Localhost is not Internet hosting; live messaging previews require a reachable deployment. Hosting/custom domains remain outside this milestone.
+
+Six opt-in MySQL concurrency cases remain unexecuted: four original draft/photo cases plus two simultaneous publish/republish cases. They require an approved disposable target with all migrations and `INNODB_TRX` inspection privileges. SQLite/duplicate-request tests and MySQL schema checks do not verify MySQL concurrency.
 
 ### Future proposals — deferred beyond Milestone 2B
 
@@ -314,10 +340,10 @@ Publication needs separate scoping. Multiple-template infrastructure in the foll
 
 ### Patterns considered
 
-| Pattern | Benefits | Costs and risks |
-| --- | --- | --- |
-| Structured section data rendered by a versioned template registry | Content is independent of design; templates share section components; section types can be validated; ordering and visibility are straightforward; templates can evolve deliberately | Requires a defined schema per section and migration/compatibility rules when schemas change |
-| Freeform page builder with arbitrary blocks, layout rules, or embedded markup | Maximum customer flexibility; can model unusual layouts without a new section type | Harder validation, accessibility, responsive behavior, preview consistency, security, and support; more editor complexity; content becomes coupled to builder implementation |
+| Pattern                                                                       | Benefits                                                                                                                                                                             | Costs and risks                                                                                                                                                              |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Structured section data rendered by a versioned template registry             | Content is independent of design; templates share section components; section types can be validated; ordering and visibility are straightforward; templates can evolve deliberately | Requires a defined schema per section and migration/compatibility rules when schemas change                                                                                  |
+| Freeform page builder with arbitrary blocks, layout rules, or embedded markup | Maximum customer flexibility; can model unusual layouts without a new section type                                                                                                   | Harder validation, accessibility, responsive behavior, preview consistency, security, and support; more editor complexity; content becomes coupled to builder implementation |
 
 ### Earlier section/registry recommendation — future only
 
@@ -327,24 +353,24 @@ Each Vue section component receives a typed, already validated view model. A sma
 
 Store content in JSON for the versioned section snapshots, but keep operational entities such as guests, RSVPs, seating, and orders in relational tables. JSON is appropriate for bounded presentation configuration; it should not replace relational records that require constraints, joins, privacy controls, and reporting.
 
-### Proposed publication and preview lifecycle — not implemented
+### Publication lifecycle and deferred enhancements
 
-Treat revisions as immutable snapshots after publication. Editing creates or updates a draft revision; publishing validates the whole snapshot and atomically changes the wedding's `published_revision_id`. The public route resolves only that published pointer. Retain prior published revisions for rollback and audit. Draft preview uses an expiring, signed URL or an authenticated editor session scoped to the wedding; it must never make unpublished content available through a guessable ID.
+Milestone 2C.2 implements the mutable-draft/immutable-snapshot lifecycle above. Prior snapshots are retained, but browsing, rollback, expiry/deletion policies and signed draft-preview links remain separately scoped. Draft previews currently require the existing authenticated owner session.
 
-The server should provide public title, description, canonical URL, and Open Graph/Twitter image metadata from the published revision. Prefer Inertia SSR for the public wedding page if the hosting target can run the supported SSR process. Confirm this before implementing public-site rendering. If the chosen host cannot support SSR, keep the public page server-rendered with Laravel for the metadata and primary content rather than relying on client-only JavaScript for crawler-visible output.
+Public HTML/metadata now use Laravel with Vue enhancement. A future full Inertia SSR process needs hosting confirmation and separate approval.
 
 ## 8. Application routing
 
 Use named, area-based route groups, keeping the current `routes/web.php`, `routes/auth.php`, and `routes/settings.php` conventions. Split route files only when the files become difficult to navigate.
 
-| Area | Initial convention | Access |
-| --- | --- | --- |
-| Marketing and demos | `/`, `/templates/{template}` | Public; demos use non-sensitive example data |
-| Customer dashboard | `/dashboard`, `/accounts/{account}/...` | Authenticated, verified account member |
-| Wedding editor | `/accounts/{account}/weddings/{wedding}/...` | Authenticated member, authorized by policy |
-| Public wedding website | `/{wedding-slug}` or `/w/{wedding-slug}` | Public published content only |
-| Guest RSVP | `/invite/{opaque-token}` | Public bearer token, throttled, scoped to one invitation group |
-| Internal admin | `/admin/...` | Authenticated staff capability and audited scoped access |
+| Area                   | Initial convention                           | Access                                                         |
+| ---------------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| Marketing and demos    | `/`, `/templates/{template}`                 | Public; demos use non-sensitive example data                   |
+| Customer dashboard     | `/dashboard`, `/accounts/{account}/...`      | Authenticated, verified account member                         |
+| Wedding editor         | `/accounts/{account}/weddings/{wedding}/...` | Authenticated member, authorized by policy                     |
+| Public wedding website | `/w/{slug}`                                  | Active published snapshot only; otherwise 404                  |
+| Guest RSVP             | `/invite/{opaque-token}`                     | Public bearer token, throttled, scoped to one invitation group |
+| Internal admin         | `/admin/...`                                 | Authenticated staff capability and audited scoped access       |
 
 For launch, prefer `/w/{slug}` if marketing routes may need root-level paths; use a dedicated public wedding hostname only if the product/domain plan makes it worthwhile. Reserve the selected path namespace and normalize slugs. A later custom-domain feature can map verified hostnames to a wedding through a domain table and middleware while reusing the same published-site resolver. Never trust arbitrary `Host` values as a tenant selector; validate custom domains and verify ownership before activation.
 

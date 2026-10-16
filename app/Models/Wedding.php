@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Wedding extends Model
@@ -26,6 +27,7 @@ class Wedding extends Model
     {
         return [
             'wedding_date' => 'date:Y-m-d',
+            'publication_version' => 'integer',
         ];
     }
 
@@ -37,6 +39,16 @@ class Wedding extends Model
     public function websiteDraft(): HasOne
     {
         return $this->hasOne(WebsiteDraft::class);
+    }
+
+    public function websiteRevisions(): HasMany
+    {
+        return $this->hasMany(WebsiteRevision::class);
+    }
+
+    public function publishedRevision(): BelongsTo
+    {
+        return $this->belongsTo(WebsiteRevision::class, 'published_revision_id');
     }
 
     /** @return array<string, string|null> */

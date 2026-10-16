@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\WebsiteDraft;
 use App\Models\Wedding;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -45,13 +46,7 @@ class UpdateWeddingInvitationRequest extends FormRequest
             'draft_version' => ['required', 'integer', 'min:0'],
             'hero_photo_action' => ['sometimes', 'required', 'in:keep,replace,remove'],
             'hero_photo' => ['bail', 'required_if:hero_photo_action,replace', 'prohibited_unless:hero_photo_action,replace', 'nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=6000,max_height=6000'],
-            'content' => ['required', 'array:introduction_message,closing_message,sections'],
-            'content.introduction_message' => ['required', 'string', 'max:500', 'not_regex:/[<>]/u'],
-            'content.closing_message' => ['required', 'string', 'max:500', 'not_regex:/[<>]/u'],
-            'content.sections' => ['required', 'array:ceremony,reception,closing'],
-            'content.sections.ceremony' => ['required', 'boolean:strict'],
-            'content.sections.reception' => ['required', 'boolean:strict'],
-            'content.sections.closing' => ['required', 'boolean:strict'],
+            ...WebsiteDraft::contentRules(),
         ];
     }
 

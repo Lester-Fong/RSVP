@@ -40,6 +40,20 @@ class WebsiteDraft extends Model
         ];
     }
 
+    /** @return array<string, array<int, string>> */
+    public static function contentRules(): array
+    {
+        return [
+            'content' => ['required', 'array:introduction_message,closing_message,sections'],
+            'content.introduction_message' => ['required', 'string', 'max:500', 'not_regex:/[<>]/u'],
+            'content.closing_message' => ['required', 'string', 'max:500', 'not_regex:/[<>]/u'],
+            'content.sections' => ['required', 'array:ceremony,reception,closing'],
+            'content.sections.ceremony' => ['required', 'boolean:strict'],
+            'content.sections.reception' => ['required', 'boolean:strict'],
+            'content.sections.closing' => ['required', 'boolean:strict'],
+        ];
+    }
+
     public function wedding(): BelongsTo
     {
         return $this->belongsTo(Wedding::class);

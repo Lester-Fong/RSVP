@@ -79,4 +79,16 @@ export interface InvitationHeroPhoto {
     url: string;
 }
 
+export interface WeddingPublicationSummary {
+    published: boolean;
+    draftSaved: boolean;
+    supportedDraft: boolean;
+    hasChanges: boolean;
+    draftVersion: number;
+    publicationVersion: number;
+    snapshotToken: string;
+    publicUrl: string;
+    publishedAt: string | null;
+}
+
 export type BreadcrumbItemType = BreadcrumbItem;

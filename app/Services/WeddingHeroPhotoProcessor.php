@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\WebsiteDraft;
+use App\Models\WebsiteRevision;
 use App\Models\Wedding;
 use GdImage;
 use Illuminate\Http\UploadedFile;
@@ -95,7 +96,8 @@ class WeddingHeroPhotoProcessor
                 Wedding::query()->useWritePdo()->whereKey($weddingId)->lockForUpdate()->first();
                 $draft = WebsiteDraft::query()->useWritePdo()->where('wedding_id', $weddingId)->first();
                 if (($draft && $draft->schema_version !== WebsiteDraft::SCHEMA_VERSION)
-                    || WebsiteDraft::query()->useWritePdo()->where('hero_photo_disk', $disk)->where('hero_photo_path', $path)->exists()) {
+                    || WebsiteDraft::query()->useWritePdo()->where('hero_photo_disk', $disk)->where('hero_photo_path', $path)->exists()
+                    || WebsiteRevision::query()->useWritePdo()->where('hero_photo_disk', $disk)->where('hero_photo_path', $path)->exists()) {
                     return false;
                 }
 

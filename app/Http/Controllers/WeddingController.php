@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateWeddingRequest;
 use App\Models\Account;
 use App\Models\WebsiteDraft;
 use App\Models\Wedding;
+use App\Services\WeddingPublication;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -105,7 +106,7 @@ class WeddingController extends Controller
         ]);
     }
 
-    public function show(Account $account, Wedding $wedding): Response
+    public function show(Account $account, Wedding $wedding, WeddingPublication $publication): Response
     {
         $this->authorize('view', $wedding);
 
@@ -115,6 +116,7 @@ class WeddingController extends Controller
                 'name' => $account->name,
             ],
             'wedding' => $this->weddingData($wedding),
+            'publication' => $publication->summary($wedding),
         ]);
     }
 

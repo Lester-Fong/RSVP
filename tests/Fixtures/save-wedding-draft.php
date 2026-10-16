@@ -32,7 +32,11 @@ try {
     DB::statement('SET SESSION innodb_lock_wait_timeout = 20');
     Auth::guard('web')->setUser(User::query()->findOrFail($payload['owner_id']));
     $url = '/accounts/'.$payload['account_id'].'/weddings/'.$payload['wedding_id'].'/invitation';
-    if (isset($payload['photo'])) {
+    if (($payload['operation'] ?? 'draft') === 'publish') {
+        $request = Request::create('/accounts/'.$payload['account_id'].'/weddings/'.$payload['wedding_id'].'/publish', 'POST', [], [], [], [
+            'HTTP_ACCEPT' => 'application/json', 'CONTENT_TYPE' => 'application/json',
+        ], json_encode($payload['publication'], JSON_THROW_ON_ERROR));
+    } elseif (isset($payload['photo'])) {
         $root = $payload['photo_root'];
         if (! is_dir($root) || realpath(dirname($root)) !== realpath(sys_get_temp_dir()) || ! str_starts_with(basename($root), 'rsvp-cms-photos-')) {
             throw new RuntimeException('Worker requires an isolated temporary photo directory.');

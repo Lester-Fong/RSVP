@@ -8,7 +8,12 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.ts'],
+            input: [
+                'resources/js/app.ts',
+                'resources/js/public-invitation.ts',
+                'resources/css/modern-classic.css',
+                'resources/css/public-invitation.css',
+            ],
             refresh: true,
         }),
         vue({

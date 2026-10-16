@@ -42,27 +42,39 @@ Source: Explicit Milestone 2B implementation request on 2026-10-16, including au
 
 ### D-012 — Single private Modern Classic hero photo (2026-10-16)
 
-Status: Approved implementation scope; owner acceptance pending.
+Status: Approved implementation scope; owner manually accepted 2C.1 on 2026-10-16. MySQL concurrency verification remains pending.
 
 Decision: Add one optional uncropped photo below the existing invitation header through the existing draft save flow. Use private Laravel storage, owner-authorized delivery, server-generated immutable keys, and two nullable draft reference columns without changing version-1 CMS JSON. Native GD/EXIF strips metadata and normalizes JPEG/PNG/WebP (5 MiB/12 MP/6,000px bounds) to static WebP, maximum 1,600px long edge. No original retention, new dependency, media library, gallery, crop editor, or publishing. Replacement/removal obey the existing locked counter; cleanup is reference-aware, with dry-run-first pruning of generated orphans older than 24 hours. Future published references must be protected before publication is implemented.
 
-Source: Owner selected uncropped placement and 5 MiB/runtime preparation during planning, then explicitly instructed “Implement the plan.” Runtime preparation, migration deployment, disposable MySQL verification, and manual acceptance remain operational prerequisites, not completed facts.
+Source: Owner selected uncropped placement and 5 MiB/runtime preparation during planning, then explicitly instructed “Implement the plan.” The owner later confirmed manual acceptance, including upload and persistence after reload. Observed runtime/migration verification is in checklist.md; skipped MySQL cases remain pending.
+
+### D-013 — Saved invitation publication (2026-10-16)
+
+Status: Approved implementation scope by explicit owner task; manual publication QA/acceptance pending.
+
+Decision: An authorized owner may publish a saved Modern Classic invitation to `/w/{slug}`, share it without authentication, edit drafts independently, republish reviewed changes, and unpublish without deleting wedding/draft/history. Snapshot wedding facts, supported validated CMS and media references independently; create immutable snapshots and change the active pointer atomically with stale/duplicate protection. Require saved supported draft, names, date and valid referenced media; time/venues remain optional. Retain snapshot media across draft replacement and pruning.
+
+Delegated choices: minimal `website_revisions` plus wedding pointer/publication counter; Laravel public HTML/metadata enhanced by the existing Vue renderer and shared stylesheet. No additional SSR server, package, generic versioning/template framework, history/rollback UI or hosting infrastructure. The conservative noindex recommendation is implemented for owner review, not approval of a marketing/search-acquisition policy. Architecture.md records contracts and rendering tradeoffs.
+
+Guest management, personalized links, RSVP, seating, payments, extra designs, advanced CMS, custom domains and production hosting remain out of scope. D-010 template deferral is unchanged. Automated checks are not owner acceptance or evidence that skipped MySQL cases passed.
+
+Source: Explicit owner publishing implementation request, including authority to choose the smallest maintainable snapshot schema and appropriate public rendering strategy.
 
 ## Working design proposals — not yet final product approvals
 
 ID Proposal What must be decided before implementation
 P-001 Extended structured CMS for Modern Classic D-011 implements only two messages and three visibility controls; images, appearance, order controls, and broader section contracts still require approval. Registry support remains deferred by D-010.
 P-002 Additional visual template compositions that reuse wedding content and business logic Deferred by D-010 until core functionality is developed and the owner provides Figma or Canva references; later compatibility and selection behavior still need scoping.
-P-003 Separate draft/published revisions and preview links Publication flow, expiration and rollback rules.
+P-003 Future revision history/rollback and signed draft previews Core publication is implemented under D-013; browsing, expiration/deletion and rollback rules remain undecided.
 P-004 Seating arrangements within the core platform roadmap Guest eligibility, table capacity, and layout/editing requirements; scope delivery after the guest/RSVP foundations.
 P-005 Trial launch prices: DIY ₱899; done-for-you ₱2,499 Validate pricing, support workload, revisions, hosting duration, guest caps; not committed prices.
-P-006 Public page SSR/server-readable metadata strategy Hosting target and implementation choice.
+P-006 Optional full Inertia SSR and deployment hosting Public HTML/metadata use Laravel plus Vue under D-013; a separate SSR process or hosting setup still requires approval.
 P-007 Partner collaboration, scoped staff grants, multi-account switching Access policy and launch necessity.
 
 Open product decisions
 
 - Which additional Modern Classic fields/sections, if any, should follow the bounded D-011 editor?
-- Is the initial public wedding URL /w/{slug}? How will private/unpublished previews work?
+- Confirm the conservative public indexing recommendation and future snapshot/media retention policy; `/w/{slug}` and authenticated draft previews are established by D-013.
 - Required guest fields, named plus-one behavior, RSVP editing cutoff, RSVP deadline defaults.
 - Which guests can be assigned seats, and what capacity and layout-editing rules are required?
 - Wedding/data retention and export policy, customer terms, hosting duration and cancellation/refund terms.
