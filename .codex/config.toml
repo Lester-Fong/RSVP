@@ -1,0 +1,7 @@
+[mcp_servers.laravel-boost]
+command = "php"
+args = ["artisan", "boost:mcp"]
+
+[mcp_servers.laravel-boost.env]
+APP_CONFIG_CACHE = "bootstrap/cache/codex-mcp-config.php"
+CACHE_STORE = "array"

@@ -1,6 +1,6 @@
 # Wedding RSVP SaaS Architecture
 
-This document describes a proposed architecture for the Wedding RSVP SaaS. It is a planning guide, not a description of features already present in the application. No product features, migrations, or authentication changes have been implemented as part of this document.
+This document combines the implemented account/wedding foundation and Milestone 2B draft CMS with explicitly labeled future proposals. The conceptual ERD is not a list of implemented tables. D-010 limits current delivery to Modern Classic; template catalogs, registries, and switching remain deferred.
 
 ## 1. Executive overview
 
@@ -10,14 +10,14 @@ This document describes a proposed architecture for the Wedding RSVP SaaS. It is
 - The product serves multiple couples and weddings through self-service and done-for-you onboarding.
 - Couples can eventually manage wedding websites, invitations, guests, RSVPs, and seating. Internal staff need customer and order management.
 - Payments start as manually recorded GCash, Maya, or bank transfers. An automated payment gateway is not required at launch.
-- Website content should use reusable templates and editable, reorderable sections. Draft edits must be previewable before publication.
+- Website content stays separate from presentation. Modern Classic is the only current design; Milestone 2B supports two messages and three section visibility controls. Additional editing capabilities and designs require later scope approval.
 - The first architecture should be understandable to a small team and avoid unnecessary packages, infrastructure, and service layers.
 
 ### Proposed architecture
 
 Use a **shared-database modular monolith**. A customer account is the commercial and access grouping; an account can contain one or more weddings and multiple members. Users join accounts through memberships. Every private wedding record is scoped to its account and wedding, with Laravel policies enforcing access. Internal staff access is explicit, limited to a customer or wedding, and audited.
 
-Represent a website as validated, structured content bound to a versioned template. Store each saved draft or published state as a revision. The public site reads only the wedding's current published revision; an authorized preview reads a draft revision. Public wedding pages should render metadata and page content on the server so social platforms can read link previews and mobile clients receive useful HTML quickly.
+The implemented CMS stores one mutable, schema-versioned JSON draft per wedding (section 7). Future publication can copy validated draft content into immutable published revisions. Published pointers, history, rollback, and public rendering remain unimplemented. Public pages will need server-readable metadata; the hosting/rendering choice remains open.
 
 Keep Laravel's standard app structure while the product is small. Use conventional controllers, Form Requests, policies, models, and focused domain actions where a multi-step operation needs one. Organize Vue pages by user-facing area and reusable website sections by section type. Introduce deeper domain folders only when actual code volume or team ownership justifies them.
 
@@ -98,7 +98,7 @@ These are responsibility boundaries, not a requirement for separate Laravel pack
 
 ## 5. Preliminary database design
 
-The following is a conceptual starting point. It is not a migration specification. Use InnoDB foreign keys and transactions for related writes. Prefer MySQL `BIGINT` IDs for internal relations; use random public identifiers or high-entropy tokens at public boundaries. Scope tenant-owned rows to `account_id` and/or `wedding_id` as shown, and index the columns used for authorization and lookup.
+The following is a conceptual starting point, not the deployed schema or a migration specification. In particular, `templates` and `website_revisions` below are future proposals; the implemented `website_drafts` table is documented in section 7. Use InnoDB foreign keys and transactions for related writes. Prefer MySQL `BIGINT` IDs for internal relations; use random public identifiers or high-entropy tokens at public boundaries. Scope tenant-owned rows to `account_id` and/or `wedding_id` as shown, and index the columns used for authorization and lookup.
 
 ```mermaid
 erDiagram
@@ -269,7 +269,48 @@ Serialize first-workspace creation with a lock on the authenticated user's row, 
 
 Use account-level roles as a starting point. If product requirements later establish different rights per wedding, add wedding memberships or scoped grants rather than encoding per-wedding exceptions in controllers. Internal staff should authenticate through the same application but have a distinct administrative capability. Grant support access to a specific account or wedding, require a reason and expiry, allow revocation, and log sensitive reads and writes. Avoid silent or permanent impersonation. Do not add staff roles or modify authentication until the product policy is agreed.
 
-## 7. Dynamic template engine
+## 7. Modern Classic draft CMS and future publication
+
+### Implemented — Milestone 2B
+
+`website_drafts` is the smallest draft-only subset of the proposed revision architecture:
+
+| Column | Contract |
+| --- | --- |
+| `id` | Internal primary key |
+| `wedding_id` | Unique, non-null foreign key to `weddings`, cascading on wedding deletion |
+| `schema_version` | Server-controlled content schema version, currently `1` |
+| `lock_version` | Save counter; clients submit their last observed version as `draft_version` (`0` before the first save) |
+| `content` | Validated JSON: `introduction_message`, `closing_message`, and `sections: { ceremony, reception, closing }` |
+| `created_at`, `updated_at` | Draft creation and last-save timestamps |
+
+Both messages are required plain text of at most 500 characters; line breaks are supported, angle brackets/markup rejected, and Vue interpolations escape all rendered values. Section values must be JSON booleans. Unknown root, content, and section keys are rejected. No account IDs, wedding facts, template IDs, publication flags, or ownership values are accepted from the form.
+
+The editor, standalone preview, and save transaction explicitly require stored `schema_version === 1`. Unsupported versions return a controlled HTTP 409 message (plain text for browser/Inertia requests, JSON for JSON clients), never expose the stored content, and never rewrite its version, content, or save counter. Authorization runs first; the write guard runs after acquiring the wedding lock. No schema migration/compatibility framework is introduced.
+
+The unique wedding key gives each wedding an independent mutable draft without creating a template registry or an incomplete revision-history system. Account ownership is reached through `Wedding -> Account`; reads/writes resolve the nested account/wedding route and reuse `WeddingPolicy::update`. Saves lock the wedding row in a transaction (including first save), compare `lock_version`, and return a validation error for stale submissions. No wedding fact is changed by this operation.
+
+`Wedding::presentationData()` supplies the existing six wedding facts to both preview surfaces. The editor receives a separate typed `InvitationCustomization`, edits a local reactive copy, and passes that copy to the existing `ModernClassicInvitation` component. The standalone authenticated preview loads only the saved draft. Without a draft both routes use the original messages and all sections enabled; loading defaults does not create a record. Hidden sections retain their messages and relational venue data. Portal light/dark/system appearance never changes the invitation's Modern Classic colors or typography.
+
+Routes: authenticated `GET /accounts/{account}/weddings/{wedding}/invitation/edit` and `PUT /accounts/{account}/weddings/{wedding}/invitation`; existing `GET .../preview` remains private. Foreign-account owners receive the existing policy's 403; mismatched nested parents receive 404. There is no public wedding route.
+
+This deliberately uses a standalone mutable draft rather than introducing `website_revisions`, published pointers, revision numbers, or template foreign keys now. Later publishing must snapshot validated content and decide how wedding facts enter a published snapshot; schema version and save counter are not publication history. That later contract is not approved by this milestone.
+
+### Implemented — Milestone 2C.1 private hero photo
+
+An additive migration adds nullable, server-controlled `hero_photo_disk`/`hero_photo_path` columns to `website_drafts`. There is no media table or JSON schema bump: content remains version 1 and unknown stored versions remain blocked. The existing save counter covers messages, visibility, and photo together. Wedding facts remain unchanged.
+
+`wedding_photos` uses Laravel Filesystem with a non-serving private local root. UUID WebP objects live under account/wedding-specific hero prefixes. The authenticated nested `GET .../invitation/hero-photo/{photo}` route authorizes the wedding owner and serves only its current reference with private/no-store and nosniff headers. No paths or public object URLs enter Inertia props; both preview surfaces receive a separate nullable `{url}` photo prop and share ModernClassicInvitation.
+
+Multipart saves JSON-encode the existing content so strict booleans survive transport. Native GD/EXIF normalizes JPEG/PNG/WebP (5 MiB, 12 MP, maximum 6,000px per side) into metadata-free static WebP, at most 1,600px long edge without upscaling. Original bytes are never retained. The runtime needs EXIF, supported GD codecs, adequate upload limits, and at least 256M memory; setup is documented in README.md.
+
+Normalization precedes the wedding lock; durable writes follow the locked schema/counter checks. Reference/content/counter updates share one transaction. After confirmed commit, superseded files are deleted only after a primary-database reference recheck under the wedding lock. Rollback/uncertain-commit cleanup uses that same safeguard. Cleanup failure leaves an orphan for the dry-run-first `wedding-photos:prune --delete` operator command (generated, unreferenced objects older than 24 hours); incompatible-schema weddings are skipped.
+
+This is draft-only ownership, not a general media lifecycle. Before publishing, snapshot media references and extend replacement/pruning checks to retain all published references. Production local storage must be persistent/backed up; adopting private S3-compatible storage later requires its adapter/configuration and object migration separately.
+
+### Future proposals — deferred beyond Milestone 2B
+
+Publication needs separate scoping. Multiple-template infrastructure in the following comparison is deferred until after core functionality and owner-supplied Figma/Canva references (D-010); it is not a prerequisite for the current CMS.
 
 ### Patterns considered
 
@@ -278,7 +319,7 @@ Use account-level roles as a starting point. If product requirements later estab
 | Structured section data rendered by a versioned template registry | Content is independent of design; templates share section components; section types can be validated; ordering and visibility are straightforward; templates can evolve deliberately | Requires a defined schema per section and migration/compatibility rules when schemas change |
 | Freeform page builder with arbitrary blocks, layout rules, or embedded markup | Maximum customer flexibility; can model unusual layouts without a new section type | Harder validation, accessibility, responsive behavior, preview consistency, security, and support; more editor complexity; content becomes coupled to builder implementation |
 
-### Recommendation
+### Earlier section/registry recommendation — future only
 
 Use the structured, section-based model. A template is a presentation choice and a registry of supported section renderers; content is stored separately as data. A revision contains an ordered list of typed sections, each with a stable section ID, section type, visibility flag, and validated settings. Examples might include `hero`, `story`, `event_details`, `gallery`, `schedule`, and `faq`. Keep the list of supported types in application code and reject unknown types or fields on save. Never render customer-provided HTML or JavaScript as trusted markup.
 
@@ -286,7 +327,7 @@ Each Vue section component receives a typed, already validated view model. A sma
 
 Store content in JSON for the versioned section snapshots, but keep operational entities such as guests, RSVPs, seating, and orders in relational tables. JSON is appropriate for bounded presentation configuration; it should not replace relational records that require constraints, joins, privacy controls, and reporting.
 
-### Drafts, publication, and preview
+### Proposed publication and preview lifecycle — not implemented
 
 Treat revisions as immutable snapshots after publication. Editing creates or updates a draft revision; publishing validates the whole snapshot and atomically changes the wedding's `published_revision_id`. The public route resolves only that published pointer. Retain prior published revisions for rollback and audit. Draft preview uses an expiring, signed URL or an authenticated editor session scoped to the wedding; it must never make unpublished content available through a guessable ID.
 
@@ -334,9 +375,9 @@ For launch, prefer `/w/{slug}` if marketing routes may need root-level paths; us
 ### Suggested implementation milestones
 
 1. **Account and wedding foundation:** Define account ownership, membership invitation/acceptance, wedding creation, roles, policies, and tenant-scoped query conventions. Add cross-account authorization tests before exposing customer records.
-2. **Website revisions and templates:** Add template metadata, section schemas, validation, draft save, preview, publish/rollback, and version compatibility rules. Test malformed sections, unknown section types, unauthorized previews, and atomic publication.
-3. **Invitation and RSVP workflow:** Add groups, guests, hashed tokens, invitation state, and per-guest responses. Test partial household attendance, token expiry/revocation, throttling, duplicate submissions, privacy, and concurrent updates.
-4. **Public site and editor experience:** Render the published snapshot through reusable Vue section components, provide server-readable metadata, and verify mobile layout/performance. Choose SSR only after confirming hosting support.
+2. **Modern Classic CMS:** Milestone 2B implements the bounded draft editor and shared private preview above; owner review remains required. Additional CMS controls are not implicitly included.
+3. **Publication:** Scope published snapshots and public rendering/hosting first, then implement publication and server-readable metadata. History/rollback require separate approval; do not add template catalogs or switching.
+4. **Invitation and RSVP workflow:** Add groups, guests, hashed tokens, invitation state, and per-guest responses after their rules are approved. Test partial household attendance, token expiry/revocation, throttling, duplicate submissions, privacy, and concurrent updates.
 5. **Seating, orders, and staff tools:** Add table capacity and assignments with transactional checks, manual order/payment records with audit trails, then scoped internal administration. Keep each area behind policies and domain-focused tests.
 
 ### Essential tests
@@ -375,7 +416,7 @@ Start with the repository's existing Laravel and frontend tools. CI should insta
 8. What happens to guest and payment data after a wedding, cancellation, or account closure? Define retention and export/deletion policy before production collection.
 9. What order statuses, deposits, refunds, and evidence are required for manual payment operations? Initial payments are recorded and verified manually; accounting policy is not specified.
 10. Which domain and hosting provider will serve public sites, and can the selected host run Inertia SSR? This determines the public rendering implementation and later custom-domain path.
-11. What should a template change do to existing customized sections when the new template does not support them? The proposal preserves content and validates it against explicit template compatibility rules.
+11. Deferred until after core functionality: what should a future design do with content it does not support? Revisit only with owner-supplied design references; preserve reusable content without implementing switching now.
 
 ## Recommended first milestone
 

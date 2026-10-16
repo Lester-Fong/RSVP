@@ -34,9 +34,19 @@ const formatDate = (date: string | null) => {
                     <h1 class="mt-1 text-2xl font-semibold tracking-tight">{{ wedding.partner_one_name }} &amp; {{ wedding.partner_two_name }}</h1>
                     <p class="mt-2 text-sm text-muted-foreground">{{ formatDate(wedding.wedding_date) }}</p>
                 </div>
-                <Button as-child>
-                    <Link :href="route('accounts.weddings.edit', { account: account.id, wedding: wedding.id })">Edit wedding</Link>
-                </Button>
+                <div class="flex flex-wrap gap-2">
+                    <Button as-child variant="outline">
+                        <Link :href="route('accounts.weddings.invitation.edit', { account: account.id, wedding: wedding.id })">
+                            Customize invitation
+                        </Link>
+                    </Button>
+                    <Button as-child variant="outline">
+                        <Link :href="route('accounts.weddings.preview', { account: account.id, wedding: wedding.id })">Preview invitation</Link>
+                    </Button>
+                    <Button as-child>
+                        <Link :href="route('accounts.weddings.edit', { account: account.id, wedding: wedding.id })">Edit wedding</Link>
+                    </Button>
+                </div>
             </header>
 
             <section class="rounded-xl border bg-card p-5 sm:p-7">

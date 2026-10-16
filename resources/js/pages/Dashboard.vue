@@ -47,14 +47,19 @@ const formatDate = (date: string | null) => {
                     v-for="wedding in weddings"
                     :key="wedding.id"
                     :href="route('accounts.weddings.show', { account: account!.id, wedding: wedding.id })"
-                    class="rounded-xl border bg-card p-5 transition hover:border-primary/50 hover:shadow-sm"
+                    class="min-w-0 rounded-xl border bg-card p-5 transition hover:border-primary/50 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                     <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <h2 class="text-lg font-medium">{{ wedding.partner_one_name }} &amp; {{ wedding.partner_two_name }}</h2>
+                        <div class="min-w-0 flex-1">
+                            <h2
+                                class="line-clamp-2 break-words text-lg font-medium [overflow-wrap:anywhere]"
+                                :title="`${wedding.partner_one_name} & ${wedding.partner_two_name}`"
+                            >
+                                {{ wedding.partner_one_name }} &amp; {{ wedding.partner_two_name }}
+                            </h2>
                             <p class="mt-1 text-sm text-muted-foreground">{{ formatDate(wedding.wedding_date) }}</p>
                         </div>
-                        <span class="rounded-full bg-muted px-3 py-1 text-xs font-medium capitalize">{{ wedding.status }}</span>
+                        <span class="shrink-0 rounded-full bg-muted px-3 py-1 text-xs font-medium capitalize">{{ wedding.status }}</span>
                     </div>
                     <p class="mt-5 text-sm font-medium text-primary">View wedding details →</p>
                 </Link>

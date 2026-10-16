@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\WeddingController;
+use App\Http\Controllers\WeddingInvitationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -19,6 +20,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('weddings/create', [WeddingController::class, 'createInAccount'])->name('weddings.create');
         Route::post('weddings', [WeddingController::class, 'store'])->name('weddings.store');
         Route::get('weddings/{wedding}', [WeddingController::class, 'show'])->name('weddings.show');
+        Route::get('weddings/{wedding}/preview', [WeddingController::class, 'preview'])->name('weddings.preview');
+        Route::get('weddings/{wedding}/invitation/edit', [WeddingInvitationController::class, 'edit'])->name('weddings.invitation.edit');
+        Route::put('weddings/{wedding}/invitation', [WeddingInvitationController::class, 'update'])->name('weddings.invitation.update');
+        Route::get('weddings/{wedding}/invitation/hero-photo/{photo}', [WeddingInvitationController::class, 'heroPhoto'])->whereUuid('photo')->name('weddings.invitation.hero-photo');
         Route::get('weddings/{wedding}/edit', [WeddingController::class, 'edit'])->name('weddings.edit');
         Route::put('weddings/{wedding}', [WeddingController::class, 'update'])->name('weddings.update');
     });

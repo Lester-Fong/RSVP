@@ -1,6 +1,6 @@
 # Wedding RSVP
 
-Wedding RSVP SaaS foundation built with the official Laravel Vue starter kit. The current product milestone provides customer workspaces and wedding detail management; website templates, guest management, and RSVP features are not implemented yet.
+Wedding RSVP SaaS built with the official Laravel Vue starter kit. Current functionality includes customer workspaces, wedding detail management, and a private Modern Classic invitation editor with saved drafts. Public publishing, guest management, and RSVP features remain deferred; owner milestone acceptance is tracked in `docs/checklist.md`.
 
 ## Stack
 
@@ -21,25 +21,26 @@ PHP 8.2+ with `bcmath`, `ctype`, `fileinfo`, `json`, `mbstring`, `openssl`, `PDO
 
 1. Install PHP and Node dependencies:
 
-   ```powershell
-   composer install
-   npm.cmd ci
-   ```
+    ```powershell
+    composer install
+    npm.cmd ci
+    ```
 
 2. Copy `.env.example` to `.env` if needed, then set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` to your local MySQL details. Never commit `.env`.
 3. In MySQL, create the dedicated database if it does not already exist:
 
-   ```sql
-   CREATE DATABASE wedding_rsvp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   ```
+    ```sql
+    CREATE DATABASE wedding_rsvp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    ```
 
-   Use an account permitted to create this database. The project does not create databases or assume a blank root password.
+    Use an account permitted to create this database. The project does not create databases or assume a blank root password.
+
 4. Generate an application key if this is a fresh environment, then run default migrations:
 
-   ```powershell
-   php artisan key:generate
-   php artisan migrate
-   ```
+    ```powershell
+    php artisan key:generate
+    php artisan migrate
+    ```
 
 ## Run locally (Windows PowerShell)
 
@@ -55,16 +56,52 @@ npm.cmd run dev
 
 Open `http://127.0.0.1:8000`. `npm.cmd` avoids PowerShell's script-execution policy blocking the `npm.ps1` shim.
 
+The project's `App\Console\Commands\Serve` extends Laravel's standard development server and passes `upload_max_filesize=5M`, `post_max_size=8M`, and `memory_limit=256M` directly to the receiving PHP child process, loading EXIF if the parent runtime does not already have it. This applies to normal `php artisan serve` and the server in `composer run dev`, survives subsequent starts, and does not edit global `php.ini`. Restart any already-running development server after updating this command. GD/Fileinfo and the EXIF extension binary must be installed; production web servers still need their own runtime configuration.
+
 ## Build, check, and test
 
 ```powershell
 npm.cmd run build
 npm.cmd run typecheck
+node --test tests/Frontend/ModernClassicInvitation.test.mjs
 php artisan test
 vendor\bin\pint --test
 ```
 
 For an auto-format pass, run `vendor\bin\pint` and `npm.cmd run format`.
+
+Laravel tests must use the isolated SQLite configuration in `phpunit.xml`, never the development MySQL database. In Codex's current Windows environment, load SQLite extensions through the temporary PHP scan directory and set process-only overrides for `APP_ENV=testing`, `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`, `SESSION_DRIVER=array`, and `SESSION_PATH=/`; point `APP_CONFIG_CACHE` and `APP_ROUTES_CACHE` at unused temporary paths to bypass local caches. See `docs/handoff.md` for verification context. The renderer tests use existing Vue/TypeScript packages and Node's built-in test runner; no additional test dependency is required.
+
+### Optional MySQL concurrency tests
+
+These cases require an existing, dedicated disposable database named `wedding_rsvp_cms_test` (optionally followed by `_` and a lowercase alphanumeric/underscore suffix), with the project migrations already applied and a test user permitted to inspect `information_schema.INNODB_TRX`. They use the configured MySQL host/credentials with the explicitly selected test database, independent request processes, and real InnoDB lock waits.
+
+After setting the isolated testing process overrides above:
+
+```powershell
+$env:CMS_MYSQL_TEST_DATABASE='wedding_rsvp_cms_test'
+php artisan test --compact --group=mysql-concurrency
+```
+
+The tests refuse `wedding_rsvp`, never create/drop/reset databases or provision schema, and clean up only their own fixture records. Without a configured/reachable prepared test database they are skipped, not verified. Creating or resetting a disposable database requires explicit owner approval separately from running the tests.
+
+## Wedding hero photos (Milestone 2C.1)
+
+Before using photo uploads in a new environment, apply the additive `2026_10_16_050354_add_hero_photo_to_website_drafts_table` migration with `php artisan migrate`. It is confirmed already applied to development MySQL; no migration was needed for the upload runtime fix. Do not reset existing databases. If configuration is cached, clear/rebuild it deliberately during deployment so the new private disk is available.
+
+The actual **web PHP runtime** needs GD (JPEG/PNG/WebP), Fileinfo, EXIF, `memory_limit=256M` or greater, `upload_max_filesize=5M` or greater, and POST/proxy body limits above multipart overhead (at least 8M for this form). Have the operator configure/restart the relevant runtime; do not silently alter global PHP settings. A missing processing prerequisite gives an actionable upload error. HEIC is unsupported. PHP/proxy rejections before Laravel may produce an oversized-request response.
+
+Photos use the `wedding_photos` disk at `storage/app/private/wedding-photos`, with automatic serving disabled. **Do not create a public symlink or use `Storage::url()` for these files.** Keep storage writable, private, persistent, and backed up. Only authenticated wedding owners can fetch the saved photo. Private S3 adoption later needs a separately approved Flysystem adapter and configuration; no dependency was added now.
+
+Replacement/removal deletes superseded objects after commit. Crash/deletion failures can leave private orphans. Inspect `php artisan wedding-photos:prune` (dry run), then explicitly execute `php artisan wedding-photos:prune --delete` to remove generated, unreferenced objects older than 24 hours. No automatic schedule is installed. Extend reference retention before introducing publishing.
+
+Photo tests need the same PHP extensions/memory as processing. Codex used a **temporary process-only** PHP scan directory containing SQLite/EXIF extension loading and 256M memory, then ran `php artisan test --compact` with the isolated testing overrides above. No global PHP settings changed. MySQL photo concurrency cases additionally require the additive migration and share only a uniquely named temporary photo directory; they still refuse development MySQL.
+
+## Laravel Boost for Codex
+
+Laravel Boost is a Composer development dependency. The project-local MCP server is configured in `.codex/config.toml` and starts with `php artisan boost:mcp`. Open and trust this project in Codex, then restart or reopen the project so Codex loads its MCP configuration.
+
+The Codex MCP process uses an in-memory cache and bypasses the local cached config file. This keeps Boost's schema metadata cache out of the MySQL database and does not change the web application's runtime configuration. Boost provides application information, database schema and connection inspection, Laravel documentation search, and supporting browser/log tools. Documentation search needs outbound access to Laravel's hosted docs service.
 
 ## Structure
 

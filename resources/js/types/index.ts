@@ -60,4 +60,23 @@ export interface WeddingDetails extends WeddingSummary {
     public_slug: string;
 }
 
+export type WeddingPresentation = Pick<
+    WeddingDetails,
+    'partner_one_name' | 'partner_two_name' | 'wedding_date' | 'wedding_time' | 'ceremony_venue' | 'reception_venue'
+>;
+
+export interface InvitationCustomization {
+    introduction_message: string;
+    closing_message: string;
+    sections: {
+        ceremony: boolean;
+        reception: boolean;
+        closing: boolean;
+    };
+}
+
+export interface InvitationHeroPhoto {
+    url: string;
+}
+
 export type BreadcrumbItemType = BreadcrumbItem;

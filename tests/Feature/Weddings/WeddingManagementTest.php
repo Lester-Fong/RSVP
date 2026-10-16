@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\User;
 use App\Models\Wedding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class WeddingManagementTest extends TestCase
@@ -93,6 +94,110 @@ class WeddingManagementTest extends TestCase
             'account' => $account->id,
             'wedding' => $wedding->id,
         ]))->assertOk();
+    }
+
+    public function test_authenticated_owner_can_preview_the_wedding_using_only_presentation_details(): void
+    {
+        $user = User::factory()->create();
+        $account = $this->createOwnedAccount($user);
+        $wedding = $this->createWedding($account);
+        $wedding->update([
+            'wedding_date' => '2027-05-12',
+            'wedding_time' => '16:30:00',
+            'ceremony_venue' => 'Manila Cathedral',
+            'reception_venue' => 'Intramuros Hall',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('accounts.weddings.preview', [
+                'account' => $account->id,
+                'wedding' => $wedding->id,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('weddings/Preview')
+                ->where('overviewUrl', route('accounts.weddings.show', [
+                    'account' => $account->id,
+                    'wedding' => $wedding->id,
+                ]))
+                ->where('wedding.partner_one_name', 'Partner One')
+                ->where('wedding.partner_two_name', 'Partner Two')
+                ->where('wedding.wedding_date', '2027-05-12')
+                ->where('wedding.wedding_time', '16:30')
+                ->where('wedding.ceremony_venue', 'Manila Cathedral')
+                ->where('wedding.reception_venue', 'Intramuros Hall')
+                ->has('wedding', 6)
+            );
+    }
+
+    public function test_preview_passes_missing_optional_wedding_details_as_null(): void
+    {
+        $user = User::factory()->create();
+        $account = $this->createOwnedAccount($user);
+        $wedding = $this->createWedding($account);
+
+        $this->actingAs($user)
+            ->get(route('accounts.weddings.preview', [
+                'account' => $account->id,
+                'wedding' => $wedding->id,
+            ]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('weddings/Preview')
+                ->where('wedding.wedding_date', null)
+                ->where('wedding.wedding_time', null)
+                ->where('wedding.ceremony_venue', null)
+                ->where('wedding.reception_venue', null)
+            );
+    }
+
+    public function test_preview_requires_authentication(): void
+    {
+        $account = $this->createOwnedAccount(User::factory()->create());
+        $wedding = $this->createWedding($account);
+
+        $this->get(route('accounts.weddings.preview', [
+            'account' => $account->id,
+            'wedding' => $wedding->id,
+        ]))->assertRedirect(route('login'));
+    }
+
+    public function test_member_of_another_account_cannot_preview_a_wedding(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $account = $this->createOwnedAccount($owner);
+        $this->createOwnedAccount($otherUser);
+        $wedding = $this->createWedding($account);
+
+        $this->actingAs($otherUser)
+            ->get(route('accounts.weddings.preview', [
+                'account' => $account->id,
+                'wedding' => $wedding->id,
+            ]))
+            ->assertForbidden();
+    }
+
+    public function test_preview_wedding_must_belong_to_the_nested_account(): void
+    {
+        $user = User::factory()->create();
+        $firstAccount = $this->createOwnedAccount($user, 'First account');
+        $secondAccount = $this->createOwnedAccount($user, 'Second account');
+        $wedding = $this->createWedding($firstAccount);
+
+        $this->actingAs($user)
+            ->get(route('accounts.weddings.preview', [
+                'account' => $secondAccount->id,
+                'wedding' => $wedding->id,
+            ]))
+            ->assertNotFound();
+    }
+
+    public function test_public_wedding_page_route_is_not_available(): void
+    {
+        $account = $this->createOwnedAccount(User::factory()->create());
+        $wedding = $this->createWedding($account);
+
+        $this->get('/w/'.$wedding->public_slug)->assertNotFound();
     }
 
     public function test_authenticated_owner_can_update_wedding_details(): void
@@ -224,6 +329,23 @@ class WeddingManagementTest extends TestCase
             'public_slug' => $wedding->public_slug,
             'status' => 'planning',
         ]);
+    }
+
+    public function test_dashboard_returns_complete_long_names_without_changing_stored_values(): void
+    {
+        $user = User::factory()->create();
+        $account = $this->createOwnedAccount($user);
+        $wedding = $this->createWedding($account);
+        $names = ['partner_one_name' => str_repeat('Long Name ', 12), 'partner_two_name' => str_repeat('W', 120)];
+        $wedding->update($names);
+        $before = $wedding->fresh()->getAttributes();
+
+        $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+            ->component('Dashboard')
+            ->where('weddings.0.partner_one_name', $names['partner_one_name'])
+            ->where('weddings.0.partner_two_name', $names['partner_two_name']));
+
+        $this->assertSame($before, $wedding->fresh()->getAttributes());
     }
 
     private function createOwnedAccount(User $user, string $name = 'Customer workspace'): Account

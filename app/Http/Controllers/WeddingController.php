@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreWeddingRequest;
 use App\Http\Requests\UpdateWeddingRequest;
 use App\Models\Account;
+use App\Models\WebsiteDraft;
 use App\Models\Wedding;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -114,6 +115,23 @@ class WeddingController extends Controller
                 'name' => $account->name,
             ],
             'wedding' => $this->weddingData($wedding),
+        ]);
+    }
+
+    public function preview(Account $account, Wedding $wedding): Response
+    {
+        $this->authorize('view', $wedding);
+        $draft = $wedding->websiteDraft;
+        $draft?->ensureSupportedSchema();
+
+        return Inertia::render('weddings/Preview', [
+            'overviewUrl' => route('accounts.weddings.show', [
+                'account' => $account->id,
+                'wedding' => $wedding->id,
+            ]),
+            'wedding' => $wedding->presentationData(),
+            'customization' => $draft?->content ?? WebsiteDraft::defaultContent(),
+            'heroPhoto' => $draft?->heroPhoto(),
         ]);
     }
 

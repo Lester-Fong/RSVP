@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Wedding extends Model
 {
@@ -31,5 +32,23 @@ class Wedding extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function websiteDraft(): HasOne
+    {
+        return $this->hasOne(WebsiteDraft::class);
+    }
+
+    /** @return array<string, string|null> */
+    public function presentationData(): array
+    {
+        return [
+            'partner_one_name' => $this->partner_one_name,
+            'partner_two_name' => $this->partner_two_name,
+            'wedding_date' => $this->wedding_date?->format('Y-m-d'),
+            'wedding_time' => $this->wedding_time ? substr($this->wedding_time, 0, 5) : null,
+            'ceremony_venue' => $this->ceremony_venue,
+            'reception_venue' => $this->reception_venue,
+        ];
     }
 }
