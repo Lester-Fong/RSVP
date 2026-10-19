@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Wedding extends Model
@@ -39,6 +40,16 @@ class Wedding extends Model
     public function websiteDraft(): HasOne
     {
         return $this->hasOne(WebsiteDraft::class);
+    }
+
+    public function invitationGroups(): HasMany
+    {
+        return $this->hasMany(InvitationGroup::class);
+    }
+
+    public function guests(): HasManyThrough
+    {
+        return $this->hasManyThrough(Guest::class, InvitationGroup::class);
     }
 
     public function websiteRevisions(): HasMany

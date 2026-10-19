@@ -47,6 +47,7 @@ PHP 8.2+ with `bcmath`, `ctype`, `fileinfo`, `json`, `mbstring`, `openssl`, `PDO
 Open two terminals in the project directory:
 
 ```powershell
+$env:SESSION_PATH = '/'
 php artisan serve
 ```
 
@@ -55,6 +56,8 @@ npm.cmd run dev
 ```
 
 Open `http://127.0.0.1:8000`. `npm.cmd` avoids PowerShell's script-execution policy blocking the `npm.ps1` shim.
+
+Set `SESSION_PATH` in the same PowerShell terminal before starting the server (also before `composer run dev`). An inherited environment variable overrides `.env`; a local process was found supplying `C:/Program Files/Git/` despite `.env` correctly containing `SESSION_PATH=/`, causing cookie creation and dashboard requests to fail. Git Bash/MSYS path conversion can produce this kind of filesystem path. The PowerShell assignment above affects only that terminal and its child processes, preserves the intended root URL path, and makes no machine-wide changes. Restart an affected server after correcting its environment; editing `.env` alone cannot override the inherited value.
 
 The project's `App\Console\Commands\Serve` extends Laravel's standard development server and passes `upload_max_filesize=5M`, `post_max_size=8M`, and `memory_limit=256M` directly to the receiving PHP child process, loading EXIF if the parent runtime does not already have it. This applies to normal `php artisan serve` and the server in `composer run dev`, survives subsequent starts, and does not edit global `php.ini`. Restart any already-running development server after updating this command. GD/Fileinfo and the EXIF extension binary must be installed; production web servers still need their own runtime configuration.
 
@@ -70,7 +73,7 @@ vendor\bin\pint --test
 
 For an auto-format pass, run `vendor\bin\pint` and `npm.cmd run format`.
 
-Laravel tests must use the isolated SQLite configuration in `phpunit.xml`, never the development MySQL database. In Codex's current Windows environment, load SQLite extensions through the temporary PHP scan directory and set process-only overrides for `APP_ENV=testing`, `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`, `SESSION_DRIVER=array`, and `SESSION_PATH=/`; point `APP_CONFIG_CACHE` and `APP_ROUTES_CACHE` at unused temporary paths to bypass local caches. See `docs/handoff.md` for verification context. The renderer tests use existing Vue/TypeScript packages and Node's built-in test runner; no additional test dependency is required.
+Laravel tests must use the isolated SQLite configuration in `phpunit.xml`, never the development MySQL database. In Codex's current Windows environment, load SQLite extensions through the temporary PHP scan directory and set process-only overrides for `APP_ENV=testing`, `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`, `CACHE_STORE=array`, `SESSION_DRIVER=array`, and `SESSION_PATH=/`; point `APP_CONFIG_CACHE` and `APP_ROUTES_CACHE` at unused temporary paths to bypass local caches. PHPUnit also forces array caching in both environment and server-variable adapters, preventing an inherited `CACHE_STORE=file` from sharing development limiter state. Use temporary storage and unused configuration-cache paths when testing environment overrides. See `docs/handoff.md` for verification context. The renderer tests use existing Vue/TypeScript packages and Node's built-in test runner; no additional test dependency is required.
 
 ### Optional MySQL concurrency tests
 
@@ -97,7 +100,7 @@ Replacement/removal deletes superseded objects after commit only if neither a dr
 
 Photo tests need the same PHP extensions/memory as processing. Codex used a **temporary process-only** PHP scan directory containing SQLite/EXIF extension loading and 256M memory, then ran `php artisan test --compact` with the isolated testing overrides above. No global PHP settings changed. MySQL photo concurrency cases additionally require the additive migration and share only a uniquely named temporary photo directory; they still refuse development MySQL.
 
-## Publishing saved invitations (Milestone 2C.2)
+## Publishing saved invitations (Milestone 3A, previously 2C.2)
 
 The additive `2026_10_16_075658_create_website_revisions_table` migration is applied to development MySQL. In another environment, run `php artisan migrate --no-interaction`, refresh its route cache deliberately, and run `npm.cmd run build` for the separate public page/CSS entries. No reset, new package or SSR service is needed. A stale pre-publication route cache must be cleared with `php artisan route:clear --no-interaction` (and rebuilt if deployment uses route caching).
 
@@ -106,6 +109,34 @@ Set a wedding date, customize and save the draft, preview, then use **Publish in
 Laravel delivers the public document, sharing metadata and styled no-JavaScript invitation; the existing Modern Classic Vue component enhances it. Public pages do not use the portal Inertia root or its authentication props. The default asks crawlers not to index/follow/archive, and page/photo responses are private/no-store. Third-party caches and previously downloaded copies cannot be recalled. Localhost URLs work locally without login; sharing over the Internet and real messaging previews require separate deployment to a reachable host.
 
 The opt-in browser tests use an isolated SQLite server, storage and sessions with `QA_ISOLATED_SQLITE=1`, `QA_BASE_URL`, `QA_PLAYWRIGHT_MODULE` and an optional `QA_BROWSER_EXECUTABLE`; they reuse existing browser tooling and do not install dependencies. With those configured, run `node --test tests/Frontend/ModernClassicInvitation.test.mjs tests/Frontend/ManualQaRegression.test.mjs tests/Frontend/Publication.browser.test.mjs`. Never point fixture-writing browser tests at development MySQL. Six MySQL concurrency cases (four draft/photo, two publication) still require the separately approved disposable target above and its latest migrations.
+
+## Guest management (Milestone 4A)
+
+The additive `2026_10_16_090634_create_invitation_groups_and_guests_tables` migration creates invitation groups and named guests; it is applied to development MySQL. Other environments need normal migrations and a production build. No reset, seed, new dependency or PHP setting change is required. Open **Guest Management** from the wedding overview; create/edit in modals, select a guest name to rename/remove, and use the group actions menu to add people or delete a group. A group requires 1–100 named guests. Removal is permanent and confirmed; the final guest can only be removed by deleting its group. There is no RSVP or delivery behavior.
+
+For the focused isolated backend checks, run `php artisan test --compact tests/Feature/Weddings/WeddingGuestManagementTest.php` with the SQLite/testing overrides described above. The opt-in real-browser checks use the same isolated server/tooling variables as publication: `node --test tests/Frontend/GuestManagement.browser.test.mjs`. The full frontend set is the three files listed above plus this guest file. Never point browser fixtures at development MySQL.
+
+## Personalized invitation links (Milestone 4B)
+
+The additive `2026_10_16_095519_add_invitation_links_to_invitation_groups` migration is applied to development MySQL. Other environments need normal migrations, refreshed configuration/route caches and a production build. Local configuration cache was cleared to activate the new application-log taps. No new dependency or global PHP change.
+
+In **Guest Management → group actions → Invitation link**, generate/copy/revoke/regenerate explicitly. A group with any issued link cannot be hard deleted, including after revocation; never-issued group deletion remains available. Saved group labels/member names change what existing holders see immediately. Wedding drafts remain private until publication. Unpublished weddings return 404; republishing updates existing active links. Delivery remains outside this scope; 5A adds responses below.
+
+Tokens are random bearer credentials with SHA-256 lookup and encrypted recoverability. Protect the application encryption key independently from database/backups, and coordinate key rotation or explicitly regenerate links. Owners retrieve URLs only through no-store JSON actions; list props have status/version, not credentials. Browser clipboard/history and recipients can retain shared URLs.
+
+**Before distributing real links:** use HTTPS and verify `/invite/*` path redaction/exclusion in every PHP/web-server/proxy/access/APM/analytics layer, and disable recovery-response body capture. Standard `php artisan serve` still prints paths to console. Application log taps and sanitized public exceptions do not control those external streams. No vendor or server-infrastructure workaround was added. Generic metadata/noindex does not prevent messaging-preview services holding a link from reading permitted names.
+
+Focused checks: `php artisan test --compact tests/Feature/Weddings/InvitationLinkTest.php` with the isolated SQLite overrides above. Browser checks use the same isolated opt-in tooling: `node --test tests/Frontend/InvitationLink.browser.test.mjs`. The full frontend run includes this fifth file alongside the preceding renderer/three browser files. MySQL concurrency has eight opt-in cases: the original six plus new link generation/regeneration, all pending an approved disposable target; additional guest/deletion-race verification is not claimed.
+
+## Guest RSVP submission (Milestone 5A)
+
+Run normal `php artisan migrate` before serving this code in another environment. The additive `2026_10_16_104215_create_rsvp_responses_table` migration creates one response per guest and adds a group stale-save counter. It is applied to development MySQL without resets or customer response creation. Do not roll it back against valuable response data.
+
+Open an existing active personalized link for a published wedding. The separate RSVP section lets its bearer save attending/declining choices for one or more named people and update them later; omitted answers are preserved and no record means pending. Generic public wedding pages have no RSVP. Renaming keeps answers; responded guests cannot be deleted. No attendance dashboard, clearing to pending, deadlines or delivery is added. Saving requires JavaScript; static HTML shows saved states.
+
+The invitation GET remains stateless. Same-origin CSRF setup uses a token-free URL, followed by an ordinary CSRF-protected submission. Privacy headers/redaction remain in effect, but external access logs and request/response capture still require deployment protection. Use a persistent shared limiter cache in production. RSVP is limited to 20/minute per hashed invitation with a separate 120/minute/IP abuse guard; CSRF setup remains independently 60/minute/IP. Errors display the actual Retry-After interval. Browser HTTP tests must use `CACHE_STORE=file` with a fresh temporary `LARAVEL_STORAGE_PATH`; an array cache would hide cross-request throttling. PHPUnit's own isolated tests use array cache.
+
+Focused check: `php artisan test --compact tests/Feature/GuestRsvpTest.php` with the isolated overrides above. Full frontend regression with the existing isolated browser setup: `node --test --test-concurrency=1 tests/Frontend/ModernClassicInvitation.test.mjs tests/Frontend/ManualQaRegression.test.mjs tests/Frontend/Publication.browser.test.mjs tests/Frontend/GuestManagement.browser.test.mjs tests/Frontend/InvitationLink.browser.test.mjs tests/Frontend/GuestRsvp.browser.test.mjs`. Real HTTP simultaneous requests test stale rejection, not InnoDB concurrency; the eight opt-in MySQL cases plus guest/RSVP races remain pending.
 
 ## Laravel Boost for Codex
 

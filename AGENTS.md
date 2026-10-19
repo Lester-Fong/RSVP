@@ -7,6 +7,7 @@ Repository-level agent instructions. This file is the entry point, not the entir
 2. Source-of-truth map — read on demand
    Need Read
    Current task/status/next action [`docs/handoff.md`](docs/handoff.md)
+   Known bugs, unverified checks, security risks, MVP limits and follow-ups [`docs/risks_and_followups.md`](docs/risks_and_followups.md) — review relevant entries before implementation/fixes.
    What the product must do, and MVP limits [`docs/product_spec.md`](docs/product_spec.md)
    Approved decisions and unresolved proposals [`docs/decisions.md`](docs/decisions.md)
    Technical design, ERD, tenancy, CMS and routes [`docs/architecture.md`](docs/architecture.md)
@@ -46,6 +47,7 @@ Precedence: Direct instructions for the current task > newly approved entries in
    Documentation updates are task-completion work, not a separate future promise. Before reporting a task complete, inspect what actually changed and synchronize only affected documents:
 1. docs/checklist.md — mark steps complete only with observed evidence; record blockers or pending manual QA. Maintain the next actionable step.
 1. docs/handoff.md — keep concise: current state, what changed, verification, known risks, next task.
+1. docs/risks_and_followups.md — maintain affected entries with category, impact, priority, status, evidence, action and target milestone. Link to the register from handoff/checklist instead of duplicating its complete issue list. Never mark resolved without verification; accepted limitations and suspected risks remain distinct from confirmed bugs.
 1. docs/decisions.md — add a dated entry only for an explicit owner-approved product/technical decision; keep unresolved recommendations under Proposals/open questions, not as approved facts.
 1. docs/product_spec.md — update only when requirements or scope actually change.
 1. docs/architecture.md — update only when a design is approved and implementation changes the architecture/ERD/contracts. Preserve rationale; avoid speculative diagrams.
@@ -71,6 +73,7 @@ Precedence: Direct instructions for the current task > newly approved entries in
 This application is a Laravel application running on PHP 8.2. Always use the APIs that match the installed major version of each package — do not assume a version.
 
 Before relying on a package's API, confirm its installed version:
+
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
@@ -141,7 +144,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
 - Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
+    - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 
@@ -255,6 +258,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Inertia + Vue
 
 Vue components must have a single root element.
+
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 </laravel-boost-guidelines>

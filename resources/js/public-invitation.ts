@@ -1,4 +1,5 @@
 import { createApp } from 'vue';
+import InvitationRsvpForm from './components/wedding/InvitationRsvpForm.vue';
 import ModernClassicInvitation from './components/wedding/ModernClassicInvitation.vue';
 import type { InvitationCustomization, InvitationHeroPhoto, WeddingPresentation } from './types';
 
@@ -10,4 +11,9 @@ if (data?.textContent) {
         heroPhoto: InvitationHeroPhoto | null;
     };
     createApp(ModernClassicInvitation, props).mount('#public-invitation');
+}
+
+const rsvp = document.getElementById('rsvp-data');
+if (rsvp?.textContent) {
+    createApp(InvitationRsvpForm, JSON.parse(rsvp.textContent)).mount('#invitation-rsvp');
 }

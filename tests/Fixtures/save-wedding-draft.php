@@ -32,7 +32,11 @@ try {
     DB::statement('SET SESSION innodb_lock_wait_timeout = 20');
     Auth::guard('web')->setUser(User::query()->findOrFail($payload['owner_id']));
     $url = '/accounts/'.$payload['account_id'].'/weddings/'.$payload['wedding_id'].'/invitation';
-    if (($payload['operation'] ?? 'draft') === 'publish') {
+    if (($payload['operation'] ?? 'draft') === 'link') {
+        $request = Request::create('/accounts/'.$payload['account_id'].'/weddings/'.$payload['wedding_id'].'/invitation-groups/'.$payload['group_id'].'/invitation-link/'.$payload['link_action'], 'POST', [], [], [], [
+            'HTTP_ACCEPT' => 'application/json', 'CONTENT_TYPE' => 'application/json',
+        ], json_encode(['link_version' => $payload['link_version']], JSON_THROW_ON_ERROR));
+    } elseif (($payload['operation'] ?? 'draft') === 'publish') {
         $request = Request::create('/accounts/'.$payload['account_id'].'/weddings/'.$payload['wedding_id'].'/publish', 'POST', [], [], [], [
             'HTTP_ACCEPT' => 'application/json', 'CONTENT_TYPE' => 'application/json',
         ], json_encode($payload['publication'], JSON_THROW_ON_ERROR));
@@ -56,9 +60,13 @@ try {
     fwrite(STDOUT, 'READY '.DB::selectOne('SELECT CONNECTION_ID() AS id')->id.PHP_EOL);
     fflush(STDOUT);
     $response = $kernel->handle($request);
+    $resultBody = json_decode($response->getContent(), true);
+    if (($payload['operation'] ?? 'draft') === 'link' && is_array($resultBody)) {
+        unset($resultBody['url']);
+    }
     fwrite(STDOUT, 'RESULT '.json_encode([
         'status' => $response->getStatusCode(),
-        'body' => json_decode($response->getContent(), true),
+        'body' => $resultBody,
     ], JSON_THROW_ON_ERROR).PHP_EOL);
     $kernel->terminate($request, $response);
 } catch (Throwable $exception) {

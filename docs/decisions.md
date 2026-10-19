@@ -50,7 +50,7 @@ Source: Owner selected uncropped placement and 5 MiB/runtime preparation during 
 
 ### D-013 — Saved invitation publication (2026-10-16)
 
-Status: Approved implementation scope by explicit owner task; manual publication QA/acceptance pending.
+Status: Approved implementation scope; Milestone 3A manually accepted with 8/8 owner tests passed, confirmed in the Milestone 4A task on 2026-10-16. Earlier documentation called this publication milestone 2C.2. MySQL concurrency remains pending.
 
 Decision: An authorized owner may publish a saved Modern Classic invitation to `/w/{slug}`, share it without authentication, edit drafts independently, republish reviewed changes, and unpublish without deleting wedding/draft/history. Snapshot wedding facts, supported validated CMS and media references independently; create immutable snapshots and change the active pointer atomically with stale/duplicate protection. Require saved supported draft, names, date and valid referenced media; time/venues remain optional. Retain snapshot media across draft replacement and pruning.
 
@@ -59,6 +59,44 @@ Delegated choices: minimal `website_revisions` plus wedding pointer/publication 
 Guest management, personalized links, RSVP, seating, payments, extra designs, advanced CMS, custom domains and production hosting remain out of scope. D-010 template deferral is unchanged. Automated checks are not owner acceptance or evidence that skipped MySQL cases passed.
 
 Source: Explicit owner publishing implementation request, including authority to choose the smallest maintainable snapshot schema and appropriate public rendering strategy.
+
+### D-014 — Named guests in wedding-scoped invitation groups (2026-10-16)
+
+Status: Manually accepted by the owner on 2026-10-16 in the explicit authorization to proceed with Milestone 4B. Guest/MySQL concurrency remains pending.
+
+Decision: Owners manage editable invitation labels, optional contact email/phone, and one or more named guests per group. Each seat is a named guest, duplicate names are allowed, and group totals are distinct from invited-person totals. Guest existence implies no RSVP. Create/edit use portal modals; saved guest/group removal requires explicit confirmation.
+
+Delegated schema: `invitation_groups.wedding_id` and `guests.invitation_group_id` define one constrained ownership chain. Omit a redundant guest wedding ID to eliminate conflicting parents; wedding queries use the indexed group relation/has-many-through. Standard FKs cannot require a child row: transactional application creation and locked last-person checks enforce nonempty groups on all management write paths. A 100-guest per-group technical safety bound is not a wedding pricing/guest quota. Strict payload allowlists reject ownership/membership injection; membership cannot be reassigned.
+
+Permanent authorized deletion and cascading group members are permitted before delivery/RSVP exists. Revisit deletion/retention before adding those records. No token, public guest route, sending, response, plus-one placeholder, seating or import/export capability is included. Modern Classic and D-010 remain unchanged.
+
+Source: Explicit Milestone 4A request and delegated minimal schema/limits choices; the same request confirms Milestone 3A owner acceptance (8/8).
+
+### D-015 — Recoverable personalized invitation links (2026-10-16)
+
+Status: Implemented and manually accepted by the owner on 2026-10-16 in the authorization to proceed with Milestone 5A. MySQL concurrency and deployment logging prerequisites remain pending.
+
+Decision: An owner explicitly generates, retrieves for copying, revokes and regenerates a group's bearer link at `/invite/{token}`. Use 32 random bytes, unique SHA-256 lookup hash, encrypted-at-rest recoverable token and monotonic version on the same group. Never include the hash/ciphertext/recovered URL in bulk lists or ordinary Inertia props. Authorized no-store JSON actions return the URL only on request. No expiry, delivery inference, sending or RSVP submission.
+
+The current saved group label and member names are visible to anyone possessing an active link; subsequent saved operational edits are immediately visible. Wedding content/media come only from the latest supported published snapshot; draft edits remain private. Unpublished weddings and inactive/unknown tokens return generic 404. Reuse the same published resolver, Blade document and unchanged Modern Classic Vue renderer; put the greeting outside that component.
+
+Issued groups cannot be hard deleted, including after revocation; this supersedes D-014's group-deletion permission only after issuance. Never-issued groups retain existing deletion behavior. Member edits/removal remain permitted before RSVP exists; revisit retention/deletion and parent cascades before future delivery/response features.
+
+Security tradeoffs approved in the plan: recoverable encryption depends on protecting the Laravel application key independently from database/backups. Database plus key compromise can reveal links. Preserve keys through coordinated rotation or regenerate links; never change keys automatically. Browser history/clipboard and recipients or services given a bearer URL can retain it; noindex/no-referrer/generic metadata are not access control. Generic metadata does not prevent a preview service with the URL from fetching permitted names.
+
+Latest owner clarification limits logging changes to safe application controls. Standard configured Laravel channels redact paths/credential-shaped strings and public exception details are sanitized before reporting. PHP development-server and upstream access logs are outside Laravel control and remain explicit HTTPS/deployment logging prerequisites. Do not edit vendor internals or add server infrastructure just to hide those logs. No additional approval is inferred for production deployment.
+
+Source: Explicit approval of the prepared 4B implementation plan, current saved-member semantics, in-place work preserving uncommitted 4A, and clarified request-logging boundaries. The owner subsequently confirmed 4B manual acceptance in the Milestone 5A request; 4A acceptance remains preserved.
+
+### D-016 — Per-person guest RSVP submission (2026-10-16)
+
+Status: Approved Milestone 5A scope; implementation and automated verification tracked in checklist.md. Manual 5A owner acceptance is pending.
+
+Decision: An active personalized invitation permits its bearer to save attending/declined choices for currently named group members, reopen and update them, and submit only part of the group. Absence of a response means pending; omitted people retain their existing choice. Responses are independent relational records, never CMS or published-snapshot content. Unpublished weddings and invalid/revoked/rotated links cannot accept responses. Anyone possessing the link can respond for its group; no guest account is required.
+
+Consequences: Implement unique guest-linked responses with timestamps, transactional token/publication/membership revalidation and stale-update protection. Renaming preserves identity and responses; a guest with a response cannot be permanently removed. New guests start pending. Membership/label edits remain visible to existing link holders. No response clearing, attendance dashboard, deadline, anonymous plus-one, meal/questionnaire, delivery or archival system is introduced. Milestone 5B owns attendance summaries and management.
+
+Source: Explicit Milestone 5A implementation request, including partial responses, reopening/editing, integrity requirements and delegated minimal schema/deletion-policy choices. Implementation details and unverified MySQL races are documented in architecture.md.
 
 ## Working design proposals — not yet final product approvals
 
@@ -75,7 +113,7 @@ Open product decisions
 
 - Which additional Modern Classic fields/sections, if any, should follow the bounded D-011 editor?
 - Confirm the conservative public indexing recommendation and future snapshot/media retention policy; `/w/{slug}` and authenticated draft previews are established by D-013.
-- Required guest fields, named plus-one behavior, RSVP editing cutoff, RSVP deadline defaults.
+- Guest delivery/access, future plus-one behavior, RSVP editing cutoff and deadline defaults. D-014 establishes required names and optional group contacts only.
 - Which guests can be assigned seats, and what capacity and layout-editing rules are required?
 - Wedding/data retention and export policy, customer terms, hosting duration and cancellation/refund terms.
 - Manual payment workflow and proof-of-payment requirements; who may verify and activate an order?

@@ -92,3 +92,31 @@ export interface WeddingPublicationSummary {
 }
 
 export type BreadcrumbItemType = BreadcrumbItem;
+export interface GuestSummary {
+    id: number;
+    name: string;
+    has_response: boolean;
+}
+
+export interface InvitationGroupSummary {
+    id: number;
+    label: string;
+    contact_email: string | null;
+    contact_phone: string | null;
+    guests_count: number;
+    guests: GuestSummary[];
+    link_status: InvitationLinkStatus;
+    link_version: number;
+}
+
+export type InvitationLinkStatus = 'not_generated' | 'active' | 'revoked';
+
+export interface InvitationRsvpState {
+    version: number;
+    guests: {
+        reference: string;
+        name: string;
+        status: 'pending' | 'attending' | 'declined';
+        respondedAt: string | null;
+    }[];
+}

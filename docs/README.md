@@ -6,6 +6,7 @@ decisions.md Approved choices, rationale, open decision requests Explicit produc
 architecture.md ERD, modules, tenancy, routing, CMS technical approach Approved architecture change
 checklist.md Milestone progress and verification evidence Every authorized implementation milestone/fix
 handoff.md Short current-state summary for the next Codex run After an authorized implementation/fix
+risks_and_followups.md Structured issue register: confirmed bugs, unverified checks, security/deployment risks, accepted MVP limits and follow-ups Review relevant entries before implementation/fixes; update affected evidence/status/actions afterward
 skills.md On-demand task playbooks / quality gates Development workflow change
 tasks/milestone1_review.md Read-only source review assignment Edit only if the review scope changes
 
@@ -14,6 +15,7 @@ How documents stay consistent
 1. A direct user decision goes into decisions.md, then into the relevant specification/architecture when appropriate.
 2. Codex implements the scoped change and verifies it.
 3. Codex updates checklist.md and handoff.md with actual, evidenced results; it updates other docs only when affected.
+   Maintain affected entries in risks_and_followups.md and link to their IDs rather than duplicating the full issue inventory. A proposed action is not product approval, and tests alone do not close an owner acceptance blocker.
 4. A read-only review must not edit files, including documentation. Document recommended fixes in the review output instead.
 5. Never mark manual browser QA or code review complete just because tests passed. Separate Codex-reported evidence from personally verified outcomes.
    Installation into the existing local repository

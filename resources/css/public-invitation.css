@@ -6,8 +6,131 @@ body {
     margin: 0;
 }
 
+.invitation-greeting {
+    padding: 1.5rem max(1rem, calc((100% - 58rem) / 2));
+    border-bottom: 1px solid #d8cdbb;
+    color: #342f29;
+    background: #fbf9f4;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    overflow-wrap: anywhere;
+}
+
+.invitation-greeting h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.invitation-greeting ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9rem;
+}
+
+.invitation-greeting li {
+    max-width: 100%;
+}
+
 body .invitation-page {
     min-height: 100svh;
+}
+
+.invitation-rsvp {
+    background: #fbf9f4;
+    color: #342f29;
+    border-top: 1px solid #d8cdbb;
+    padding: 2.5rem max(1rem, calc((100% - 42rem) / 2));
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.invitation-rsvp h2 {
+    margin: 0 0 1rem;
+    font-family: Georgia, serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+}
+
+.invitation-rsvp p {
+    margin: 0 0 1rem;
+}
+.invitation-rsvp .rsvp-note {
+    font-size: 0.85rem;
+}
+.rsvp-members {
+    margin: 1.5rem 0;
+    border-top: 1px solid #d8cdbb;
+}
+.rsvp-member {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid #d8cdbb;
+}
+.rsvp-name {
+    min-width: 0;
+}
+.rsvp-name label {
+    font-weight: 500;
+}
+.rsvp-name .rsvp-note {
+    margin: 0.25rem 0 0;
+}
+.invitation-rsvp select {
+    max-width: 100%;
+    width: 12rem;
+    flex-shrink: 0;
+    padding: 0.65rem;
+    border: 1px solid #8b8173;
+    border-radius: 6px;
+    color: inherit;
+    background: #fffefa;
+    font: inherit;
+    font-size: 1rem;
+}
+.rsvp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+.invitation-rsvp button {
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+    background: #342f29;
+    color: #fffefa;
+    border: 1px solid #342f29;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+}
+.invitation-rsvp .rsvp-secondary {
+    background: transparent;
+    color: inherit;
+}
+.invitation-rsvp :is(select, button):focus-visible {
+    outline: 2px solid #342f29;
+    outline-offset: 3px;
+}
+.invitation-rsvp :disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+@media (max-width: 540px) {
+    .rsvp-member {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .invitation-rsvp select {
+        width: 100%;
+    }
 }
 
 *,

@@ -55,6 +55,16 @@ const formatDate = (date: string | null) => {
 
             <PublicationPanel :account-id="account.id" :wedding-id="wedding.id" :publication="publication" />
 
+            <section class="flex flex-wrap items-center justify-between gap-4 border-b pb-6" aria-labelledby="guest-management-heading">
+                <div>
+                    <h2 id="guest-management-heading" class="text-lg font-medium">Your guest list</h2>
+                    <p class="mt-1 text-sm text-muted-foreground">Organize families, couples and individual guests.</p>
+                </div>
+                <Button as-child variant="outline">
+                    <Link :href="route('accounts.weddings.guests.index', { account: account.id, wedding: wedding.id })">Guest Management</Link>
+                </Button>
+            </section>
+
             <section class="rounded-xl border bg-card p-5 sm:p-7">
                 <div class="mb-5 flex items-center justify-between gap-4">
                     <h2 class="text-lg font-medium">Wedding information</h2>

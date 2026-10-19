@@ -3,8 +3,10 @@
 namespace Tests\Feature\Weddings;
 
 use App\Models\Account;
+use App\Models\InvitationGroup;
 use App\Models\User;
 use App\Models\WebsiteDraft;
+use App\Services\InvitationLink;
 use App\Services\WeddingHeroPhotoProcessor;
 use App\Services\WeddingPublication;
 use Illuminate\Database\QueryException;
@@ -80,16 +82,17 @@ class WeddingDraftConcurrencyTest extends TestCase
         parent::tearDown();
     }
 
-    /** @return array<string, array<int, int|bool>> */
+    /** @return array<string, array<int, int|bool|string>> */
     public static function draftVersions(): array
     {
         return ['simultaneous first saves' => [0, false], 'simultaneous existing draft updates' => [1, false],
             'simultaneous first photo saves' => [0, true], 'simultaneous photo replacements' => [1, true],
-            'simultaneous first publications' => [1, false, true], 'simultaneous republications' => [2, false, true]];
+            'simultaneous first publications' => [1, false, true], 'simultaneous republications' => [2, false, true],
+            'simultaneous link generation' => [0, false, false, 'generate'], 'simultaneous link regeneration' => [1, false, false, 'regenerate']];
     }
 
     #[DataProvider('draftVersions')]
-    public function test_same_version_concurrent_requests_allow_exactly_one_complete_save(int $expectedVersion, bool $withPhoto, bool $publishing = false): void
+    public function test_same_version_concurrent_requests_allow_exactly_one_complete_save(int $expectedVersion, bool $withPhoto, bool $publishing = false, string|false $links = false): void
     {
         $owner = User::factory()->create();
         $account = null;
@@ -99,6 +102,8 @@ class WeddingDraftConcurrencyTest extends TestCase
         $photoRoot = null;
         $photoBytes = [];
         $oldPhoto = null;
+        $group = null;
+        $oldHash = null;
 
         try {
             $account = Account::create(['name' => 'Disposable CMS concurrency test']);
@@ -122,7 +127,7 @@ class WeddingDraftConcurrencyTest extends TestCase
                 $photoBytes = [$fixture(1), $fixture(2)];
             }
 
-            if ($expectedVersion === 1 || $publishing) {
+            if (($expectedVersion === 1 && ! $links) || $publishing) {
                 $draft = WebsiteDraft::factory()->for($wedding)->create();
                 if ($withPhoto) {
                     $oldPhoto = 'accounts/'.$account->id.'/weddings/'.$wedding->id.'/hero/'.Str::uuid().'.webp';
@@ -132,6 +137,16 @@ class WeddingDraftConcurrencyTest extends TestCase
             }
 
             $publicationPayload = null;
+            if ($links) {
+                if (! DB::connection()->getSchemaBuilder()->hasColumn('invitation_groups', 'invitation_link_version')) {
+                    $this->markTestSkipped('The disposable database needs the additive guest and invitation-link migrations.');
+                }
+                $group = InvitationGroup::factory()->for($wedding)->withGuests()->create();
+                if ($links === 'regenerate') {
+                    app(InvitationLink::class)->execute($wedding, $group, 'generate', 0);
+                    $oldHash = $group->fresh()->invitation_token_hash;
+                }
+            }
             if ($publishing) {
                 $publication = app(WeddingPublication::class);
                 if ($expectedVersion === 2) {
@@ -150,14 +165,15 @@ class WeddingDraftConcurrencyTest extends TestCase
             ];
 
             $blocker->beginTransaction();
-            $blocker->table('weddings')->where('id', $wedding->id)->lockForUpdate()->first();
+            $blocker->table($links ? 'invitation_groups' : 'weddings')->where('id', $links ? $group->id : $wedding->id)->lockForUpdate()->first();
 
             foreach ($contents as $index => $content) {
                 $process = new Process([PHP_BINARY, base_path('tests/Fixtures/save-wedding-draft.php')], base_path(), $this->workerEnvironment(), json_encode([
                     'owner_id' => $owner->id, 'account_id' => $account->id, 'wedding_id' => $wedding->id,
                     'content' => $content, 'draft_version' => $expectedVersion,
                     'photo_root' => $photoRoot, 'photo' => $withPhoto ? base64_encode($photoBytes[$index]) : null,
-                    'operation' => $publishing ? 'publish' : 'draft', 'publication' => $publicationPayload,
+                    'operation' => $links ? 'link' : ($publishing ? 'publish' : 'draft'), 'publication' => $publicationPayload,
+                    'group_id' => $group?->id, 'link_action' => $links, 'link_version' => $expectedVersion,
                 ], JSON_THROW_ON_ERROR));
                 $process->setTimeout(30);
                 $processes[] = $process;
@@ -194,9 +210,21 @@ class WeddingDraftConcurrencyTest extends TestCase
 
             $statuses = array_column($results, 'status');
             sort($statuses);
-            $this->assertSame([302, 422], $statuses);
-            $winner = $results[0]['status'] === 302 ? 0 : 1;
+            $this->assertSame([$links ? 200 : 302, 422], $statuses);
+            $winner = $results[0]['status'] === ($links ? 200 : 302) ? 0 : 1;
             $loser = 1 - $winner;
+            if ($links) {
+                $this->assertSame('This invitation link changed in another window. Reload the guest list before trying again.', $results[$loser]['body']['errors']['invitation_link'][0]);
+                $saved = $group->fresh();
+                $this->assertSame($expectedVersion + 1, $saved->invitation_link_version);
+                $this->assertSame(hash('sha256', $saved->invitation_token), $saved->invitation_token_hash);
+                $this->assertNotSame($oldHash, $saved->invitation_token_hash);
+                $this->assertSame(1, $saved->guests()->count());
+                $this->assertSame(['status' => 'active', 'version' => $expectedVersion + 1], $results[$winner]['body']);
+                $this->assertSame($originalWedding, $wedding->fresh()->getAttributes());
+
+                return;
+            }
             $this->assertSame($publishing ? 'Publication changed in another window. Reload before trying again.' : 'This draft was saved in another window. Copy your changes, then reload before saving again.', $results[$loser]['body']['errors'][$publishing ? 'publication' : 'draft_version'][0]);
 
             $this->assertSame(1, $wedding->websiteDraft()->count());
