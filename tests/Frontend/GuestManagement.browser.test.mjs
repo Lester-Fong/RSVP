@@ -47,7 +47,7 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
         await page.getByLabel('Partner 2 name').fill('Guest QA Jamie');
         await page.getByRole('button', { name: 'Create wedding', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
-        await page.getByRole('link', { name: 'Guest Management', exact: true }).click();
+        await page.getByRole('link', { name: 'Guests', exact: true }).click();
         await page.waitForURL('**/guests');
         await totals(0, 0);
         await page.getByRole('heading', { name: 'Start your guest list', exact: true }).waitFor();
@@ -60,16 +60,16 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
             .evaluate((form) => {
                 form.noValidate = true;
             });
+        await page.getByLabel('Guest name', { exact: true }).fill('John Santos');
+        await page.getByRole('button', { name: 'Add another guest', exact: true }).click();
         await page.getByRole('button', { name: 'Create group', exact: true }).click();
-        await page.getByRole('alert').waitFor();
+        await page.getByRole('dialog').getByRole('alert').filter({ hasText: 'label' }).waitFor();
         assert.ok(await page.getByLabel('Group label', { exact: true }).evaluate((el) => document.activeElement === el));
         await totals(0, 0);
         await page.getByLabel('Group label', { exact: true }).fill('Santos Family');
         await page.getByLabel('Contact email (optional)').fill('family@example.test');
         await page.getByLabel('Contact phone (optional)').fill('+63 917 000 0000');
-        await page.getByLabel('Guest 1 name', { exact: true }).fill('John Santos');
-        await page.getByRole('button', { name: 'Add another guest', exact: true }).click();
-        await page.getByLabel('Guest 2 name', { exact: true }).fill('Anna Santos');
+        await page.getByLabel('Guest name', { exact: true }).fill('Anna Santos');
         await submit('Create group');
         await totals(1, 2);
         await page.reload();
@@ -95,11 +95,14 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
                 await create.click();
                 assert.equal(await page.getByLabel('Group label', { exact: true }).inputValue(), '');
                 assert.equal(await page.getByLabel('Contact email (optional)').inputValue(), '');
-                assert.equal(await page.getByLabel('Guest 1 name', { exact: true }).inputValue(), '');
+                assert.equal(await page.getByLabel('Guest name', { exact: true }).inputValue(), '');
+                assert.equal(await page.getByRole('list', { name: 'Guests to add', exact: true }).count(), 0);
                 const dialog = page.getByRole('dialog');
                 await dialog.waitFor();
+                await page.getByLabel('Guest name', { exact: true }).fill('Modal guest one');
                 await page.getByRole('button', { name: 'Add another guest', exact: true }).click();
-                await page.getByRole('button', { name: 'Add another guest', exact: true }).click();
+                await page.getByLabel('Guest name', { exact: true }).fill('Modal guest two');
+                await page.getByLabel('Guest name', { exact: true }).press('Enter');
                 const box = await dialog.boundingBox();
                 assert.ok(box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 1000);
                 for (let i = 0; i < 14; i++) {
@@ -119,11 +122,11 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
             }
         }
         await page.getByLabel('Search groups or guest names').fill('Anna Santos');
-        await page.getByRole('button', { name: 'Search', exact: true }).click();
-        await page.getByText('1 matching groups. Totals above include your entire wedding.', { exact: true }).waitFor();
+        await page
+            .getByText('1 matching groups. Totals above include your entire wedding. All member names are shown while searching.', { exact: true })
+            .waitFor();
         await totals(1, 3);
         await page.getByLabel('Search groups or guest names').fill('Missing guest');
-        await page.getByRole('button', { name: 'Search', exact: true }).click();
         await page.getByRole('heading', { name: 'No matching invitations', exact: true }).waitFor();
         await totals(1, 3);
         await page.getByRole('button', { name: 'Clear search', exact: true }).click();

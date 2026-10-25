@@ -39,7 +39,8 @@ test('dashboard containment and real multipart photo saves', { skip: !enabled },
             [first, second],
             [second, first],
         ]) {
-            await page.getByRole('link', { name: 'Edit wedding', exact: true }).click();
+            await page.getByRole('button', { name: 'More', exact: true }).click();
+            await page.getByRole('menuitem', { name: 'Edit wedding details', exact: true }).click();
             await page.getByLabel('Partner 1 name').fill(one);
             await page.getByLabel('Partner 2 name').fill(two);
             await page.getByRole('button', { name: 'Save changes', exact: true }).click();
@@ -81,7 +82,7 @@ test('dashboard containment and real multipart photo saves', { skip: !enabled },
             await page.goto(overview);
         }
 
-        await page.getByRole('link', { name: 'Customize invitation', exact: true }).click();
+        await page.getByRole('link', { name: 'Invitation', exact: true }).click();
         await page.waitForURL('**/invitation/edit');
         const editor = page.url();
         const png = await page.evaluate(() => {
