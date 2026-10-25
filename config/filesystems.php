@@ -30,6 +30,14 @@ return [
 
     'disks' => [
 
+        'wedding_media' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/wedding-media'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => true,
+        ],
+
         'wedding_photos' => [
             'driver' => 'local',
             'root' => storage_path('app/private/wedding-photos'),

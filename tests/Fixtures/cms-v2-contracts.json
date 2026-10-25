@@ -1,0 +1,774 @@
+{
+    "base": {
+        "schema_version": 2,
+        "template_key": "floral-trial",
+        "template_version": 1,
+        "content": {
+            "theme": {
+                "palette": "ivory-ink",
+                "font_pair": "editorial-serif"
+            },
+            "experience": {
+                "enabled": true,
+                "intro_style": "botanical-bloom",
+                "intro_version": 1,
+                "intro_settings": {
+                    "opening_text": "A celebration awaits you",
+                    "open_label": "Open invitation",
+                    "font_preset": "script-serif",
+                    "palette_preset": "blush-terracotta",
+                    "variant": {
+                        "artwork_preset": "botanical-default"
+                    }
+                }
+            },
+            "sections": [
+                {
+                    "id": "00000000-0000-4000-8000-000000000001",
+                    "type": "welcome",
+                    "enabled": true,
+                    "data": {
+                        "message": "Welcome, family & friends"
+                    }
+                },
+                {
+                    "id": "00000000-0000-4000-8000-000000000002",
+                    "type": "event_details",
+                    "enabled": true,
+                    "data": {
+                        "events": [
+                            {
+                                "id": "00000000-0000-4000-8000-000000000011",
+                                "kind": "ceremony",
+                                "address": "Intramuros, Manila",
+                                "directions": "Use the main entrance",
+                                "map_url": "https://example.test/maps?venue=ceremony"
+                            },
+                            {
+                                "id": "00000000-0000-4000-8000-000000000012",
+                                "kind": "reception",
+                                "address": "",
+                                "directions": "",
+                                "map_url": null
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "00000000-0000-4000-8000-000000000003",
+                    "type": "closing",
+                    "enabled": false,
+                    "data": {
+                        "message": "Private draft-only closing"
+                    }
+                },
+                {
+                    "id": "00000000-0000-4000-8000-000000000004",
+                    "type": "rsvp_information",
+                    "enabled": true,
+                    "data": {
+                        "message": "Use your personal invitation to respond"
+                    }
+                }
+            ]
+        }
+    },
+    "variants": {
+        "royal-wax-seal": {
+            "seal_preset": "round-monogram",
+            "liner_preset": "plain"
+        },
+        "classic-ivory-letter": {
+            "paper_preset": "ivory",
+            "edge_preset": "straight"
+        },
+        "botanical-bloom": {
+            "artwork_preset": "botanical-default"
+        },
+        "modern-folded-card": {
+            "fold_direction": "horizontal",
+            "edge_preset": "straight"
+        },
+        "romantic-photo-reveal": {
+            "focal_point": "center",
+            "scrim_preset": "readable"
+        }
+    },
+    "accepted": [
+        {
+            "name": "royal-wax-seal",
+            "changes": {
+                "content.experience.intro_style": "royal-wax-seal",
+                "content.experience.intro_settings.variant": {
+                    "seal_preset": "round-monogram",
+                    "liner_preset": "plain"
+                }
+            }
+        },
+        {
+            "name": "classic-ivory-letter",
+            "changes": {
+                "content.experience.intro_style": "classic-ivory-letter",
+                "content.experience.intro_settings.variant": {
+                    "paper_preset": "ivory",
+                    "edge_preset": "straight"
+                }
+            }
+        },
+        {
+            "name": "botanical-bloom",
+            "changes": {
+                "content.experience.intro_style": "botanical-bloom",
+                "content.experience.intro_settings.variant": {
+                    "artwork_preset": "botanical-default"
+                }
+            }
+        },
+        {
+            "name": "modern-folded-card",
+            "changes": {
+                "content.experience.intro_style": "modern-folded-card",
+                "content.experience.intro_settings.variant": {
+                    "fold_direction": "horizontal",
+                    "edge_preset": "straight"
+                }
+            }
+        },
+        {
+            "name": "romantic-photo-reveal",
+            "changes": {
+                "content.experience.intro_style": "romantic-photo-reveal",
+                "content.experience.intro_settings.variant": {
+                    "focal_point": "center",
+                    "scrim_preset": "readable"
+                }
+            }
+        },
+        {
+            "name": "independent website and intro themes",
+            "changes": {
+                "content.theme.palette": "blush-terracotta",
+                "content.theme.font_pair": "script-serif",
+                "content.experience.intro_settings.palette_preset": "ivory-ink",
+                "content.experience.intro_settings.font_preset": "editorial-serif"
+            }
+        },
+        {
+            "name": "empty bounded draft lists",
+            "changes": {
+                "content.sections": []
+            }
+        },
+        {
+            "name": "empty events and prose",
+            "changes": {
+                "content.sections.1.data.events": [],
+                "content.sections.0.data.message": ""
+            }
+        },
+        {
+            "name": "unicode plain text",
+            "changes": {
+                "content.sections.0.data.message": "José & María — Maligayang pagdating"
+            }
+        }
+    ],
+    "rejected": [
+        {
+            "name": "unknown schema",
+            "changes": {
+                "schema_version": 3
+            },
+            "error": "document.schema_version",
+            "type_error": true
+        },
+        {
+            "name": "string schema",
+            "changes": {
+                "schema_version": "2"
+            },
+            "error": "document.schema_version",
+            "type_error": true
+        },
+        {
+            "name": "unknown website",
+            "changes": {
+                "template_key": "unknown"
+            },
+            "error": "template",
+            "type_error": true
+        },
+        {
+            "name": "website version",
+            "changes": {
+                "template_version": 2
+            },
+            "error": "template",
+            "type_error": true
+        },
+        {
+            "name": "string website version",
+            "changes": {
+                "template_version": "1"
+            },
+            "error": "document.template_version",
+            "type_error": true
+        },
+        {
+            "name": "legacy website incompatible with v2",
+            "changes": {
+                "template_key": "modern-classic"
+            },
+            "error": "template",
+            "type_error": true
+        },
+        {
+            "name": "unknown intro",
+            "changes": {
+                "content.experience.intro_style": "unknown"
+            },
+            "error": "intro",
+            "type_error": true
+        },
+        {
+            "name": "intro version",
+            "changes": {
+                "content.experience.intro_version": 2
+            },
+            "error": "intro",
+            "type_error": true
+        },
+        {
+            "name": "string intro version",
+            "changes": {
+                "content.experience.intro_version": "1"
+            },
+            "error": "document.content.experience.intro_version",
+            "type_error": true
+        },
+        {
+            "name": "unknown palette",
+            "changes": {
+                "content.theme.palette": "custom"
+            },
+            "error": "content.theme.palette",
+            "type_error": true
+        },
+        {
+            "name": "arbitrary font",
+            "changes": {
+                "content.theme.font_pair": "https://example.test/font.woff2"
+            },
+            "error": "content.theme.font_pair",
+            "type_error": true
+        },
+        {
+            "name": "unknown intro font",
+            "changes": {
+                "content.experience.intro_settings.font_preset": "arbitrary"
+            },
+            "error": "content.experience.intro_settings.font_preset",
+            "type_error": true
+        },
+        {
+            "name": "unknown intro palette",
+            "changes": {
+                "content.experience.intro_settings.palette_preset": "custom"
+            },
+            "error": "content.experience.intro_settings.palette_preset",
+            "type_error": true
+        },
+        {
+            "name": "guest root",
+            "changes": {
+                "guest_id": 12
+            },
+            "error": "document",
+            "type_error": true
+        },
+        {
+            "name": "storage path",
+            "changes": {
+                "hero_photo_path": "accounts/1/private.webp"
+            },
+            "error": "document",
+            "type_error": true
+        },
+        {
+            "name": "raw CSS",
+            "changes": {
+                "content.theme.css": "body { display: none }"
+            },
+            "error": "document.content.theme",
+            "type_error": true
+        },
+        {
+            "name": "custom theme token",
+            "changes": {
+                "content.theme.accent": "#abcdef"
+            },
+            "error": "document.content.theme",
+            "type_error": true
+        },
+        {
+            "name": "music future capability",
+            "changes": {
+                "content.experience.music": {
+                    "enabled": true
+                }
+            },
+            "error": "document.content.experience",
+            "type_error": true
+        },
+        {
+            "name": "RSVP permissions",
+            "changes": {
+                "content.experience.permissions": {
+                    "representative": true
+                }
+            },
+            "error": "document.content.experience",
+            "type_error": true
+        },
+        {
+            "name": "guest greeting",
+            "changes": {
+                "content.experience.intro_settings.guest_name": "Another guest"
+            },
+            "error": "document.content.experience.intro_settings",
+            "type_error": true
+        },
+        {
+            "name": "unapproved color overrides",
+            "changes": {
+                "content.experience.intro_settings.theme_overrides": {
+                    "text": "#fff"
+                }
+            },
+            "error": "document.content.experience.intro_settings",
+            "type_error": true
+        },
+        {
+            "name": "raw artwork path",
+            "changes": {
+                "content.experience.intro_settings.variant.path": "/private/art.svg"
+            },
+            "error": "content.experience.intro_settings.variant",
+            "type_error": true
+        },
+        {
+            "name": "wrong variant keys",
+            "changes": {
+                "content.experience.intro_settings.variant": {
+                    "seal_preset": "round-monogram"
+                }
+            },
+            "error": "content.experience.intro_settings.variant",
+            "type_error": true
+        },
+        {
+            "name": "unknown artwork preset",
+            "changes": {
+                "content.experience.intro_settings.variant.artwork_preset": "unlicensed"
+            },
+            "error": "content.experience.intro_settings.variant.artwork_preset",
+            "type_error": true
+        },
+        {
+            "name": "guest section reference",
+            "changes": {
+                "content.sections.0.data.guest_id": 42
+            },
+            "error": "content.sections.0.data",
+            "type_error": true
+        },
+        {
+            "name": "RSVP answer in section",
+            "changes": {
+                "content.sections.3.data.attending": true
+            },
+            "error": "content.sections.3.data",
+            "type_error": true
+        },
+        {
+            "name": "credentials in section",
+            "changes": {
+                "content.sections.0.data.token": "synthetic-token"
+            },
+            "error": "content.sections.0.data",
+            "type_error": true
+        },
+        {
+            "name": "duplicate canonical wedding facts",
+            "changes": {
+                "content.sections.1.data.events.0.wedding_date": "2027-01-01"
+            },
+            "error": "content.sections.1.data.events.0",
+            "type_error": true
+        },
+        {
+            "name": "raw event storage",
+            "changes": {
+                "content.sections.1.data.events.0.disk": "private"
+            },
+            "error": "content.sections.1.data.events.0",
+            "type_error": true
+        },
+        {
+            "name": "future section type",
+            "changes": {
+                "content.sections.0.type": "guestbook"
+            },
+            "error": "document.content.sections.0.type",
+            "type_error": true
+        },
+        {
+            "name": "string enabled flag",
+            "changes": {
+                "content.sections.0.enabled": "true"
+            },
+            "error": "document.content.sections.0.enabled",
+            "type_error": true
+        },
+        {
+            "name": "invalid section id",
+            "changes": {
+                "content.sections.0.id": "not-a-uuid"
+            },
+            "error": "document.content.sections.0.id",
+            "type_error": false
+        },
+        {
+            "name": "duplicate section ids",
+            "changes": {
+                "content.sections.1.id": "00000000-0000-4000-8000-000000000001"
+            },
+            "error": "document.content.sections.0.id",
+            "type_error": false
+        },
+        {
+            "name": "duplicate section types",
+            "changes": {
+                "content.sections.2.type": "welcome"
+            },
+            "error": "document.content.sections.0.type",
+            "type_error": false
+        },
+        {
+            "name": "duplicate event kinds",
+            "changes": {
+                "content.sections.1.data.events.1.kind": "ceremony"
+            },
+            "error": "content.sections.1.data.events.0.kind",
+            "type_error": false
+        },
+        {
+            "name": "duplicate event ids",
+            "changes": {
+                "content.sections.1.data.events.1.id": "00000000-0000-4000-8000-000000000011"
+            },
+            "error": "content.sections.1.data.events.0.id",
+            "type_error": false
+        },
+        {
+            "name": "unknown event kind",
+            "changes": {
+                "content.sections.1.data.events.0.kind": "party"
+            },
+            "error": "content.sections.1.data.events.0.kind",
+            "type_error": true
+        },
+        {
+            "name": "HTML message",
+            "changes": {
+                "content.sections.0.data.message": "<script>alert(1)</script>"
+            },
+            "error": "content.sections.0.data.message",
+            "type_error": false
+        },
+        {
+            "name": "oversize prose",
+            "changes": {
+                "content.sections.0.data.message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            },
+            "error": "content.sections.0.data.message",
+            "type_error": false
+        },
+        {
+            "name": "oversize intro label",
+            "changes": {
+                "content.experience.intro_settings.open_label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            },
+            "error": "content.experience.intro_settings.open_label",
+            "type_error": false
+        },
+        {
+            "name": "oversize opening text",
+            "changes": {
+                "content.experience.intro_settings.opening_text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            },
+            "error": "content.experience.intro_settings.opening_text",
+            "type_error": false
+        },
+        {
+            "name": "empty open label",
+            "changes": {
+                "content.experience.intro_settings.open_label": ""
+            },
+            "error": "content.experience.intro_settings.open_label",
+            "type_error": false
+        },
+        {
+            "name": "javascript link",
+            "changes": {
+                "content.sections.1.data.events.0.map_url": "javascript:alert(1)"
+            },
+            "error": "content.sections.1.data.events.0.map_url",
+            "type_error": false
+        },
+        {
+            "name": "insecure link",
+            "changes": {
+                "content.sections.1.data.events.0.map_url": "http://example.test/maps"
+            },
+            "error": "content.sections.1.data.events.0.map_url",
+            "type_error": false
+        },
+        {
+            "name": "credential link",
+            "changes": {
+                "content.sections.1.data.events.0.map_url": "https://user:secret@example.test/maps"
+            },
+            "error": "content.sections.1.data.events.0.map_url",
+            "type_error": false
+        },
+        {
+            "name": "unsafe link",
+            "changes": {
+                "content.sections.1.data.events.0.map_url": "https://example.test/<script>"
+            },
+            "error": "content.sections.1.data.events.0.map_url",
+            "type_error": false
+        },
+        {
+            "name": "protocol-relative link",
+            "changes": {
+                "content.sections.1.data.events.0.map_url": "//example.test/maps"
+            },
+            "error": "content.sections.1.data.events.0.map_url",
+            "type_error": false
+        },
+        {
+            "name": "extra section",
+            "changes": {
+                "content.sections": [
+                    {
+                        "id": "00000000-0000-4000-8000-000000000001",
+                        "type": "welcome",
+                        "enabled": true,
+                        "data": {
+                            "message": "Welcome, family & friends"
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "type": "event_details",
+                        "enabled": true,
+                        "data": {
+                            "events": [
+                                {
+                                    "id": "00000000-0000-4000-8000-000000000011",
+                                    "kind": "ceremony",
+                                    "address": "Intramuros, Manila",
+                                    "directions": "Use the main entrance",
+                                    "map_url": "https://example.test/maps?venue=ceremony"
+                                },
+                                {
+                                    "id": "00000000-0000-4000-8000-000000000012",
+                                    "kind": "reception",
+                                    "address": "",
+                                    "directions": "",
+                                    "map_url": null
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000003",
+                        "type": "closing",
+                        "enabled": false,
+                        "data": {
+                            "message": "Private draft-only closing"
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000004",
+                        "type": "rsvp_information",
+                        "enabled": true,
+                        "data": {
+                            "message": "Use your personal invitation to respond"
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000005",
+                        "type": "welcome",
+                        "enabled": true,
+                        "data": {
+                            "message": "Welcome, family & friends"
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000001",
+                        "type": "welcome",
+                        "enabled": true,
+                        "data": {
+                            "message": "Welcome, family & friends"
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000001",
+                        "type": "welcome",
+                        "enabled": true,
+                        "data": {
+                            "message": "Welcome, family & friends"
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000001",
+                        "type": "welcome",
+                        "enabled": true,
+                        "data": {
+                            "message": "Welcome, family & friends"
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000006",
+                        "type": "welcome",
+                        "enabled": true,
+                        "data": {
+                            "message": "A ninth section"
+                        }
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000007",
+                        "type": "welcome",
+                        "enabled": true,
+                        "data": {
+                            "message": "A tenth section"
+                        }
+                    }
+                ]
+            },
+            "error": "document.content.sections",
+            "type_error": false
+        },
+        {
+            "name": "oversize event list",
+            "changes": {
+                "content.sections.1.data.events": [
+                    {
+                        "id": "00000000-0000-4000-8000-000000000011",
+                        "kind": "ceremony",
+                        "address": "Intramuros, Manila",
+                        "directions": "Use the main entrance",
+                        "map_url": "https://example.test/maps?venue=ceremony"
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000012",
+                        "kind": "reception",
+                        "address": "",
+                        "directions": "",
+                        "map_url": null
+                    },
+                    {
+                        "id": "00000000-0000-4000-8000-000000000011",
+                        "kind": "ceremony",
+                        "address": "Intramuros, Manila",
+                        "directions": "Use the main entrance",
+                        "map_url": "https://example.test/maps?venue=ceremony"
+                    }
+                ]
+            },
+            "error": "content.sections.1.data.events",
+            "type_error": false
+        },
+        {
+            "name": "associative section list",
+            "changes": {
+                "content.sections": {
+                    "named": {
+                        "id": "00000000-0000-4000-8000-000000000001",
+                        "type": "welcome",
+                        "enabled": true,
+                        "data": {
+                            "message": "Welcome, family & friends"
+                        }
+                    }
+                }
+            },
+            "error": "document.content.sections",
+            "type_error": true
+        }
+    ],
+    "public_content": {
+        "theme": {
+            "palette": "ivory-ink",
+            "font_pair": "editorial-serif"
+        },
+        "experience": {
+            "enabled": true,
+            "intro_style": "botanical-bloom",
+            "intro_version": 1,
+            "intro_settings": {
+                "opening_text": "A celebration awaits you",
+                "open_label": "Open invitation",
+                "font_preset": "script-serif",
+                "palette_preset": "blush-terracotta",
+                "variant": {
+                    "artwork_preset": "botanical-default"
+                }
+            }
+        },
+        "sections": [
+            {
+                "id": "00000000-0000-4000-8000-000000000001",
+                "type": "welcome",
+                "enabled": true,
+                "data": {
+                    "message": "Welcome, family & friends"
+                }
+            },
+            {
+                "id": "00000000-0000-4000-8000-000000000002",
+                "type": "event_details",
+                "enabled": true,
+                "data": {
+                    "events": [
+                        {
+                            "id": "00000000-0000-4000-8000-000000000011",
+                            "kind": "ceremony",
+                            "address": "Intramuros, Manila",
+                            "directions": "Use the main entrance",
+                            "map_url": "https://example.test/maps?venue=ceremony"
+                        },
+                        {
+                            "id": "00000000-0000-4000-8000-000000000012",
+                            "kind": "reception",
+                            "address": "",
+                            "directions": "",
+                            "map_url": null
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "00000000-0000-4000-8000-000000000004",
+                "type": "rsvp_information",
+                "enabled": true,
+                "data": {
+                    "message": "Use your personal invitation to respond"
+                }
+            }
+        ]
+    }
+}
