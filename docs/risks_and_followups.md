@@ -1,6 +1,8 @@
 # Risks and follow-ups
 
-Reviewed: 2026-10-18. This is the issue register; architecture and decisions remain the sources for implemented contracts and approved product behavior. Review relevant entries during each authorized implementation/fix and update evidence, status and next action. No unattended maintenance is configured.
+Reviewed: 2026-10-25 (ALB-00 documentation only). This is the issue register; architecture and decisions remain the sources for implemented contracts and approved product behavior. Review relevant entries during each authorized implementation/fix and update evidence, status and next action. No unattended maintenance is configured.
+
+The [QA verification register](qa/verification_register.md) owns executable checks, missing coverage, prerequisites, gate timing and last execution evidence. It preserves historical MySQL execution, including DEL-04's 45 enumerated cases, separately from Planned races and new ALB obligations. Maintain findings here and checks there; ALB-00 ran no application or engine tests and closes no existing security gate.
 
 Priorities: **P0** blocks current milestone acceptance; **P1** needs resolution or an explicit deployment decision before real distribution/customer use; **P2** is scoped reliability, usability or maintenance work; **P3** is future product work. Accepted MVP constraints are not bugs or approval to build their proposed alternatives. Unverified risks are not confirmed failures. Automated success does not imply owner acceptance.
 
@@ -9,40 +11,44 @@ Priorities: **P0** blocks current milestone acceptance; **P1** needs resolution 
 - Category: Confirmed bug / test isolation.
 - Description: During investigation on 2026-10-16, actual local HTTP returned CSRF 200 followed by RSVP 429, limit 20, remaining 0 and Retry-After 5461 seconds. All links shared the IP-only submission counter. An earlier test run inherited file caching and time-travel tests left future-dated counters in development storage. CSRF setup had a different bucket; it was not consuming the submission counter. No frontend automatic retry was found.
 - Impact: A normal first response could be blocked by another group's traffic or leftover test state; the fixed “one minute” message concealed the actual wait.
-- Priority: P0.
-- Status: Fix verified automatically: 40 focused Laravel tests, 237 full-suite tests and all ten frontend tests pass, including persistent-cache HTTP/browser coverage. Owner retest/5A acceptance pending. Not marked resolved.
-- Proposed action: Keep the 20/minute restrictive allowance per hashed invitation credential and an independent 120/minute IP abuse guard. Keep CSRF setup separate at 60/minute/IP. PHPUnit overrides both environment/server cache adapters to array. Only the diagnosed future-dated localhost RSVP/view counters and timers were removed (four entries), not the application cache. Return actual Retry-After in JSON and feedback, including setup failures. Retain the verified persistent-cache regression and complete owner retest.
-- Target milestone: 5A acceptance blocker. Evidence: `GuestRsvpTest`, `GuestRsvp.browser.test.mjs`, handoff verification.
+- Priority: P0 at discovery; resolved acceptance blocker.
+- Status: Resolved — automated verification plus explicit owner 5A manual acceptance on 2026-10-19. The owner confirms persistence, partial submissions, updates, stale handling, revocation and publication protections; no new test-count total is inferred.
+- Proposed action: Retain the verified per-invitation limiter, separate CSRF allowance, actual Retry-After feedback and persistent-cache regression. PHPUnit forces isolated array cache. The owner retest is complete; no additional cache reset is required.
+- Target milestone: 5A acceptance blocker closed with historical owner evidence. Active personal limiter/CSRF/Retry-After regression coverage is now in PersonalRsvpHttpTest and PersonalRsvpIntegration.browser.test.mjs; old group-authority tests were replaced after D-022.
 
-## RF-002 — Eight skipped MySQL concurrency cases
+## RF-002 — Original eight MySQL concurrency cases verified
+
+DEL-03b D03B (2026-10-22): all original cases rerun as part of 31 real InnoDB passes/661 assertions, zero skips. New isolated local strict REPEATABLE-READ target was removed afterward. Historical 2026-10-20 evidence below is preserved; new publication schedules are QA-MY-25–31.
 
 - Category: Unverified technical behavior.
-- Description: Four draft/photo, two publication and two invitation-link generation/rotation cases remain opt-in and skipped. SQLite success and inspected MySQL schema do not prove InnoDB concurrency.
+- Description: Four draft/photo, two publication and two personal-link generation/rotation cases were previously skipped. All eight now pass on isolated MySQL 26.7.0/InnoDB. The last two use the current individual credential HTTP adapters; group-wide authority is not exercised or restored.
 - Impact: Intended lock/version guarantees have not been empirically verified on the production database engine.
 - Priority: P1.
-- Status: Unverified; eight tests skipped, no pass claimed.
-- Proposed action: Run the existing cases on an approved disposable `CMS_MYSQL_TEST_DATABASE` with current migrations and INNODB_TRX privileges; verify independent workers actually wait on the blocker lock. Never reset development MySQL.
-- Target milestone: Before production concurrency sign-off. See `WeddingDraftConcurrencyTest` and README.
+- Status: Closed for these eight scenarios on 2026-10-20: independent processes, distinct connection IDs and actual two-worker LOCK WAIT barriers verified. See the per-case inventory below. Production configuration/load and additional races remain separate findings.
+- Proposed action: Retain the opt-in cases and rerun against the selected release MySQL version/configuration. No further execution is pending for these original eight cases in this audit.
+- Target milestone: Original eight-case execution complete; M8 still verifies deployment-specific behavior and remaining RF-003 scenarios.
 
 ## RF-003 — Additional guest/RSVP races
 
+DEL-03b D03B (2026-10-22): historical personal lifecycle/RSVP schedules rerun successfully in the 31-case isolated engine bundle; seven new CMS schedules verify selected publication/credential/media/facts overlaps. This does not cover last-person/capacity/parent-deletion or upload/cleanup/crash schedules; remaining composite QA-RACE obligations stay Planned.
+
 - Category: Unverified technical behavior.
-- Description: Guest capacity/final-member changes, deletion versus link issuance, and RSVP writes versus other submissions, rotation, revocation, unpublication or member removal lack actual isolated MySQL race verification.
+- Description: Original 19 cases plus four added cases now verify current draft/photo/publication/personal issuance/rotation, independent/same-guest/representative saves, designation/reassignment/removal, credential revocation, guest rename/deletion, and publication changes versus in-flight responses. Guest capacity/final-member and broader group/parent/membership/withdrawal/seating combinations still lack dedicated real-engine coverage.
 - Impact: Lock-order reasoning, stale-update tests and simultaneous single-process PHP/SQLite requests cannot exclude engine-specific races/deadlocks.
 - Priority: P1.
-- Status: Unverified; additional scenarios are not included in the eight existing cases.
-- Proposed action: Add/run focused independent-worker MySQL cases using barriers and verify all-or-nothing state, retention and token/publication revalidation.
-- Target milestone: 5A security/reliability follow-up before production use; revisit before future lifecycle features.
+- Status: Partially verified on 2026-10-20: all 23 implemented engine cases pass; no surfaced deadlock errors, partial writes or stale authorization in those tested schedules. Internal retried deadlock events were not separately attributed on the shared server. Remaining combinations/load/production settings are unverified; this is not a universal race-safety claim.
+- Proposed action: Keep current barrier tests; add focused capacity/final-member and group/parent cases, then future 5D/M6 races as those rules are implemented. Test release-version/configuration behavior before real-customer use.
+- Target milestone: 5C implemented engine cases verified; additional lifecycle and future withdrawal/seating races remain M8/5D/M6 work.
 
 ## RF-004 — Recorded answers cannot return to Pending
 
 - Category: Accepted MVP limitation / product decision.
-- Description: Pending means no response row. A recorded answer can change between attending and declined, but cannot be cleared back to pending in 5A (D-016).
-- Impact: A link holder cannot withdraw an answer without choosing the other attendance state.
+- Description: Pending means no response row. A recorded answer can change between attending and declined, but cannot be cleared back to pending (D-016). The 5B owner dashboard is deliberately read-only: no owner correction, reset or bulk override.
+- Impact: A link holder cannot withdraw an answer without choosing the other attendance state; owners cannot correct responses from Attendance.
 - Priority: P2.
 - Status: Confirmed current behavior; future clearing policy not approved.
-- Proposed action: Decide whether clearing means withdrawal, deletion or another retained state, including timestamps/versioning, before scoping controls.
-- Target milestone: Consider during 5B planning; no implementation authorized by this entry.
+- Proposed action: Separately scope owner corrections/reset and its authorization, timestamps, retention and versioning. Keep answer clearing distinct from D-021/5D invitation withdrawal, which preserves the saved response; 5D does not authorize reset-to-Pending.
+- Target milestone: After 5B; no implementation authorized by this entry.
 
 ## RF-005 — Saving requires JavaScript
 
@@ -54,34 +60,38 @@ Priorities: **P0** blocks current milestone acceptance; **P1** needs resolution 
 - Proposed action: Assess progressive enhancement if required, preserving bearer privacy, CSRF and stale-save protection; do not add an SSR server merely for this.
 - Target milestone: Future accessibility scope; not part of 5A acceptance changes.
 
-## RF-006 — Bearer links authorize the entire group
+## RF-006 - Personal links remain bearer credentials
 
-- Category: Accepted security tradeoff.
-- Description: Anyone possessing an active invitation link may view its group's names/answers and respond for every named member. This is intentional under D-015/D-016; it is not individual identity verification.
-- Impact: Recipients, forwarded links and preview services holding the URL can access permitted group data. Noindex and generic metadata are not access control.
-- Priority: P1.
-- Status: Accepted MVP authority model; owner/guest warnings and revocation/rotation exist.
-- Proposed action: Retain clear sharing guidance and tested revocation/rotation; reconsider only through an approved identity/access change. Do not infer delivery from copying.
-- Target milestone: Before real distribution and ongoing onboarding.
+DEL-04 / D-045, 2026-10-22: DEL-04 preserves bearer semantics and the existing private/no-store/token redaction boundary; only synthetic local links were used. Already delivered content cannot be remotely erased. External distribution/transport controls remain open. [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
+
+- Category: Implemented authority replacement / accepted residual MVP security tradeoff.
+- Description: D-022 retires group-wide HTTP authority. Active links authorize only their independent holder and explicit same-group dependents. Possession does not establish real-world identity; anyone holding the URL can perform those permitted actions. OTP remains outside MVP.
+- Impact: Forwarded links or preview services can access the permitted personal/dependent information. Noindex and generic metadata are not access control.
+- Priority: P1 before real distribution; personal replacement is owner-accepted (D-023), residual bearer risk remains.
+- Status: Individual replacement and old-route denial automatically verified, active in development and manually accepted under D-023; historical 4B/5A acceptance remains preserved. Residual bearer-distribution/privacy risk is not resolved by narrower permissions.
+- Proposed action: Preserve accepted personal scope; retain private-sharing guidance, no unnecessary recovery/logging and immediate revocation. Copying is not delivery. RF-021 tracks production rollback, RF-008 external logs and RF-024 withdrawal.
+- Target milestone: 5C accepted; M7 onboarding/M8 release safeguards/M9 pilot.
 
 ## RF-007 — Group membership is live
 
 - Category: Accepted MVP behavior / lifecycle decision.
-- Description: Saved group labels/names, additions and permitted removals change what existing active-link holders see. Wedding content remains a published snapshot; the roster is not snapshotted.
+- Description: Saved names of the respondent and explicitly authorized dependents are live, not snapshotted. Owner delegation changes immediately change the permitted roster. Other independent household members remain private. Wedding content uses the immutable published snapshot.
 - Impact: Sharing a link does not freeze its guest list. Renaming retains responses; responded people and issued groups are retained.
 - Priority: P2.
-- Status: Confirmed D-015/D-016 behavior; explained in the link dialog.
-- Proposed action: Keep owner guidance; reconsider historical identity/archive semantics before delivery/history features.
-- Target milestone: Current guidance; future lifecycle scope.
+- Status: Approved C02 behavior is active after D-022; scope/privacy and permission changes are automatically verified and owner-accepted (D-023). Live-name/bearer-sharing implications remain.
+- Proposed action: Keep live-name guidance and review minimum personal/dependent roster visibility (RF-022). No automatic household authority. Reconsider historical identity/archive semantics before delivery/history features.
+- Target milestone: 5C privacy/UX review; future lifecycle scope.
 
 ## RF-008 — Raw invitation credentials in external logs
 
+DEL-04 / D-045, 2026-10-22: DEL-04 application HTML/JSON/metadata/privacy and core redaction tests pass. External server/proxy/APM/analytics/body-capture inspection remains unverified (QA-OPS-02); local PHP development-server logs can contain synthetic bearer paths. Do not treat local success as deployed logging remediation. [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
+
 - Category: Confirmed local exposure / unverified deployment security.
 - Description: Standard Artisan/PHP development-server output prints bearer request paths. Application log redaction cannot redact PHP/web-server/proxy/access/APM/analytics streams or independently captured request/response bodies.
-- Impact: Anyone obtaining a raw active URL can exercise its group authority; captured recovery bodies also contain credentials.
+- Impact: Anyone obtaining a raw active URL can exercise personal self/explicit-dependent authority; legacy group-wide authority is retired. Captured recovery bodies also contain credentials.
 - Priority: P1.
-- Status: Local exposure confirmed; deployment protections remain unverified.
-- Proposed action: Require HTTPS and verify exclusion/redaction of `/invite/*`, recovery/submission bodies and URL analytics in every deployed logging layer. Do not modify vendor internals or invent server infrastructure just to conceal local output.
+- Status: Local exposure confirmed; 5C.3a extends application redaction to personal paths and tests real nested logger/exception contexts. Deployment protections remain unverified; application tests do not certify upstream logs.
+- Proposed action: Require HTTPS and verify exclusion/redaction of `/invite/*`, any approved 5C personal route namespace, recovery/submission bodies and URL analytics in every deployed logging layer. Preserve tested application redaction for both namespaces; separately verify every upstream logging/body-capture layer. Do not modify vendor internals or invent server infrastructure just to conceal local output.
 - Target milestone: Before distributing real links. Application redaction tests are not external logging evidence.
 
 ## RF-009 — Tracked credential example
@@ -101,7 +111,7 @@ Priorities: **P0** blocks current milestone acceptance; **P1** needs resolution 
 - Impact: Storage and personal-media retention can grow; indiscriminate cleanup could break historical/published snapshots.
 - Priority: P2.
 - Status: Policy unresolved; existing reference-preserving behavior is implemented.
-- Proposed action: Define retention/history rules and clean only safely unreferenced media after approval; preserve active published media when drafts change.
+- Proposed action: Define retention/history quotas and clean only safely unreferenced media after approval; preserve active and retained revision media when drafts change. CMS v2 proposes immutable multi-asset references/pinning and current-visible-only public delivery; it does not resolve retention policy or implement cleanup changes.
 - Target milestone: Prelaunch retention review / separately scoped revision history (P-003).
 
 ## RF-011 — Guest/response/wedding data lifecycle
@@ -111,10 +121,14 @@ Priorities: **P0** blocks current milestone acceptance; **P1** needs resolution 
 - Impact: Destructive lifecycle operations could lose customer records or conflict with retained identity/history if added without explicit rules.
 - Priority: P1.
 - Status: Current guards verified; future policy unresolved.
-- Proposed action: Define retention/export/deletion/archive rules before implementing those operations. Keep existing response FKs and authorized pending-member deletion rules intact.
+- Proposed action: Amended C04 approves preserving issued/delegated/responded guest records and separately requires 5D withdrawal (RF-024). 5C restrictive FKs and friendly guest/parent guards are active and owner-accepted; normal-app withdrawal remains unavailable despite the default-off internal 5D.1b service. [5D W05](tasks/milestone5d_invitation_withdrawal.md), now approved by D-036, requires retaining withdrawn people and evaluating deletion after reinstatement without claiming a permanent withdrawal audit. Ordinary active never-issued/never-delegated pending removal remains subject to nonempty groups. Define broader retention/export/archive/parent deletion separately.
 - Target milestone: Before production personal-data lifecycle handling and future delivery/RSVP history.
 
 ## RF-012 — Recoverable token encryption and key custody
+
+DEV-ENV / 2026-10-25: the retained legacy synthetic preview manifest omitted its original generated encryption key. Port-8000 owner login/public rendering are verified, but encrypted credential recovery is not; do not silently revoke/rotate existing links. Newly created automated preview fixtures now persist their private runtime key/cookie for later resume. No current credential or key was rewritten. Production key custody/restore and QA-OPS-04 remain unverified; local runtime-file persistence is not an ACL/backup guarantee. [DEV-ENV limitations](tasks/dev_env_single_origin.md#reuse-and-security).
+
+DEL-04 / D-045, 2026-10-22: DEL-04 preserves credential encryption/recovery and publication does not rotate/recreate credentials. Coordinated key custody, backup/restore and rotation drills remain open (QA-OPS-04/07). [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
 
 - Category: Accepted security tradeoff / deployment requirement.
 - Description: Recopying links requires encrypted recoverable credentials alongside hashes. Database plus application-key compromise reveals them; losing required keys can prevent recopying while hash-valid links still work.
@@ -126,11 +140,13 @@ Priorities: **P0** blocks current milestone acceptance; **P1** needs resolution 
 
 ## RF-013 — Hosting, image runtime and public previews
 
+ALB-00 follow-up / 2026-10-25 (D-053): Hostinger VPS (KVM 2 candidate), existing Laravel/Vue/Inertia monolith with MySQL/workers, Cloudflare static-asset CDN, private R2 album storage and one branded domain are the owner-preferred evaluation candidate only. Production configuration/capacity/region/cost, CDN tenant/session isolation, private-media revocation, object access, worker/runtime performance and backup restore remain unverified. No SPA/API split or Vercel/Netlify frontend. [Evaluation and cache exclusions](tasks/alb00_wedding_photo_album_plan.md#deployment-candidate--evaluation-only). This preference resolves no existing release gate and authorizes no deployment.
+
 - Category: Unverified deployment behavior / product decision.
 - Description: Local publication and server metadata work, but localhost is not Internet hosting. Production private storage, PHP upload/image extensions/limits, backup restore, public social previews and indexing preference still need deployment verification.
 - Impact: Real recipients or preview services may not reach the site; incorrect runtime/storage setup can break photos or privacy.
 - Priority: P1.
-- Status: Local automated coverage exists; production evidence is pending. Conservative noindex/nofollow/noarchive remains the default.
+- Status: Local automated coverage exists; production evidence is pending. A.2 private disk/root/no-serving configuration and anonymous storage denial are tested in isolated temporary storage. Windows Flysystem visibility reporting did not prove private filesystem ACLs; verify actual deployment ownership/permissions separately. Conservative noindex/nofollow/noarchive remains default.
 - Proposed action: Scope hosting separately, configure receiving PHP for the advertised 5 MiB support, keep media private with authorized delivery, test external previews/restore and confirm indexing policy.
 - Target milestone: Deployment/launch review; no infrastructure approval implied.
 
@@ -156,6 +172,12 @@ Priorities: **P0** blocks current milestone acceptance; **P1** needs resolution 
 
 ## RF-016 — Inherited local environment and isolated testing
 
+CMS-INTEGRATION / 2026-10-25: normal MySQL still contains only the migration ledger; no initialization was run. Real new-user registration/wedding/CMS/publishing/guest flow is verified using a fresh disposable SQLite environment, independently of retained manual data. [Exact owner migration impact, local gate settings and alternative port-8000 startup](tasks/cms_customer_workflow_integration.md#local-walkthrough-and-remaining-owner-action). QA-DEV-02 remains Blocked; this is not evidence of initialized MySQL login or production readiness.
+
+DEV-ENV / 2026-10-25: read-only inspection confirms development MySQL currently contains only an empty migration ledger; the saved manual preview is separate retained SQLite. `dev.cmd` resumes that existing profile on 8000, isolates cached MySQL configuration, uses live Vite internally and fails rather than auto-initializing/falling back. Five configuration tests, 20 Laravel cases/212 assertions and connected read-only owner/public/mobile checks pass; existing SQLite bytes and MySQL schema/data remain unchanged. QA-DEV-02 is blocked on explicit approval for 18 existing migrations/20 application tables; no migration or synthetic import. Windows blocks `.ps1`, so startup uses `.cmd`/Node without changing execution policy. Temporary-file cleanup/key loss remain risks; do not recreate missing data. [Exact commands, restart evidence and boundaries](tasks/dev_env_single_origin.md). QA-DEV-01 is the bounded local pass; this closes no production/release/key gate.
+
+**Superseding correction, later 2026-10-25:** one unisolated test command then applied the 18 pending migrations. Post-incident read-only checks now show the 18-entry ledger, 20 app tables and zero rows in app/cache/job tables. No pre-existing application table/data was available to overwrite. The safeguards below were added after this state change; this correction supersedes the prior statements above that MySQL remained uninitialized.
+
 - Category: Confirmed environment failure / workflow safeguard.
 - Description: Inherited SESSION_PATH previously replaced `/` with a Git filesystem path and broke cookie creation. Inherited file caching also escaped PHPUnit defaults until both cache adapters were forced. SQLite extensions are temporarily loaded for test processes; cached app configuration can bypass intended test settings.
 - Impact: Local startup failures or tests touching development state can recur if the documented isolated configuration is bypassed.
@@ -166,20 +188,305 @@ Priorities: **P0** blocks current milestone acceptance; **P1** needs resolution 
 
 ## RF-017 — Manual acceptance evidence
 
-- Category: Pending verification / documentation debt.
-- Description: 5A owner acceptance is blocked pending the RF-001 retest; earlier 2A/2B explicit sign-off remains tracked. 2C.1, 3A (8/8), 4A and 4B acceptance are preserved.
-- Impact: Automated checks cannot establish owner acceptance or close older review questions.
-- Priority: P0 for 5A; P2 for older sign-off reconciliation.
-- Status: Pending owner confirmation; no acceptance inferred.
-- Proposed action: Run the handoff's concise 5A retest and record only explicit owner results; reconcile earlier milestones separately.
-- Target milestone: 5A acceptance / checkpoint review.
+- Category: Acceptance evidence / reconciled documentation debt.
+- Description: In the roadmap request, the owner explicitly confirms Milestones 1–5B completed/manually accepted and confirms 5B plus portal refinements passed manual acceptance. This reconciles the prior 1/2A/2B/5B sign-off gaps. Preserve 3A's existing 8/8 count without inventing new manual totals.
+- Impact: Feature acceptance is now recorded consistently; it does not close MySQL, security, deployment or future milestone gates.
+- Priority: P2 at discovery; owner-sign-off gap resolved through 5C.
+- Status: Resolved through Milestone 5C: 1–5B/portal acceptance under D-018, then all 5C manual tests and RSVP Access bug-fix retests explicitly confirmed 2026-10-20 (D-023). No new manual total inferred. 5D and Milestones 6–9 are not accepted; automatic/23-case engine evidence is recorded separately.
+- Proposed action: Maintain the canonical roadmap and record later acceptance only from explicit owner confirmation. Keep technical/release evidence separate.
+- Target milestone: Completed acceptance reconciliation through 5C; future gates in mvp_roadmap.md.
 
 ## RF-018 — Deferred product work and open launch decisions
 
 - Category: Future enhancement / product decision.
-- Description: Attendance summaries/management belong to 5B. Additional templates remain deferred under D-010. Delivery, deadlines, plus-one rules, seating, prices/payment workflow and lifecycle policies require separately approved scope; proposals in decisions.md are not approvals.
+- Description: D-051 establishes premium wedding websites/secure personal RSVP plus separate paid Our Wedding Memories planning. Advanced drag-and-drop Seating is outside MVP priorities and indefinitely deferred pending real customer demand; historical S01–S06 remain unapproved. DEL-07a is accepted and DEL-07b refinements await visual acceptance. 5D W01–W06 are approved, with default-off foundations only; full withdrawal acceptance, M7/M8/M9 and P-009 remain independent. General attendance export scope remains open; album contracts are RF-031.
 - Impact: Building these opportunistically would expand the MVP or silently decide product rules.
 - Priority: P3; launch-critical commercial/policy decisions need review before use.
 - Status: Deferred/open; no new feature implemented by this register.
 - Proposed action: Use product_spec.md and the decisions proposals as the backlog source, then scope one milestone at a time after acceptance. Do not duplicate that complete backlog here.
-- Target milestone: 5B next; other targets require owner decisions.
+- Target milestone: Scoped website/ALB approvals and independent required 5D/M7/M8/M9 gates. Advanced Seating only if real demand warrants separate reauthorization; no replacement planner commitment.
+
+## RF-019 — Portal branding and inherited shell polish
+
+- Category: Confirmed UX/branding follow-up.
+- Description: The authenticated shell still contains Laravel Starter Kit branding and generic GitHub/Documentation links. Existing Instrument Sans/system fallbacks are retained rather than introducing font dependencies. Wedding-scoped navigation and the requested overview/search/group-entry refinements are implemented; public Modern Classic styling is unchanged.
+- Impact: The workspace is functional but inherited shell copy and external links do not yet communicate a finished customer product.
+- Priority: P2; review before launch.
+- Status: Confirmed in desktop/mobile visual review; branding decisions and broader shell changes are deferred.
+- Proposed action: Approve product name/logo, support/help destinations and any font changes in a separate branding pass. Preserve keyboard/mobile navigation, current architecture and invitation styling. Do not install fonts or redesign unrelated shell pages opportunistically.
+- Target milestone: M8/pilot-readiness polish under a separately approved branding scope; 5B/refinement manual acceptance is complete.
+
+## RF-020 — Registration, email verification and activation policy
+
+- Category: Confirmed configuration / unresolved launch policy.
+- Description: routes/auth.php exposes registration and verification routes, but app/Models/User.php does not implement MustVerifyEmail. The inspected Laravel middleware enforces verification only for that interface, so a verified route label is not proof of email-ownership enforcement. No order/payment activation control exists in the current implementation.
+- Impact: The desired consultation/paid-access journey lacks an explicit technical activation boundary; identity/contact verification and account-abuse handling are not established for launch. This is a confirmed configuration gap, not evidence of a customer breach or a new change in accepted behavior.
+- Priority: P1 before real-customer pilot/release.
+- Status: Source/framework inspection confirmed during the documentation audit; intended verification/registration/activation rules remain unapproved and unchanged.
+- Proposed action: Approve the minimal registration/email/password-recovery and payment-activation policies, including existing accounts, in M7; implement and verify the approved controls and production mail in M7/M8. Do not silently close registration or disable existing weddings/public links.
+- Target milestone: M7 product/access decisions; M8 security/deployment gate before M9.
+
+## RF-021 — Legacy authority and mixed-version cutover
+
+- Category: Development retirement verified / unresolved production deployment risk.
+- Description: Current code permanently denies old group GET/RSVP POST/owner lifecycle routes, including with legacy configuration. D-022 authorizes a verified reset of disposable local data instead of customer migration/backfill. Deploying/restoring an older binary remains capable of restoring its old authorization model.
+- Impact: A partial rollout could leave wider legacy writes active alongside restricted personal links, violating D-019 and exposing responses to unintended changes.
+- Priority: P1 before real deployment/customer distribution; not a requirement for pre-launch data migration tooling.
+- Status: Development retirement implemented: only personal mode enables RSVP, old routes always 404, no UI group workflow. Actual runtime and isolated HTTP/browser tests verify denial. Local MySQL wedding_rsvp was deliberately reset; no historical customer responses required preservation. Production old-binary/worker/backup restore protections remain unverified, not resolved by the reset.
+- Proposed action: No pre-launch backfill, maintenance simulation or old-data rollback command. In M8 define deployment/all-instance drain, prohibit unsafe old-code restore, protect keys/backups and verify release rollback/restore against the intended personal authorization model before M9.
+- Target milestone: 5C development activation implemented/manually accepted. M8 production deployment/recovery evidence before M9.
+
+## RF-022 — Personal invitation household visibility
+
+DEL-04 / D-045, 2026-10-22: DEL-04 controlled Enchanted now shows only the holder/current authorized dependents, with separate operational payload and generic metadata. Scoped PHP/connected browser cases and14 Enchanted engine schedules pass. Owner acceptance QA-UI-21 and external deployment privacy gates remain open; no production activation. [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
+
+- Category: Personal privacy verified in development / bearer-sharing limitation.
+- Description: Only self/authorized dependent names and answers are presented by active personal links. Unrelated independent names/contacts/IDs remain absent from HTML and JSON. A valid bearer URL sent to a preview service can disclose permitted names even with generic metadata.
+- Impact: Keeping full-group HTML/JSON while merely hiding other response controls exposes more personal information than necessary.
+- Priority: P1 for 5C privacy design.
+- Status: Scoped fallback HTML/JSON/metadata and connected personal HTTP/UI are verified in isolation; D-022 activates the same model in development; D-023 records manual owner acceptance. Preview-service/bearer distribution risks remain; external logging is RF-008.
+- Proposed action: Prefer server-side self/authorized-dependents-only projection in greeting, fallback HTML and JSON, generic OG/canonical public URL, no contacts/IDs. Explain scoped live-name visibility to owners; test crawler/body/metadata surfaces separately.
+- Target milestone: 5C privacy owner-accepted; M7/M9 private-sharing guidance; M8 logging/release safeguards.
+
+## RF-023 — Permission and per-guest version races
+
+DEL-04 / D-045, 2026-10-22: DEL-04 reruns all 31 existing real-engine cases and adds 14 Enchanted schedules:45/953 assertions, independent workers/observed waits. Per-person conflicts/delegation/revoke/rotate/publish boundaries pass. Broader capacity/parent deletion, crash/cleanup and future5D races remain distinct unverified obligations. [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
+
+- Category: Unverified technical behavior / integration risk.
+- Description: Current personal versions and wedding-first integration have now been exercised under real InnoDB contention: first issuance, independent/same-target changes, competing designations, revoke/rotate/reassignment/removal, atomic dependent batches, rename/deletion and publication changes. The original 19 plus four additional cases pass on this local engine.
+- Impact: An incomplete migration could allow stale authority, lost answers, partial dependent saves or deadlocks; simply introducing guest counters is insufficient.
+- Priority: P1; M8 engine integrity/release sign-off, with additional 5D/M6 integration scenarios.
+- Status: Implemented scenarios verified on isolated MySQL 26.7.0, strict SQL mode, REPEATABLE-READ, independent processes and real barriers. Prior 19 are no longer skipped/unverified. Additional lifecycle combinations, stress and release deployment configuration remain open through RF-003/M8. D-023 separately records manual owner acceptance; it does not close these remaining engine scenarios.
+- Proposed action: Retain the expanded opt-in suite; extend it for remaining group/parent operations and separately approved 5D/M6 integration. Do not gate RSVP on seating versions. Recheck against the chosen release MySQL configuration.
+- Target milestone: Current 5C engine scenarios verified; remaining lifecycle/withdrawal/seating and deployment evidence stays in RF-003 and M8.
+
+## RF-024 — Retained guests need invitation withdrawal and active eligibility
+
+- Category: Approved MVP requirement / incomplete lifecycle implementation.
+- Description: Amended C04/D-021 preserve issued/delegated/responded guests and require 5D withdrawal before Seating. D-059 completes the default-off authenticated owner lifecycle, retention states, RSVP access guards and active-only Attendance reads. Owner acceptance and real InnoDB race evidence remain outstanding; production stays disabled.
+- Impact: Without a defined withdrawal workflow owners cannot safely remove an invitation while preserving answers, deny all self/delegated authority or distinguish active attendance/seating eligibility from retained history.
+- Priority: P1; required gate before any M6 development.
+- Status: Open; 5C accepted and W01–W06 approved under D-036. Owner HTTP/Attendance implementation is verified on isolated SQLite and browser fixture; production/default-off activation, explicit owner acceptance and genuine InnoDB schedules remain unverified. Do not infer pilot readiness.
+- Proposed action: Complete the owner manual acceptance checklist and implement/run the approved withdrawal races against an explicitly approved disposable InnoDB target before any production or future Seating activation. Preserve response history, tenant boundaries and old-token revocation. See the [5D readiness handoff](tasks/milestone5d_implementation_readiness.md) for exact evidence and acceptance steps.
+- Target milestone: Remaining 5D implementation/owner acceptance before customer pilot and any resumed M6; CMS planning does not waive this gate. M8 engine/release verification and RF-011 retention questions remain.
+
+## RF-025 — RSVP Access copy and sibling-action failures
+
+- Category: Confirmed UI bugs / resolved owner acceptance blocker.
+- Description: Reproduced before fixing on an isolated HTTP/browser server. A valid canonical recovered URL was rejected when its origin differed from the portal alias; fail('unavailable') cleared it and set the dialog-wide blocked flag after successful credential issuance. Copy also awaited HTTP recovery before invoking the clipboard, losing the direct click context and reporting denial as ordinary status. Backend mutation snapshots/current per-member versions were correct.
+- Impact: No usable copied URL; siblings' mutation controls disabled until manual Refresh access, preventing consecutive owner management.
+- Priority: P0 at discovery; acceptance blocker closed.
+- Status: Closed 2026-10-20: fixed, automated/visual regressions verified, and the owner explicitly confirms clipboard and multi-member state retests passed with all 5C manual acceptance tests (D-023).
+- Evidence: New RsvpAccessRegression.browser.test.mjs reproduced canonical alias rejection and asynchronous copy before the patch; PersonalRsvpHttpTest verifies consecutive mutations using response versions and genuine stale rejection. Final stable browser suite 28 passes/0 failures/0 skips; native clipboard write/read, fallback, sibling/delegation/version states, 404/409/422 and late-result/privacy checks pass. Current Laravel focused 84 passes/596 assertions; full isolated SQLite 309 passes/2,616 assertions/23 opt-in MySQL skips. 1440/1024/390 light/dark and keyboard/overflow checks passed. See handoff for exact commands, unsuccessful sandbox/build-overlap attempts and visual evidence. No development data, token cryptography or server access/version contract changed; prior MySQL audit remains separate.
+- Action: Retain explicit recover-then-copy, success only after clipboard resolution, selectable fallback, full credential-free snapshot synchronization, valid selection and stale-state safeguards. Secret-lifetime checks reject delayed reappearance after clearing. Owner confirms the RSVP Access bug-fix retests passed; retain those sequential-member, delegation, clipboard and privacy regressions for future changes.
+- Target milestone: 5C accepted; unrelated existing engine/release findings remain separate and open.
+
+## RF-026 — CMS v2 schema, publication and media privacy boundaries
+
+DEL-09a / D-058: one opt-in photobooth uses the existing experience branch, strict preset/version validation and immutable visible-media projection. Saving does not enable a live intro; explicit republish does. Old disabled documents/history, tenant checks, generic/personal privacy and production hard denial stay intact. No new media grants, upload pipeline, migration or transaction lock order. [Exact checks and acceptance](tasks/premium_delight_experience.md#del-09a--enchanted-editorial-photobooth-opening). Composite engine/operational release gates remain open; isolated SQLite is not new InnoDB evidence.
+
+CMS-INTEGRATION / D-057, 2026-10-25: real customer Invitation routing now defaults only unconfigured local/testing weddings to the existing Enchanted CMS; reads do not persist defaults, and v1/history are preserved. Focused first-save template races, cross-account denial and immutable saved/live/media visibility are verified; production hard denial and existing publication services are unchanged. [Evidence and QA-CMS-15 owner acceptance](tasks/cms_customer_workflow_integration.md). This bounded integration does not close composite engine, privacy, operational or public-release gates.
+
+DEL-04.2 / D-047, 2026-10-22: DEL-04.1 is owner-accepted (14/14). The Guest Guide adds optional Attire/Gifts/FAQs blocks under the existing strict Enchanted contract; old documents and immutable snapshots remain unchanged absent explicit opt-in. FAQ, swatch and HTTPS bounds, hidden source/public projection, generic/personal RSVP guidance and keyboard/no-JS rendering pass **171 Laravel tests/1,152 assertions, 8 frontend checks and 2 connected Edge cases**. No migration/customer activation or new bird motion; QA-UI-23 visual acceptance remains. [Exact evidence](tasks/del03a_draft_persistence_contract.md#del-042--guest-guide).
+
+DEL-04 / D-046, 2026-10-22: DEL-04 completes the controlled personal Enchanted adapter/privacy/publication guard reconciliation, with 427 SQLite/45 InnoDB/58 frontend cases. Owner explicitly accepts 20/20. Generic display data/snapshots remain guest-free; current-visible media rules remain. Composite upload/ownership/cleanup/crash/parent schedules and deployed ACL/retention/restore/release gates remain open. Production hard denial unchanged. [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
+
+DEL-03b.1 / D-044: saved-state editor publishing reuses unchanged publisher/ownership/version/transaction guards; owner JSON summary now returns on successful JSON publish and Save. Empty fresh/public media, dirty/stale prevention and immutable saved/live behavior pass focused tests. Existing default-off production/personal boundaries stay intact. 87 PHP/820 assertions and 51 distinct frontend/browser cases pass; this adds no new InnoDB execution or upload/crash/release claim. [Exact evidence](tasks/del03a_draft_persistence_contract.md#10-del-03b1--focused-preview-publishing-and-loader-polish).
+
+DEL-03b / D-043 (2026-10-22): partial resolution verified by 427 focused SQLite tests/2,470 assertions, 31 real InnoDB cases/661 assertions and 47 distinct frontend/browser/contract cases. Complete validated CMS-v2 snapshots, named timezone/UTC instant/DST rejection, list-order fingerprints, immutable saved-vs-live behavior, safe generic Enchanted/Blade display and current-visible-only owned media are implemented under default-off dual local/testing flags; production hard denied. Hidden/history source retained; no cleanup. Owner accepts DEL-03a.2 (17/17); DEL-03b QA-UI-20 pending. Seven actual new engine schedules and the previously pending CMS constraint pass; temporary database/principal removed. Personal Enchanted remains deliberately unsupported until DEL-04 and guarded on publication/credential issuance/read/write. Remaining composite upload/cleanup/crash/ownership/parent races, production privacy/ACL/log/key/retention/rights/device gates stay open. This risk is partially resolved for isolated generic publication, not closed for customer rollout. [Exact evidence](tasks/del03a_draft_persistence_contract.md#9-del-03b--immutable-publishing-and-public-wedding-website).
+
+DEL-03a.2/D-042: private editor error consolidation/backgrounds, empty gallery/library assertions, mobile disclosure navigation, reduced-motion-aware dissolve and stable section/milestone discovery are verified by 120 isolated PHP passes/508 assertions and 63 distinct affected frontend/browser/contract cases. On/off, every interval and hidden Gallery settings now have actual Save/reload/private-preview evidence. Existing uploads/source/ownership/private-media/publication boundaries are preserved; no cleanup/data migration/public grant was added. DEL-07 FRONT/LEFT/RIGHT and waypoint contract are recorded, but artwork/flight/wing/engine remain absent. Owner visual acceptance, cross-engine/physical-device/assistive/slow-network checks and existing public-media/UTC-instant/race/release gates remain open; no new MySQL evidence. [Exact execution and corrected initial checks](tasks/del03a_draft_persistence_contract.md#8-del-03a2--final-ux-polish-and-hummingbird-preparation).
+
+DEL-03a.1/D-041: optional reusable frame/slideshow settings pass strict PHP/TS, isolated save/load/private preview and browser checks. Raw Save error paths are replaced by friendly linked validation; hidden/old source preferences remain intact. Default-on motion is restricted to multiple visible photos with focus/manual/offscreen/hidden-document/reduced-motion guards and tested unmount interval cleanup. Static original SVG markers do not activate DEL-07 motion. Basic owner persistence tests passed; polish acceptance, physical-device/slow-font tests and all public snapshot/media/engine/release gates remain open. No new SQL/DDL, development database operation, new MySQL result or public activation.
+
+DEL-03a/D-040 (2026-10-22): DP-01–03 approved and implemented behind the default-off local/testing owner boundary. Single-row optimistic draft saving/reload, optional independent photo slots, canonical IANA timezone and saved private preview pass isolated HTTP/browser/full SQLite checks (QA-CMS-12/D03A). V1/template transitions reject without erasing source; complete hidden references are ownership/byte validated. Published snapshots/live websites remain unchanged. Owner acceptance QA-UI-19, DEL-03b public dispatch/current-visible media/escaped fallback, UTC-instant/DST snapshot rules, QA-MY-24 and new draft/media/zone races remain open. Development MySQL was not migrated; no new InnoDB evidence. This partial resolution does not approve production delivery or final rights/template acceptance.
+
+DEL-02b / D-035 adds real owner upload/list/private-image/validation HTTP and a reusable local editor, verified only behind a default-off local/test boundary with disposable SQLite/storage/sessions. Production/invalid configuration denies routes; missing media schema fails closed. Functional CSRF, ownership, reference privacy, retry and local-only behavior pass; no permanent v2 draft or public delivery exists. Hero/story-cover slots remain typed local presentation state, requiring an approved durable shared contract before DEL-03. QA-CMS-11 records this partial integration; QA-CMS-05–09/QA-MY-24 and media races are still gates, not waived by isolated HTTP success.
+
+D-033 / DEL-02a: reusable image bytes/MIME/extension/bounds/orientation/metadata, internal owner-scoped resolution, hidden-reference ownership and injected upload/cleanup failures pass isolated tests (QA-CMS-10). No new HTTP endpoint, draft assignment or public delivery exists; this does not satisfy connected snapshot/current-visible media gates. Full SQLite: 555 passed/24 opt-in MySQL skips. New collision/cleanup/crash races are Planned QA-RACE-09–11, not additional skipped tests. See RF-030 for the non-atomic filesystem boundary.
+
+D-032 / DEL-01: internal Story/Gallery/Entourage, explicit disabled intro, retained source and nested capability projection pass PHP/TS checks and the isolated suite. Read-only inspection found no durable local v2 documents before evolution; no migration/conversion. This resolves the internal contract gap only. Connected snapshots/public delivery, timezone, HTTP owner adapters and media races remain unimplemented/unverified; this P1 finding stays open before customer activation. QA-DEL-02/QA-CMS-10 are current; QA-CMS-05–09/QA-MY-24 and relevant races remain gates.
+
+D-031 planning baseline: A.1 mandated an intro and rejected known sections unsupported by a selected template. Main-CMS-first and preserve-on-switch direction require explicit contract/version evolution, not silently enabling reserved manifests. [Premium Delight](tasks/premium_delight_experience.md) proposes global validation, retained private content/media and a separate visible public projection. No runtime change or verification is claimed; QA-DEL-02 and existing CMS/race gates must pass before affected activation.
+
+CMS-B.2b (D-030): complete trial uses proposed display-only story/gallery/entourage sections and a fixture named timezone. No active CMS validator/schema/customer paths expanded. PHP content bounds, unique IDs, owned visible media, preserved hidden content and canonical timezone/snapshot resolution are planned in QA-CMS-09 and required before activation. Countdown is client-clock presentation, not an RSVP deadline.
+
+- Category: Proposed architecture / unverified integration risk, not a confirmed v1 vulnerability.
+- Description: Future typed sections/templates and multiple media assets expand content projection, validation, preview and cleanup paths. Hidden content or historically pinned assets could become public if delivery checks only ownership/bindings rather than the current visible published projection.
+- Impact: Cross-wedding media exposure, accidental hidden-content disclosure, broken snapshots or a v1/personal RSVP regression.
+- Priority: P1 before enabling any new v2 public delivery.
+- Status: Partially resolved for isolated generic/personal DEL-03b/DEL-04 and Countdown/Guest Guide; open before customer/production activation. Full immutable snapshots/current-visible media/UTC resolution and all 45 enumerated engine cases pass D04. DEL-03a.2, DEL-03b.1, DEL-04, DEL-04.1, DEL-04.2 and DEL-07a are owner-accepted. DEL-07b is implemented and awaits bounded visual acceptance; remaining composite upload/ownership/cleanup/crash/parent races and deployment/privacy/rights gates remain open. Historical skip/absence statements above describe earlier execution only.
+- Proposed action: Preserve verified A.1/A.2/DEL-01/DEL-02a boundaries; approve and test customer dispatch, locked ownership/byte revalidation, safe public/personal DTOs, current-visible-only delivery, authenticated preview HTTP and transactional upload/prune/publish races. A.2 restrictive FKs are not same-wedding enforcement or proof of complete immutable SQL storage. Keep RSVP authority outside CMS; no untested cleanup/deployment claim.
+- Target milestone: Proposed CMS-A/B/C/E implementation and owner acceptance; new engine/deployment evidence in CMS/M8.
+
+## RF-027 — Rich-media runtime, licensing and mobile accessibility
+
+DEL-09a final feedback (2026-10-25): the confirmed Hero focus rectangle and inconsistent strip framing are corrected in presentation only. Eleven browser cases, mixed-orientation full-frame measurements and actual desktop/mobile Open/Skip/printing/settled captures verify the fix; interactive keyboard focus remains visible. [Exact evidence](tasks/premium_delight_experience.md#final-owner-feedback--hero-outline-and-strip-framing-2026-10-25). Final owner acceptance and all broader device/rights/performance obligations remain open; this does not resolve RF-027 as a whole.
+
+DEL-09a / D-058: finalized opening uses finite masked CSS printing, immediate Open/Skip, honest sparse/failure fallbacks, static reduced motion and bounded/no-module direct entry. Existing bird is hidden until entry; same component/geometry resumes afterward. Three already authorized photo renditions are the maximum additional eager picture demand; no external origins, library or artwork asset. Targeted desktop Edge captures do not certify a physical midrange phone, assistive technology, measured budgets or asset redistribution rights. These gates remain open. [Final evidence](tasks/premium_delight_experience.md#del-09a--enchanted-editorial-photobooth-opening).
+
+DEL-05 / D-056, 2026-10-25: Story and finite personal RSVP botanical feedback are implemented; combined owner visual acceptance remains pending. Seven new connected RSVP journeys plus focused existing tests verify privacy, stale/error/retry/no-op handling, reduced motion, no-JS, mobile/keyboard and unobstructed new confirmation/control geometry. Actual inspection moved the confirmation above editable responses to avoid focus-induced overlap with the existing bird path. Bird/loader/waypoint source hashes remain unchanged. No new dependency or engine; broader physical-device, competing effects, rights and measured budgets remain open. [Exact evidence and limitations](tasks/premium_delight_experience.md#del-05--romantic-guest-experience-closeout).
+
+Current 2026-10-25 / D-055: the owner explicitly accepts DEL-07b, including Hero/flower contact and flight scaling. DEL-05a adds finite progressive Story reveals only and awaits visual acceptance. One observer/finite native animations preserve default-visible semantic content and stationary flower geometry; failures, reduced motion, reorder/removal and unmount cancel cleanly. Nine new browser cases, eleven accepted bird/flight regressions and three existing Editorial keyboard/no-JS cases pass; desktop/mobile before/after recordings retain identical row sizes and one bird. Approved bird/engine source hashes are unchanged. Physical-device/assistive, competing effects, rights and measured whole-delight performance remain open; this is not a broad RF-027 closure. [Exact Story evidence](tasks/premium_delight_experience.md#del-05a--interactive-our-story-progressive-reveals). Earlier pending DEL-07b statuses below preserve their execution-date context and are superseded by D-055.
+
+DEL-07b owner-feedback refinement / D-050, 2026-10-24: Owner reported inaccurate nectar contact, low/offscreen first Hero stop and barely visible travel scale. The causes were generic SVG-container centres, segment-derived resting headings and a 0.94× mid-flight shrink. Runtime now uses marked nectar centres plus calibrated bill tips, one upper-right Hero flower with short-screen lift, unit-scale dwell and 1.18×/1.10× desktop/mobile travel. Actual per-section/milestone contact, initial viewport and read-only connected browser tests pass; before/after desktop/mobile WebMs and samples are captured. Owner visual acceptance remains pending; physical devices, assistive technology and measured performance budgets remain open. PHP CLI/Boost checks are currently blocked by Windows App Control, including PHPUnit/Pint/syntax; preserve historical PHP evidence without claiming a new pass. No security policy, dependencies, development DB/schema or production activation change. [Exact refinement evidence](tasks/premium_delight_experience.md#del-07b-owner-feedback-refinement--nectar-contact-hero-and-travel-zoom).
+
+DEL-07b / D-049, 2026-10-23: DEL-07a is owner-accepted. The same shared layered SVG now follows visible section/milestone markers after Hero handoff through bounded viewport-space curves, safe clamps, five-heading updates, flower-facing rest offsets and reduced-motion static fallback. Three new guided-flight cases and four prototype cases pass; connected published smoke confirms one bird and no page errors. Owner visual acceptance of scroll rhythm/clearance remains pending; physical-device/assistive/performance and competing-effect gates remain open. No filters/dependencies/schema/publishing/production activation. [Exact design/evidence](tasks/premium_delight_experience.md#del-07b--guided-hummingbird-flight-integration).
+
+DEL-07a / D-048, 2026-10-22: Guest Guide is owner-accepted. The original shared layered SVG now provides five smooth heading projections, independent wings/body/tail, first-Hero nectar alignment and a contained two-flower prototype. Four motion cases, three connected loader cases, four personal regressions, 13 frontend unit/contracts and 72 Laravel tests/658 assertions pass. Actual WebM/decoded frames and desktop/mobile captures were visually inspected; QA-DEL-06 is subsequently owner-accepted. Three-quarter views are interpolated stylizations rather than separately rendered 3D assets. No filters/dependencies/full scroll following or production activation; physical-device/assistive/performance and existing media/font/music/ACL gates remain open. [Exact design/evidence](tasks/premium_delight_experience.md#del-07a--layered-svg-hummingbird-and-contained-motion-prototype).
+
+DEL-04 / D-045, 2026-10-22: DEL-03b.1 owner acceptance is confirmed14/14. DEL-04 mobile/keyboard/no-JS/reduced-motion and existing loader/Hero readiness regressions pass installed Chromium; physical iOS/Android, assistive technology, measured performance, commercial rights and full DEL-07 prototype remain open. [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
+
+DEL-03b.1 / D-044: original decorative SVG loader, FRONT/LEFT/RIGHT and one Hero handoff are implemented; delayed module/font/image, failure/no-JS, mobile/desktop/reduced-motion and layout reanchoring pass Chromium checks. Null photo slots no longer imply placeholder images. Owner visual review, physical iOS/Android, assistive technology, measured performance and the full DEL-07 prototype remain open; no supplied GIF art copied. Existing font payload/production rights/ACL gates remain. [Exact evidence](tasks/del03a_draft_persistence_contract.md#10-del-03b1--focused-preview-publishing-and-loader-polish).
+
+DEL-03b / D-043: generic published Vue and escaped no-JS narrative/milestones/photos tested in Chromium/Edge at desktop/mobile sizes; actual Fit/Fill/crop/focus parity, menu hash/history/focus/sticky offset/smooth/reduced-motion navigation and accepted gallery regressions pass. DEL-03a.2 has owner 17/17 acceptance; DEL-03b owner review remains separate. Physical Safari/Android, assistive technology, slow-network/final fonts, production ACLs and commercial image rights remain open. All new public/preview media are synthetic uploaded fixtures. Previously approved temporary matching WASM build tooling reused; dependency manifests/security settings unchanged.
+
+DEL-03a.2: Chromium/Edge emulated mobile verifies menu keyboard/focus/Escape/selection in saved and live previews, stable gallery geometry and opacity-only dissolve with reduced-motion suppression. Fresh-gallery and private real-upload regressions pass; synthetic assets remain test-only and supplied family originals remain private. Physical iOS/Android, assistive technology, slow-network/font payload and production rights/ACL acceptance are still unverified. Windows App Control blocked the installed native Rollup parser; owner-approved matching WASM tooling in temporary storage allowed build/renderer verification without project dependency or OS-security changes. Reusing plain native build still depends on resolving that local policy or the documented temporary process option; this is a tooling limitation, not customer media activation.
+
+DEL-02b exercises actual multipart PNG upload/private WebP delivery through an isolated PHP web runtime, reusing DEL-02a's full codec/orientation tests. Desktop/1024/390 light/dark, keyboard and bounded photo presets have browser evidence; photographs are synthetic. This does not verify production PHP/proxy/storage policy, real iOS/Android performance or commercial photo rights. DEL-02e owner editor acceptance is QA-UI-18 confirmed; DEL-03a adds tested shared-slot persistence/private preview but needs its own QA-UI-19 acceptance. Customer public delivery remains unresolved before activation.
+
+The picker pages 12 assets and lazy-loads photographs, but thumbnails currently reuse the processed image, not a separately sized derivative. Worst-case image/font payload, large repeaters and low-bandwidth/physical-device behavior remain unverified. Review these before customer sharing (QA-UI-10); upload rate limits are not a total storage quota. Quota/retention decisions remain RF-010 before normal customer uploads.
+
+DEL-02a uses the existing GD/EXIF runtime with real synthetic JPEG/PNG/WebP fixtures, including all JPEG orientations and PNG/WebP EXIF. This verifies the isolated CLI processor, not deployment PHP upload limits/codecs/storage ACLs or actual new HTTP uploads. Family photographs were neither accessed nor moved; their existing permission/licensing limits remain. D-034 adds future default-on gallery playback, requiring pause/reduced-motion/device/timer coverage (QA-UI-17), not current visual acceptance.
+
+D-031 planning: optional music is approved in direction; catalogue-only MP3 caps/delivery/rights and motion budgets remain proposals. A.2 stays image-only. The private hummingbird GIF is primary anatomical/hover reference, **not rights-cleared production art**. Original/licensed colorful botanical SVG and later animated Enchanted prototype approval must precede shared integration. QA-DEL-04–08/10 cover future delivery, mobile/playback failure, animation cleanup and provenance; no new tests or rights clearance here. Video processing is deferred from this cycle.
+
+CMS-B.2b extends local family-permitted photography to story and all six .jpg gallery files; originals/captures remain ignored/private and unchanged. No stock-distribution claim. Native manual gallery/timer/no-JS/reduced-motion checks pass in Chromium; production font payload/network/device/assistive-technology checks remain open.
+
+CMS-B.2a local-rights evidence: owner confirms the four supplied family prenup photos are used with their sister's permission. Originals and photo-bearing screenshots remain ignored/private; no stock redistribution or photographer copyright-transfer claim. New original botanical SVG and self-hosted OFL Cormorant Garamond/Roboto have [provenance](../resources/assets/enchanted-editorial/ASSET_SOURCES.md). Local trial permission is confirmed; commercial demonstration-image rights, source fidelity, production font delivery and the broader AV/media/runtime requirements below remain open.
+
+- Category: Proposed capability / unresolved runtime, rights and performance requirements.
+- Description: Current GD pipeline supports images only. Safe custom audio/video needs codec/duration/metadata processing and seek delivery; reference artwork/fonts/music are not licensed merely because linked. Browser playback can fail and animation/video must remain optional.
+- Impact: Unsupported uploads, excessive processing/storage/mobile downloads, rights exposure or a blocked/inaccessible invitation.
+- Priority: P1 before accepting or distributing new rich media.
+- Status: Open. No AV runtime or final artwork/photo rights/fidelity accepted. CMS-B.1a uses original provisional SVGs and three matching font families self-hosted with verified OFL licenses; this does not establish rights to Figma artwork or exact source font binaries. Mobile/desktop/motion fixture evidence is recorded in RF-028. Existing upload limits unchanged.
+- Proposed action: Approve an original design and licensed self-hosted assets; begin with images/envelope, choose curated media versus explicitly approved processing dependencies, validate caps/runtime, retain poster/quiet/no-JS/reduced-motion fallbacks and test actual mobile browsers. Track quotas/retention in RF-010 rather than duplicating policy.
+- Target milestone: Proposed CMS-B/D/E; production capability/rights checks M8 and final pilot scope.
+
+## RF-028 — Figma references, five-intro completeness and fidelity evidence
+
+DEL-09a / D-058: owner's finalized Photobooth brief supersedes the first envelope concept. One original existing-system variant is implemented and awaits **QA-DEL-15 owner visual acceptance**. Older reserved style identifiers stay readable for compatibility; they are not newly rendered/activated. This does not finish the future catalogue/Replay QA-DEL-09 or certify other designs/physical devices. No Figma/reference imagery, burgundy styling or literal envelope is copied. [Current storyboard and evidence](tasks/premium_delight_experience.md#del-09a--enchanted-editorial-photobooth-opening).
+
+DEL-07b / D-049: DEL-07a is owner-accepted. Original layered SVG and the actual five-view/short-flight showcase now underpin a one-bird guided section/milestone route with screenshots and connected published smoke. DEL-07b owner visual acceptance remains pending for scroll rhythm, marker/RSVP clearance and responsive size; this does not certify the five introductions, physical-device fidelity or measured performance. [Concrete design/evidence](tasks/premium_delight_experience.md#del-07b--guided-hummingbird-flight-integration).
+
+DEL-07a / D-048: Guest Guide is owner-accepted. Original layered SVG and an actual five-view/short-flight showcase now exist, with screenshots and recorded motion; QA-DEL-06 was subsequently owner-accepted. This is original code-authored vector work rather than an extracted Figma/GIF asset. It does not certify the five introductions or physical-device fidelity. [Concrete design/evidence](tasks/premium_delight_experience.md#del-07a--layered-svg-hummingbird-and-contained-motion-prototype).
+
+D-031: owner approves Enchanted's overall visual direction and Premium Delight direction; full-template, each intro and hummingbird prototype acceptance remain separate. Finish the main CMS before the five introductions; use future INTRO-01–05 labels rather than the historical unimplemented B.2–B.5 intro proposal. No new visual implementation or acceptance is inferred.
+
+CMS-B.2b: owner approves B.2a desktop visual direction only. Complete responsive story/countdown/gallery/entourage/RSVP trial is delivered with real private captures and fourteen passing browser cases; final full-template/mobile acceptance remains pending. New sections are source-inspired adaptations, not measured Figma frames. ED-07–ED-10 record remaining differences.
+
+CMS-B.2a addendum (D-029): the preferred Enchanted Editorial first slice is implemented only in a loopback fixture. Official Figma MCP is rate-limited; verified 1920 × 7936 owner screenshot supplies estimates, not layer geometry. Actual browser comparisons/responsive/alternate-crop/long-name/fallback/keyboard/no-JS evidence and ED-01–ED-06 are in [design findings Section 9](tasks/figma_first_trial_design_spec.md#9-cms-b2a--enchanted-editorial-source-and-browser-comparison). Seven new cases pass. Owner visual approval, exact typography/artwork fidelity and mobile adaptation acceptance remain pending. No extra intro or customer CMS activation. Existing Floral findings below remain evidence, not Enchanted measurements.
+
+- Category: Verified source gaps / pending design approval and implementation evidence.
+- Description: Official MCP reads verified the first trial file's mobile floral cover and wedding-app frames. No desktop wedding composition, five distinct intro designs or envelope motion specification was found. Source attendance/messages/registration cannot become public guest features. Low-contrast token pairs and clipped fixed layers need documented adaptations. Asset/font rights remain unverified (RF-027).
+- Impact: Invented desktop/motion details, coupled intro/template selection, private guest leakage or unsupported claims that five high-fidelity designs exist.
+- Priority: P1 before final design acceptance/customer activation.
+- Status: Open, partially verified. D-028 delivers only isolated CMS-B.1a Floral Trial/Botanical Bloom with actual 414/390/768/1024/1440px browser captures and source comparisons. Official source was re-read; geometry/type/palette and interaction tests pass. Significant original substitute artwork/hero differences, desktop/motion/navigation proposals and owner design acceptance remain pending. Other four intro visuals are unimplemented. Customer v2 stays unavailable; no five-design/final-fidelity claim.
+- Evidence: [First trial source specification and FD-01–FD-06](tasks/figma_first_trial_design_spec.md); [CMS independent intro contract/batches](tasks/cms_v2_premium_wedding_website_plan.md); D-025 approves direction only.
+- Proposed action: Approve final architecture/first exact frames, resolve source gaps, obtain each variant's reference and licensed assets; implement separately and compare matching browser screenshots. Preserve private personal RSVP boundaries and v1; resolve material discrepancies before each owner acceptance.
+- Target milestone: CMS-0/A/B.1–B.5/C/E; rights/runtime RF-027 and release M8 remain separate.
+
+## RF-029 — RSVP feedback needs submit-specific commit evidence
+
+- Category: Resolved implementation gap for the bounded DEL-05b effect; owner visual/release acceptance remains separate. No observed RSVP data-loss defect.
+- Description: Previously the shared `saved` event covered both submit and reload without an operation receipt. D-056 now returns a private submit-only boolean from the existing transaction-local changes, preserves state-only internal callers and keeps GET/reload free of effect metadata. Enchanted's optional slot consumes only successful typed receipts; malformed/unknown outcomes fail safely.
+- Impact: Prevents false celebration on reload, identical retry, errors or uncertain acknowledgements. Current authorized saved rows determine explicit attending/declining/pending counts, with neutral mixed/partial feedback. No operational data enters generic pages or immutable snapshots.
+- Priority: P1 before activating RSVP confirmation effects.
+- Status: Resolved for the implemented submit-only effect by 262 PHP passes/1,607 assertions and 72 distinct frontend/browser passes, including actual lost-acknowledgement/no-op retry, stale two-window submission and rollback. Fourteen opt-in InnoDB cases remain skipped without a prepared target; no new engine result. Combined DEL-05 owner visual acceptance is pending QA-DEL-03/12.
+- Action: Preserve receipt/private-data tests and existing transaction rules; obtain combined visual acceptance, then separately satisfy existing customer/production security and device gates. No audit table or stored celebration state. [Exact tests, corrections and evidence](tasks/premium_delight_experience.md#del-05--romantic-guest-experience-closeout).
+- Target milestone: DEL-05b automated/owner acceptance; not a deferrable release-only check once the feature is enabled.
+
+## RF-030 — Image upload filesystem/database recovery
+
+DEL-03b: injected revision-binding failure proves complete publication SQL rollback in SQLite and real waiting InnoDB schedules; current-publication files/source remain retained. Save/publish, facts/publish and media/unpublish contention pass. These SQL-only publisher checks do not establish upload filesystem crash atomicity, collision/uncertain-compensation races or process-kill reconciliation. QA-RACE-09–11 remain Planned; no cleaner/deletion introduced. [D03B execution](tasks/del03a_draft_persistence_contract.md#9-del-03b--immutable-publishing-and-public-wedding-website).
+
+DEL-03a adds SQL-only draft saving, not filesystem mutation or deletion. An actual HTTP commit followed by a lost response is browser-tested: no false success, automatic overwrite or silent retry; local edits remain and explicit reload/review reconciles the stored version. This is distinct from upload idempotency or process-crash reconciliation, which remain open below. Missing saved private bytes fail closed without deleting source; there is no new repair UI or cleanup scheduler. New save/asset/timezone concurrency schedules remain Planned; no MySQL execution.
+
+DEL-02e evidence: bounded sequential multi-upload and explicit selection use the same private single-image endpoint. A controlled failed response is retryable without reuploading successful files; repeated confirmation/reopening cannot duplicate gallery asset references. This does **not** deduplicate file bytes or guarantee upload idempotency after a lost commit acknowledgement. An interrupted request may already have registered an asset; inspect/reload the private library before retrying an ambiguous upload. Existing per-file upload throttles still apply to batches, with partial successes retained and safe errors. Engine/process-kill/crash-reconciliation and production retention gates remain open; see QA-CMS-11/D02E and QA-RACE-09–11. No development MySQL operation or new InnoDB evidence.
+
+- Category: Confirmed architectural limitation / unverified crash and concurrent recovery behavior; no observed customer data-loss incident.
+- Description: DEL-02a reserves immutable asset metadata under a wedding-first SQL transaction, then writes/verifies private bytes. SQL and filesystem changes cannot commit atomically. Compensation retains any committed UUID row's file and defers deletion when the database outcome is unknown. A process kill or failed deletion can leave private unregistered bytes; no general cleanup scheduler is implemented.
+- Impact: Storage leakage/orphan accumulation and ambiguous retry outcomes; an unsafe future cleaner could delete registered or revision-retained files. Repeated successful uploads intentionally create distinct assets.
+- Priority: P1 before activating customer uploads/reconciliation; retention policy remains RF-010.
+- Status: Open. Isolated synthetic tests pass for partial writes, registration/pre-commit failures, lost commit acknowledgment, cleanup failure, UUID collision and pinned-asset protection. DEL-02b adds private HTTP upload/error/retry tests; a canceled browser upload may already have committed, so the UI directs owners to reopen the library before retrying. Independent InnoDB writers and real process-kill/recovery schedules are unverified (QA-RACE-09–11 Planned); D03B?s 31 InnoDB passes include publication SQL contention, not the remaining upload filesystem collision/compensation/crash schedules.
+- Proposed action: Before upload activation, implement/execute controlled collision and uncertain-compensation race coverage on a separately approved disposable target. Before sharing, rehearse a crash/recovery procedure using private isolated storage; any future reconciliation must lock the wedding and verify primary committed asset/revision references, never delete on unknown outcomes. Keep file deletion out of customer CRUD until separately designed/approved.
+- Target milestone: DEL-02b upload/private-preview adapters and DEL-03 media publication gates; production retention/recovery and storage policy in M8 before pilot.
+
+## RF-031 — Paid album contracts and private media isolation
+
+- Category: Product/security/operations design gates; not a confirmed deployed album defect.
+- Description: D-051 approves separate paid Our Wedding Memories direction, not implementation. Existing CMS lists all wedding assets, the processor discards originals and outputs bounded WebP, and model deletion protects revision references rather than future album references. Reusing these unchanged could expose Pending guest images through invitation selection, fail download-quality expectations or permit unsafe cleanup. No entitlement/staff grant/album lifecycle implementation exists.
+- Impact: Unauthorized collection/viewing, cross-tenant or cross-purpose media disclosure, premature release after approval, retention/capacity cost or data loss if contracts are guessed.
+- Priority: P1 before album implementation/affected upload or media activation; commercial/retention acceptance before real collection.
+- Status: Open, source-inspected 2026-10-25; no application/engine tests or album activation in ALB-00. DEL-07b visual approval remains separate and pending.
+- Evidence: [ALB-00 reuse, contracts and decision queue](tasks/alb00_wedding_photo_album_plan.md). QA-ALB-01–08 are Planned, not skipped or passed. Existing RF-008/010/011/012/013/014/026/030 remain independent.
+- Proposed action: ALB-D01 is approved (D-052); implement no code here. Approve remaining minimum entitlement, purpose-separated access, media-purpose/original/HEIC and lifecycle contracts before ALB-01. Add shared registry isolation and reference retention, enforce current state on every rendition/download, and verify tenant/revoke/moderation/reveal/upload races on isolated targets. Agree finite storage/hosting, consent/removal and recovery/export terms before customer use; cost assumptions are not approved limits. D-053's Hostinger/Cloudflare/R2 candidate requires effective CDN/private-storage, deployment and performance validation under RF-013; no release gate is closed.
+- Target milestone: ALB-00 owner contracts → separately authorized ALB-01–04; M7 manual grant authority and M8/pilot release gates. No new package, gateway or parallel media/publishing system by inference.
+
+## RF-032 — Test runner applied migrations to development MySQL
+
+- Category: Confirmed development-process incident / database state change.
+- Description: On 2026-10-25, `php artisan test --compact tests/Feature/PersonalRsvpHttpTest.php tests/Feature/GuestInvitationLifecycleTest.php` was run without process-only SQLite overrides. `.env` selected `mysql/wedding_rsvp`, and Laravel `RefreshDatabase` applied the 18 existing pending migrations. The test runner did not seed a user or synthetic customer data.
+- Impact: The application schema now exists in the development MySQL database despite the earlier explicit-approval gate. Read-only Boost verification found 18 migration rows, 20 application tables, and zero rows in users/accounts/weddings/guests. The database is no longer uninitialized. Normal MySQL registration was not tested. No rollback/reset was attempted; no further MySQL writes are authorized by this incident record.
+- Priority: P1 process/data-boundary correction before any future database write or normal-MySQL verification.
+- Status: Open; owner review required. No customer rows or pre-existing application tables were found in read-only post-incident checks. Do not treat the schema application as authorized or as engine verification. Fail-closed test safeguards are implemented and verified, but do not alter or authorize this database.
+- Evidence: [DEV-ENV incident record and guard implementation](tasks/dev_env_single_origin.md#test-runner-incident-2026-10-25); QA-DEV-02/03. Read-only inventory found 18 migration rows, 20 application tables and zero rows in application/cache/job tables; no pre-existing application tables/data existed. PHPUnit 11.5.57 did not force old XML environment values, and Laravel loaded the existing compiled config; the child test process did not clear that cached config. The new bootstrap guard rejects unsafe inherited values and checks effective SQLite before tests.
+- Proposed action: Owner decides whether to retain the empty schema; do not roll back or reapply automatically. Continue QA only on isolated SQLite. Any cleanup or normal-MySQL use requires explicit direction after review.
+- Target milestone: Owner review before any further development MySQL operation; QA-OPS-11 InnoDB races must use a separately approved disposable target.
+
+## MySQL verification evidence - 2026-10-20
+
+Exact original inventory: eight WeddingDraftConcurrencyTest data sets, one IndividualRsvpMySqlConstraintTest method and ten PersonalRsvpConcurrencyTest data sets (the original eight plus rename/deletion). All were previously skipped because CMS_MYSQL_TEST_DATABASE was unset. Opt-in guards also require a recognized disposable name, APP_ENV=testing, migrated InnoDB schema/counters and suitable inspection privileges; no development fallback is allowed.
+
+Method key (full names):
+
+- D: Tests\Feature\Weddings\WeddingDraftConcurrencyTest::test_same_version_concurrent_requests_allow_exactly_one_complete_save
+- C: Tests\Feature\IndividualRsvpMySqlConstraintTest::test_mysql_nullable_uniqueness_unsigned_ranges_and_restrictive_deletion
+- P: Tests\Feature\PersonalRsvpConcurrencyTest::test_independent_workers_revalidate_permissions_versions_and_atomicity_after_real_lock_waits
+
+Original 19, individually accounted for:
+
+| ID  | Method / data set                       | Scenario                                                                                                   | Current-model validity                      | Final status |
+| --- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------ |
+| M01 | D / simultaneous first saves            | Competing first draft saves                                                                                | Valid                                       | Passed       |
+| M02 | D / simultaneous existing draft updates | Competing saved-draft updates                                                                              | Valid                                       | Passed       |
+| M03 | D / simultaneous first photo saves      | Competing initial hero uploads                                                                             | Valid                                       | Passed       |
+| M04 | D / simultaneous photo replacements     | Complete winner plus losing-file cleanup                                                                   | Valid                                       | Passed       |
+| M05 | D / simultaneous first publications     | One complete published revision wins                                                                       | Valid                                       | Passed       |
+| M06 | D / simultaneous republications         | No duplicate conflicting republish                                                                         | Valid                                       | Passed       |
+| M07 | D / simultaneous link generation        | Competing personal credential issuance                                                                     | Already retargeted from retired group links | Passed       |
+| M08 | D / simultaneous link regeneration      | Competing personal credential rotation                                                                     | Already retargeted from retired group links | Passed       |
+| M09 | C / no provider                         | Unique ownership/hash/delegation slots; null hashes; FKs; unsigned bounds; restricted guest/group deletion | Valid                                       | Passed       |
+| M10 | P / issuance (original #0)              | Single first-issuance winner, stale loser                                                                  | Valid                                       | Passed       |
+| M11 | P / independent (#1)                    | Two independent people both save from one baseline                                                         | Valid                                       | Passed       |
+| M12 | P / same-guest (#2)                     | Conflicting target changes cannot silently overwrite                                                       | Valid                                       | Passed       |
+| M13 | P / designation (#3)                    | Only one competing representative designation wins                                                         | Valid                                       | Passed       |
+| M14 | P / revoke (#4)                         | Committed credential revocation denies waiting submissions                                                 | Valid                                       | Passed       |
+| M15 | P / rotate (#5)                         | Rotation denies waiting old-token submissions                                                              | Valid                                       | Passed       |
+| M16 | P / reassign (#6)                       | Representative reassignment invalidates old access                                                         | Valid                                       | Passed       |
+| M17 | P / representative-batch (#7)           | Conflicting multi-person submissions remain atomic                                                         | Valid                                       | Passed       |
+| M18 | P / rename (#8)                         | Committed rename rejects stale changed responses                                                           | Valid                                       | Passed       |
+| M19 | P / retention (#9)                      | First issuance versus guest deletion has a consistent retained/deleted outcome                             | Valid                                       | Passed       |
+
+D/P privileges: schema-scoped SELECT/INSERT/UPDATE/DELETE plus PROCESS for INNODB_TRX observation. Preparing the empty schema additionally used test-schema CREATE/DROP/ALTER/INDEX/REFERENCES; C exercises only its disposable schema and requires strict SQL mode. No case used production/customer credentials. One new temporary account had these test-only data privileges and temporary PROCESS access; an explicit development-table SELECT was denied. Credentials/app key were random and kept in a protected temporary directory, never printed or committed.
+
+Additional coverage gaps found and tested (not counted among the original 19):
+
+| ID  | P data set        | Additional scenario                                                              | Final status |
+| --- | ----------------- | -------------------------------------------------------------------------------- | ------------ |
+| A01 | delegation-revoke | Removing delegation before waiting representative submissions commit             | Passed       |
+| A02 | unpublish         | Unpublication denies waiting RSVP writes                                         | Passed       |
+| A03 | republish         | Latest published snapshot and correct response conflict behavior after republish | Passed       |
+| A04 | rotate-revoke     | Concurrent rotation versus revocation has one lifecycle winner                   | Passed       |
+
+Environment: new local schema wedding_rsvp_cms_test_20261020_80c23c4296, host 127.0.0.1:3306, MySQL Community Server 26.7.0, all 19 tables InnoDB, strict SQL mode and REPEATABLE-READ. The name/selected database/local server were checked before migrations. Fresh schema only; no reset of wedding_rsvp. Test principal could not read development tables. Parent ordinary regressions used SQLite :memory:; the opt-in cases explicitly switched to the dedicated MySQL schema. Cache/session/mail/queue/config/storage paths and application key were isolated. Worker guards revalidate the selected database and reject fallback. The disposable database, temporary user/global PROCESS privilege and credential file were removed after verification; protected synthetic JUnit evidence remains outside the repository.
+
+First original run: 3 passed / 16 failed / 0 skipped. Reproduced harness causes: HTTP worker instantiated SessionGuard before binding its Request (TypeError); the transaction barrier's 20 ms polling kept observing early transaction metadata on this instance. Binding the actual synthetic HTTP request before guard setup and polling every 150 ms fixed those cases. Ten-second deadlines, independent workers and two actual LOCK WAIT requirements were retained; no timeout increase or relaxed application assertion. Safe phase/connection diagnostics and named data sets improve failures. A test-only restoration to legacy mode was corrected to personal. A missing import in the new republish fixture was corrected and its case rerun. No application defect/business-logic change was needed.
+
+MySQL documents that transaction/locking metadata is transient and can be inconsistent across inspection views; this supports treating it as an observation barrier rather than application data. The polling correction is verified empirically on this instance, not a claimed universal server defect: [MySQL metadata consistency](https://dev.mysql.com/doc/refman/26.7/en/innodb-information-schema-internal-data.html).
+
+Final commands (with isolated process-only environment): php artisan test --compact --group=mysql-concurrency --group=mysql-schema -> **23 passed / 483 assertions / 0 skipped**; focused RSVP HTTP/service/retirement regressions -> **83 passed / 562 assertions**; php artisan test --compact with opt-in configured -> **331 passed / 3,065 assertions / 0 skips**. JUnit output corroborated the engine results. Pint and syntax checks passed. No frontend/shared-type changes; frontend/browser tests were not rerun. No skipped case was deleted and no assertion/timeout was weakened.
+
+361 -> 308 audit: before activation GuestRsvpTest had 40 expanded cases and InvitationLinkTest had 22 (recovered from tracked pre-activation source and enumerated with PHPUnit --list-tests). Current counts are 3 and 5: 62 -> 8, a reduction of 54 obsolete group-authority cases. PersonalRsvpHttpTest gained one invalid legacy-configuration case: 361 - 54 + 1 = 308. No test-suite configuration change explains the decrease. Current focused coverage totals 83: 38 personal HTTP + 37 personal service + 3 response-integrity + 5 permanent-retirement/logging cases. Authorization, private snapshots/media, validation, stale/partial/no-op responses, retention and atomic rollback are covered by the current model; shared group-wide authority/version expectations are intentionally retired. No unexplained count discrepancy found. Original 19 plus four added engine cases now give 308 + 23 = 331.
+
+Limits: this verifies these controlled schedules on one MySQL version/isolation configuration, not arbitrary interleavings or production load. Remaining capacity/final-member/group/parent races and future withdrawal/seating integration remain RF-003/M8. External logs, credential-example, key custody, backups/retention and deployment risks remain open. 5C manual owner acceptance was subsequently confirmed in D-023, including the UI bug-fix retests; that confirmation does not broaden this engine evidence. Ongoing owner QA was not interrupted by the audit.
