@@ -1,0 +1,217 @@
+:where(.cms-editor, .cms-picker, .cms-confirm) {
+    overflow-wrap: anywhere;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) .cms-input {
+    @apply mt-1 block min-h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) .cms-label {
+    @apply block text-sm font-medium;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) .cms-primary {
+    @apply min-h-11 rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:cursor-not-allowed disabled:opacity-50;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) .cms-secondary {
+    @apply min-h-11 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) :is(button, a, input, textarea, select):focus-visible {
+    @apply outline-none ring-2 ring-foreground ring-offset-2 ring-offset-background;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) input[type='checkbox'] {
+    accent-color: hsl(var(--foreground));
+    @apply h-4 w-4 rounded border-input text-foreground focus:ring-foreground;
+}
+.cms-picker progress {
+    accent-color: hsl(var(--foreground));
+}
+@media (prefers-reduced-motion: reduce) {
+    .cms-picker,
+    .cms-confirm,
+    .cms-editor-overlay {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.cms-editor .cms-name-chip {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+}
+.cms-editor .cms-chip-grip,
+.cms-editor .cms-chip-remove {
+    flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+}
+.cms-editor .cms-chip-grip {
+    cursor: grab;
+}
+.cms-editor .cms-chip-name {
+    min-width: 0;
+    max-width: 100%;
+    padding: 8px 2px;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    color: inherit;
+}
+.cms-editor summary:focus-visible,
+.cms-editor .cms-chip-grip:focus-visible,
+.cms-editor .cms-chip-remove:focus-visible,
+.cms-editor .cms-chip-name:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+}
+
+.cms-editor .cms-collection-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border-bottom: 1px solid hsl(var(--border));
+    padding-block: 8px;
+}
+.cms-editor .cms-guide-block,
+.cms-editor .cms-guide-faq-editor {
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    padding: 12px;
+}
+.cms-editor .cms-guide-faq-editor {
+    border-radius: 6px;
+    background: hsl(var(--muted) / 0.3);
+}
+.cms-editor .cms-guide-block > details > summary,
+.cms-editor .cms-guide-faq-editor > summary {
+    min-height: 44px;
+    cursor: pointer;
+    padding-block: 10px;
+}
+.cms-editor .cms-collection-row > details {
+    min-width: 0;
+}
+.cms-editor .cms-collection-summary {
+    min-height: 44px;
+    cursor: pointer;
+    padding-block: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+.cms-editor .cms-collection-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+}
+.cms-editor .cms-collection-action {
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+}
+.cms-editor .cms-collection-action:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.cms-editor-fields:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: -2px;
+}
+@media (min-width: 1024px) {
+    .cms-workspace {
+        height: calc(100dvh - 5rem);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+    .cms-workspace > header {
+        flex-shrink: 0;
+    }
+    .cms-split {
+        flex: 1;
+        min-height: 0;
+    }
+    .cms-workspace .cms-editor-pane {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+    .cms-editor-nav {
+        flex-shrink: 0;
+    }
+    .cms-editor-fields {
+        overflow-y: auto;
+        min-height: 0;
+        scrollbar-gutter: stable;
+        scroll-padding-block: 16px 24px;
+        padding-right: 6px;
+    }
+    .cms-preview-pane {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    .cms-preview-pane iframe {
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+    }
+}
+
+@supports selector(:has(*)) {
+    .cms-editor .cms-collection-row:not(:has(details[open])) {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: start;
+    }
+}
+
+.cms-feedback,
+.cms-error-summary {
+    border: 1px solid hsl(var(--border));
+    padding: 12px 16px;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+}
+.cms-feedback[data-kind='success'] {
+    background: hsl(var(--muted));
+    border-left: 3px solid currentColor;
+}
+.cms-feedback[data-kind='error'],
+.cms-feedback[data-kind='conflict'],
+.cms-error-summary {
+    background: color-mix(in srgb, #c69a55 12%, hsl(var(--background)));
+    border-color: color-mix(in srgb, #c69a55 45%, hsl(var(--border)));
+}
+.cms-feedback[data-kind='conflict'],
+.cms-error-summary[data-kind='conflict'] {
+    background: color-mix(in srgb, #b38969 16%, hsl(var(--background)));
+    border-left: 3px solid currentColor;
+}
+.cms-feedback[data-kind='info'] {
+    background: hsl(var(--muted));
+}
+.cms-draft-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+}
+.cms-draft-state[data-dirty='true'] {
+    font-weight: 600;
+}
+.cms-editor [aria-invalid='true'] {
+    border: 2px solid currentColor;
+    outline-offset: 3px;
+}
+.cms-error-summary:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}

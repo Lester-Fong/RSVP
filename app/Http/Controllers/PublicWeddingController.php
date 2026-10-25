@@ -21,6 +21,7 @@ class PublicWeddingController extends Controller
     {
         $wedding = Wedding::query()->where('public_slug', $slug)->firstOrFail();
         $revision = $published->revision($wedding);
+        abort_unless($revision->schema_version === 1, 404);
         $path = $revision->hero_photo_path;
         abort_unless($revision->hero_photo_disk === WeddingHeroPhotoProcessor::DISK && is_string($path)
             && $photos->validPath($path, $wedding->account_id, $wedding->id) && pathinfo($path, PATHINFO_FILENAME) === $photo, 404);
@@ -40,5 +41,10 @@ class PublicWeddingController extends Controller
                 fclose($stream);
             }
         }, 200, ['Content-Type' => 'image/webp', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff', 'X-Robots-Tag' => 'noindex, nofollow, noarchive']);
+    }
+
+    public function media(string $slug, string $asset, PublishedWedding $published): Response
+    {
+        return $published->media(Wedding::query()->where('public_slug', $slug)->firstOrFail(), $asset);
     }
 }

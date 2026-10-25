@@ -11,6 +11,7 @@ export default defineConfig({
             input: [
                 'resources/js/app.ts',
                 'resources/js/public-invitation.ts',
+                'resources/js/public-enchanted.ts',
                 'resources/css/modern-classic.css',
                 'resources/css/public-invitation.css',
             ],

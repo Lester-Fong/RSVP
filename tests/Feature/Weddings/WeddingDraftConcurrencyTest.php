@@ -6,7 +6,7 @@ use App\Models\Account;
 use App\Models\InvitationGroup;
 use App\Models\User;
 use App\Models\WebsiteDraft;
-use App\Services\InvitationLink;
+use App\Services\PersonalInvitationLink;
 use App\Services\WeddingHeroPhotoProcessor;
 use App\Services\WeddingPublication;
 use Illuminate\Database\QueryException;
@@ -20,6 +20,7 @@ use PDOException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Process\Process;
+use Tests\Support\TestDatabaseGuard;
 use Tests\TestCase;
 
 #[Group('mysql-concurrency')]
@@ -31,19 +32,16 @@ class WeddingDraftConcurrencyTest extends TestCase
     {
         parent::setUp();
 
-        $database = getenv('CMS_MYSQL_TEST_DATABASE') ?: '';
+        $configuration = TestDatabaseGuard::disposableMySqlConfigurationFromProcess();
 
-        if ($database === '') {
-            $this->markTestSkipped('Set CMS_MYSQL_TEST_DATABASE to an existing disposable wedding_rsvp_cms_test database; no database is created or reset.');
+        if ($configuration === null) {
+            $this->markTestSkipped('Set the explicit CMS_MYSQL_TEST_* disposable InnoDB environment; no database is created or reset.');
         }
 
+        $database = $configuration['database'];
         $this->assertMatchesRegularExpression('/\Awedding_rsvp_cms_test(?:_[a-z0-9_]+)?\z/D', $database, 'Concurrency tests refuse development databases.');
         $this->assertTrue($this->app->environment('testing'), 'MySQL concurrency tests require APP_ENV=testing.');
         $this->originalConnection = config('database.default');
-        $configuration = config('database.connections.mysql');
-        unset($configuration['read'], $configuration['write']);
-        $configuration['url'] = null;
-        $configuration['database'] = $database;
         config(['database.connections.cms_mysql_test' => $configuration, 'database.connections.cms_mysql_blocker' => $configuration]);
 
         try {
@@ -138,13 +136,13 @@ class WeddingDraftConcurrencyTest extends TestCase
 
             $publicationPayload = null;
             if ($links) {
-                if (! DB::connection()->getSchemaBuilder()->hasColumn('invitation_groups', 'invitation_link_version')) {
+                if (! DB::connection()->getSchemaBuilder()->hasTable('guest_invitation_links')) {
                     $this->markTestSkipped('The disposable database needs the additive guest and invitation-link migrations.');
                 }
                 $group = InvitationGroup::factory()->for($wedding)->withGuests()->create();
                 if ($links === 'regenerate') {
-                    app(InvitationLink::class)->execute($wedding, $group, 'generate', 0);
-                    $oldHash = $group->fresh()->invitation_token_hash;
+                    app(PersonalInvitationLink::class)->execute($owner, $wedding, $group, $group->guests()->sole(), 'generate', 0, 0);
+                    $oldHash = $group->guests()->sole()->invitationLink->token_hash;
                 }
             }
             if ($publishing) {
@@ -165,7 +163,7 @@ class WeddingDraftConcurrencyTest extends TestCase
             ];
 
             $blocker->beginTransaction();
-            $blocker->table($links ? 'invitation_groups' : 'weddings')->where('id', $links ? $group->id : $wedding->id)->lockForUpdate()->first();
+            $blocker->table('weddings')->where('id', $wedding->id)->lockForUpdate()->first();
 
             foreach ($contents as $index => $content) {
                 $process = new Process([PHP_BINARY, base_path('tests/Fixtures/save-wedding-draft.php')], base_path(), $this->workerEnvironment(), json_encode([
@@ -173,7 +171,7 @@ class WeddingDraftConcurrencyTest extends TestCase
                     'content' => $content, 'draft_version' => $expectedVersion,
                     'photo_root' => $photoRoot, 'photo' => $withPhoto ? base64_encode($photoBytes[$index]) : null,
                     'operation' => $links ? 'link' : ($publishing ? 'publish' : 'draft'), 'publication' => $publicationPayload,
-                    'group_id' => $group?->id, 'link_action' => $links, 'link_version' => $expectedVersion,
+                    'guest_id' => $group?->guests()->sole()->id, 'group_id' => $group?->id, 'link_action' => $links, 'link_version' => $expectedVersion,
                 ], JSON_THROW_ON_ERROR));
                 $process->setTimeout(30);
                 $processes[] = $process;
@@ -181,6 +179,12 @@ class WeddingDraftConcurrencyTest extends TestCase
             }
 
             $this->waitFor(function () use ($processes): bool {
+                foreach ($processes as $process) {
+                    if (! $process->isRunning() && ! str_contains($process->getOutput(), 'READY ')) {
+                        $this->fail('Worker could not connect: '.$process->getErrorOutput());
+                    }
+                }
+
                 return count(array_filter($processes, fn (Process $process): bool => preg_match('/^READY \d+\r?$/m', $process->getOutput()) === 1)) === 2;
             }, 'Both independent request workers must connect before the lock is released.');
 
@@ -210,16 +214,15 @@ class WeddingDraftConcurrencyTest extends TestCase
 
             $statuses = array_column($results, 'status');
             sort($statuses);
-            $this->assertSame([$links ? 200 : 302, 422], $statuses);
-            $winner = $results[0]['status'] === ($links ? 200 : 302) ? 0 : 1;
+            $this->assertSame([$links || $publishing ? 200 : 302, 422], $statuses);
+            $winner = $results[0]['status'] === ($links || $publishing ? 200 : 302) ? 0 : 1;
             $loser = 1 - $winner;
             if ($links) {
-                $this->assertSame('This invitation link changed in another window. Reload the guest list before trying again.', $results[$loser]['body']['errors']['invitation_link'][0]);
-                $saved = $group->fresh();
-                $this->assertSame($expectedVersion + 1, $saved->invitation_link_version);
-                $this->assertSame(hash('sha256', $saved->invitation_token), $saved->invitation_token_hash);
-                $this->assertNotSame($oldHash, $saved->invitation_token_hash);
-                $this->assertSame(1, $saved->guests()->count());
+                $this->assertSame('stale_access', $results[$loser]['body']['kind']);
+                $saved = $group->guests()->sole()->invitationLink;
+                $this->assertSame($expectedVersion + 1, $saved->version);
+                $this->assertSame(hash('sha256', $saved->token), $saved->token_hash);
+                $this->assertNotSame($oldHash, $saved->token_hash);
                 $this->assertSame(['status' => 'active', 'version' => $expectedVersion + 1], $results[$winner]['body']);
                 $this->assertSame($originalWedding, $wedding->fresh()->getAttributes());
 
@@ -264,6 +267,9 @@ class WeddingDraftConcurrencyTest extends TestCase
                 $wedding->published_revision_id = null;
                 $wedding->save();
             }
+            if ($links && $group !== null) {
+                DB::table('guest_invitation_links')->whereIn('guest_id', $group->guests()->select('id'))->delete();
+            }
             $wedding?->delete();
             $account?->delete();
             $owner->delete();
@@ -282,7 +288,8 @@ class WeddingDraftConcurrencyTest extends TestCase
                 return;
             }
 
-            usleep(20000);
+            // Allow the transaction metadata snapshot to refresh between observations.
+            usleep(150000);
         } while (microtime(true) < $deadline);
 
         $this->fail($message);
@@ -292,15 +299,11 @@ class WeddingDraftConcurrencyTest extends TestCase
     private function workerEnvironment(): array
     {
         $configuration = config('database.connections.cms_mysql_test');
-        $cachePrefix = sys_get_temp_dir().'/rsvp-cms-concurrency-'.Str::uuid();
+        $cachePrefix = preg_replace('/^[A-Za-z]:/', '', str_replace('\\', '/', sys_get_temp_dir())).'/rsvp-cms-concurrency-'.Str::uuid();
 
-        return [
-            'APP_ENV' => 'testing', 'APP_CONFIG_CACHE' => $cachePrefix.'-config.php', 'APP_ROUTES_CACHE' => $cachePrefix.'-routes.php',
-            'DB_CONNECTION' => 'mysql', 'DB_DATABASE' => $configuration['database'], 'DB_URL' => '(null)',
-            'DB_HOST' => (string) $configuration['host'], 'DB_PORT' => (string) $configuration['port'],
-            'DB_USERNAME' => (string) $configuration['username'], 'DB_PASSWORD' => (string) $configuration['password'],
-            'DB_SOCKET' => (string) $configuration['unix_socket'], 'CMS_MYSQL_TEST_DATABASE' => $configuration['database'],
+        return array_merge(TestDatabaseGuard::workerEnvironment($configuration), [
+            'APP_CONFIG_CACHE' => $cachePrefix.'-config.php', 'APP_ROUTES_CACHE' => $cachePrefix.'-routes.php',
             'SESSION_DRIVER' => 'array', 'SESSION_PATH' => '/', 'CACHE_STORE' => 'array', 'LOG_CHANNEL' => 'null',
-        ];
+        ]);
     }
 }

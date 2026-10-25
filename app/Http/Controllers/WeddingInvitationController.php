@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateWeddingInvitationRequest;
 use App\Models\Account;
 use App\Models\WebsiteDraft;
 use App\Models\Wedding;
+use App\Services\CmsEditorPreview;
 use App\Services\WeddingHeroPhotoProcessor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -22,11 +23,14 @@ use Throwable;
 
 class WeddingInvitationController extends Controller
 {
-    public function edit(Account $account, Wedding $wedding): Response
+    public function edit(Account $account, Wedding $wedding): Response|RedirectResponse
     {
         $this->authorize('update', $wedding);
 
         $draft = $wedding->websiteDraft;
+        if (CmsEditorPreview::shouldOpen($wedding)) {
+            return to_route('accounts.weddings.cms-preview.show', [$account, $wedding]);
+        }
         $draft?->ensureSupportedSchema();
 
         return Inertia::render('weddings/InvitationEditor', [

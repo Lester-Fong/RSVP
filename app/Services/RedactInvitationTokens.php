@@ -19,7 +19,7 @@ class RedactInvitationTokens
 
     public static function text(string $value): string
     {
-        $value = preg_replace('~(/invite/)[^\\s/?#<>"\\\']+~i', '$1[redacted]', $value);
+        $value = preg_replace('~(/(?:invite|rsvp)/)[^\\s/?#<>"\\\']+~i', '$1[redacted]', $value);
 
         return preg_replace('/[a-f0-9]{64,}/i', '[redacted]', $value);
     }

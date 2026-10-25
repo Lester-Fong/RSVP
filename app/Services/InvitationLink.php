@@ -21,6 +21,7 @@ class InvitationLink
     public function execute(Wedding $wedding, InvitationGroup $group, string $action, int $expectedVersion): array
     {
         return DB::transaction(function () use ($wedding, $group, $action, $expectedVersion): array {
+            Wedding::query()->whereKey($wedding->id)->lockForUpdate()->firstOrFail();
             $locked = $wedding->invitationGroups()->whereKey($group->id)->lockForUpdate()->firstOrFail();
             if ($locked->invitation_link_version !== $expectedVersion) {
                 $this->fail('This invitation link changed in another window. Reload the guest list before trying again.');

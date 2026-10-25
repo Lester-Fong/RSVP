@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateWeddingRequest;
 use App\Models\Account;
 use App\Models\WebsiteDraft;
 use App\Models\Wedding;
+use App\Services\CmsEditorPreview;
 use App\Services\WeddingPublication;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -109,6 +110,7 @@ class WeddingController extends Controller
     public function show(Account $account, Wedding $wedding, WeddingPublication $publication): Response
     {
         $this->authorize('view', $wedding);
+        $cmsEditor = CmsEditorPreview::shouldOpen($wedding);
 
         return Inertia::render('weddings/Show', [
             'account' => [
@@ -117,16 +119,25 @@ class WeddingController extends Controller
             ],
             'wedding' => $this->weddingData($wedding),
             'publication' => $publication->summary($wedding),
+            'cmsEditorUrl' => $cmsEditor
+                ? route('accounts.weddings.cms-preview.show', [$account, $wedding], false) : null,
+            'cmsSavedPreviewUrl' => $cmsEditor && ($wedding->websiteDraft?->lock_version ?? 0) > 0
+                ? route('accounts.weddings.cms-preview.saved-preview', [$account, $wedding], false) : null,
         ]);
     }
 
-    public function preview(Account $account, Wedding $wedding): Response
+    public function preview(Account $account, Wedding $wedding): Response|RedirectResponse
     {
         $this->authorize('view', $wedding);
         $draft = $wedding->websiteDraft;
+        if (CmsEditorPreview::shouldOpen($wedding)) {
+            return to_route('accounts.weddings.cms-preview.saved-preview', [$account, $wedding]);
+        }
         $draft?->ensureSupportedSchema();
 
         return Inertia::render('weddings/Preview', [
+            'accountId' => $account->id,
+            'weddingId' => $wedding->id,
             'overviewUrl' => route('accounts.weddings.show', [
                 'account' => $account->id,
                 'wedding' => $wedding->id,
@@ -153,7 +164,14 @@ class WeddingController extends Controller
     public function update(UpdateWeddingRequest $request, Account $account, Wedding $wedding): RedirectResponse
     {
         $this->authorize('update', $wedding);
-        $wedding->update($request->validated());
+        DB::transaction(function () use ($request, $wedding): void {
+            $current = $wedding->newQuery()->whereKey($wedding->id)->lockForUpdate()->firstOrFail();
+            $this->authorize('update', $current);
+            if ($request->has('timezone')) {
+                abort_unless(array_key_exists('timezone', $current->getAttributes()), 503);
+            }
+            $current->update($request->validated());
+        }, 3);
 
         return to_route('accounts.weddings.show', [
             'account' => $account->id,
@@ -165,6 +183,7 @@ class WeddingController extends Controller
     private function weddingData(Wedding $wedding): array
     {
         return [
+            ...(array_key_exists('timezone', $wedding->getAttributes()) ? ['timezone' => $wedding->timezone] : []),
             'id' => $wedding->id,
             'partner_one_name' => $wedding->partner_one_name,
             'partner_two_name' => $wedding->partner_two_name,
