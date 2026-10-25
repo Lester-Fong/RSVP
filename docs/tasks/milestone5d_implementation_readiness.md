@@ -1,6 +1,6 @@
 # Milestone 5D — Implementation Readiness
 
-Prepared: 2026-10-21. Updated: 2026-10-25. **W01–W06 OWNER-APPROVED under D-036. D-059 authorizes completion of 5D.2; the current closeout records the integrated default-off owner/Attendance implementation. Owner acceptance and real disposable-InnoDB schedules remain pending.**
+Prepared: 2026-10-21. Updated: 2026-10-25. **W01–W06 OWNER-APPROVED under D-036. D-059 authorizes completion of 5D.2; the current closeout records the integrated default-off owner/Attendance implementation. The owner accepted the manual functional walkthrough under D-060; real disposable-InnoDB schedules remain pending.**
 
 This handoff refines the [original withdrawal proposal](milestone5d_invitation_withdrawal.md). D-021 requires retained-record withdrawal, D-023 records accepted 5C and D-036 approves W01–W06 including W03 preserved-answer counting, W05's narrow deletion exception and W06's exact affected-person/version confirmation. D-059 authorizes the integrated owner/read implementation described in Section 15; Sections 13–14 remain historical foundation evidence. [Decisions](../decisions.md), [roadmap](../mvp_roadmap.md), [QA register](../qa/verification_register.md) and [risk register](../risks_and_followups.md) remain authoritative for status.
 
@@ -457,7 +457,7 @@ Implement explicit active scopes in every Attendance summary/list/group/count/de
 
 ## 15. 5D.2 implementation closeout (2026-10-25)
 
-D-059 explicitly authorizes the remaining owner/read integration under the unchanged D-036 W01–W06 contract. **Implementation is complete; owner acceptance and real InnoDB verification remain open.** The earlier Section 14 boundary is historical foundation status, superseded here. DEL-09a Photobooth owner acceptance is recorded in D-059; its approved source and behavior were not changed in this batch.
+D-059 explicitly authorizes the remaining owner/read integration under the unchanged D-036 W01–W06 contract. **Implementation is complete; the owner accepted the manual functional walkthrough under D-060. Real InnoDB verification remains open.** The earlier Section 14 boundary is historical foundation status, superseded here. DEL-09a Photobooth owner acceptance is recorded in D-059; its approved source and behavior were not changed in the 5D batch.
 
 ### Integrated behavior
 
@@ -491,7 +491,7 @@ php artisan test --compact tests/Feature/PersonalRsvpHttpTest.php tests/Feature/
 
 Connected installed Edge: `node --test tests/Frontend/GuestWithdrawal.browser.test.mjs` — **1 passed / 0 skipped** using its isolated migrated SQLite, owner session and test-only `RSVP_WITHDRAWAL_ENABLED=true` harness. It withdraws a representative, confirms the dependent remains active, reinstates without reissuing access, and checks active Attendance. No retained owner preview data was written.
 
-`npm.cmd run typecheck`, scoped `npm.cmd exec -- eslint ...`, scoped `npm.cmd exec -- prettier --check ...`, `vendor/bin/pint --dirty --format agent` on changed PHP files, PHP syntax checks and `npm.cmd run build` pass. Exact changed paths are in the closeout's delivery record and repo status. No migrations were authored. No disposable InnoDB target was configured or used; the local `wedding_rsvp` schema is not an approved disposable target. D5 withdrawal/reinstatement versus RSVP/credential/delegation/parent races remain Planned, not skipped or passed. Owner acceptance and QA-OPS-11 remain pending.
+`npm.cmd run typecheck`, scoped `npm.cmd exec -- eslint ...`, scoped `npm.cmd exec -- prettier --check ...`, `vendor/bin/pint --dirty --format agent` on changed PHP files, PHP syntax checks and `npm.cmd run build` pass. Exact changed paths are in the closeout's delivery record and repo status. No migrations were authored. No disposable InnoDB target was configured or used; the local `wedding_rsvp` schema is not an approved disposable target. D5 withdrawal/reinstatement versus RSVP/credential/delegation/parent races remain Planned, not skipped or passed. Manual owner acceptance is recorded under D-060; QA-OPS-11 remains open for real disposable-InnoDB evidence only.
 
 ### Owner review on the required origin
 

@@ -128,6 +128,7 @@ run('real registration and wedding workflow reuses complete CMS, scoped uploads,
     assert.equal(initial.draft_version, 0);
     assert.equal(initial.document.content.sections.length, 9);
     assert.deepEqual(initial.document.content.sections.find((value) => value.type === 'gallery').data.items, []);
+    assert.equal(initial.document.content.experience.enabled, true);
     await page.getByLabel('Invitation message', { exact: true }).fill('A wedding authored by Marina and Elias');
     const first = await uploadHero('#b1ba9a');
     await save();
@@ -167,6 +168,7 @@ run('real registration and wedding workflow reuses complete CMS, scoped uploads,
     await page.reload();
     await section('Guest Guide');
     assert.equal(await page.getByLabel('Dress code', { exact: true }).inputValue(), 'Garden formal');
+    assert.equal(await page.getByLabel('Photobooth opening', { exact: true }).isChecked(), true);
     assert.deepEqual(await source(), saved);
     for (const [device, width] of [
         ['desktop', 1440],
@@ -195,6 +197,7 @@ run('real registration and wedding workflow reuses complete CMS, scoped uploads,
     await page.getByLabel('Invitation message', { exact: true }).fill('A wedding authored by Marina and Elias');
     await publish();
     await guest.goto(publicUrl);
+    await guest.getByRole('button', { name: 'Skip animation', exact: false }).click();
     await guest.locator('[data-ee-phase="landed"]').waitFor();
     await guest.getByText('A wedding authored by Marina and Elias', { exact: true }).waitFor();
     assert.equal(await guest.locator('form, #our-photos, #personal-rsvp-data').count(), 0);
@@ -241,7 +244,9 @@ run('real registration and wedding workflow reuses complete CMS, scoped uploads,
     await page.getByRole('button', { name: 'Manage RSVP access for Our invited guest', exact: true }).click();
     await page.getByRole('button', { name: 'Generate link', exact: true }).click();
     const personal = await page.getByLabel('Personal invitation URL', { exact: true }).inputValue();
+    await guest.evaluate(() => sessionStorage.clear());
     await guest.goto(personal);
+    await guest.getByRole('button', { name: 'Skip animation', exact: false }).click();
     await guest.locator('[data-ee-phase="landed"]').waitFor();
     await guest.getByLabel('Our invited guest', { exact: true }).selectOption('attending');
     await guest.getByRole('button', { name: 'Save responses', exact: true }).click();

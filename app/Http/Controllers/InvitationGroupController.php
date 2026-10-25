@@ -37,8 +37,8 @@ class InvitationGroupController extends Controller
         $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
         $groups = $wedding->invitationGroups()
             ->when($invitationState !== 'all', fn (Builder $query) => $query->whereHas('guests', fn (Builder $guests) => $eligibility->constrain($guests, $invitationState)))
-            ->when($search !== '', function (Builder $query) use ($pattern): void {
-                $query->where(function (Builder $query) use ($pattern): void {
+            ->when($search !== '', function (Builder $query) use ($pattern, $eligibility, $invitationState): void {
+                $query->where(function (Builder $query) use ($pattern, $eligibility, $invitationState): void {
                     $query->whereRaw("label LIKE ? ESCAPE '!'", [$pattern])
                         ->orWhereHas('guests', fn (Builder $guests) => $eligibility->constrain($guests->whereRaw("name LIKE ? ESCAPE '!'", [$pattern]), $invitationState));
                 });

@@ -64,7 +64,8 @@ class CmsEditorPreviewTest extends TestCase
         $this->actingAs($owner)->get($url)->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('weddings/CmsEditorPreview')
             ->where('wedding.partner_one_name', 'Synthetic')
-            ->where('initialDocument.content.experience.enabled', false)
+            ->where('initialDocument.content.experience.enabled', true)
+            ->where('initialDocument.content.experience.intro_style', 'photobooth')
             ->where('initialDocument.content.sections.4.data.items', [])
             ->where('initialDocument.content.sections.2.type', 'countdown')
             ->where('initialDocument.content.sections.2.enabled', true)
@@ -132,6 +133,7 @@ class CmsEditorPreviewTest extends TestCase
         $this->getJson($otherUrl.'/images')->assertJsonPath('total', 0);
         $document = CmsEditorPreview::document();
         $document['template_key'] = 'floral-trial';
+        $document['content']['experience'] = ['enabled' => false];
         $document['content']['sections'] = array_values(array_filter($document['content']['sections'], fn (array $section): bool => ! in_array($section['type'], ['countdown', 'guest_guide'], true)));
         $document['content']['sections'][3]['enabled'] = false;
         $document['content']['sections'][3]['data']['items'][] = [
@@ -147,6 +149,7 @@ class CmsEditorPreviewTest extends TestCase
         [$owner, $wedding, $url] = $this->fixture();
         $document = CmsEditorPreview::document();
         $document['template_key'] = 'floral-trial';
+        $document['content']['experience'] = ['enabled' => false];
         $document['content']['sections'] = array_values(array_filter($document['content']['sections'], fn (array $section): bool => ! in_array($section['type'], ['countdown', 'guest_guide'], true)));
         $document['content']['sections'][2]['data']['paragraphs'] = ['Our private local edit.'];
         $payload = ['document' => $document, 'slots' => ['hero' => null, 'story' => null]];

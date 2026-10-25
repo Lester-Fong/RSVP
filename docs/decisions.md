@@ -1,10 +1,18 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-25 (D-059 records DEL-09a acceptance and authorized 5D closeout; D-058/D-057/D-056/D-054/D-055 and ALB decisions preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-25 (D-060 records 5D manual acceptance and the fresh Enchanted Photobooth default; D-059 and earlier decisions preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-060 — Milestone 5D manual acceptance and fresh Enchanted opening default (2026-10-25)
+
+Status: **The owner accepts the completed Milestone 5D manual functional walkthrough.** Preserve the approved W01–W06 implementation and default-off/production-disabled configuration. This acceptance does not waive disposable-InnoDB race verification, development-database restrictions, or independent production/security/release gates.
+
+For new Enchanted Editorial starter documents, initialize the approved Photobooth opening as enabled so a newly published eligible wedding presents it on first visit. Owners may turn it off before Save/Publish. Never rewrite existing saved drafts, immutable revisions, or the current customer's saved preference; a previously saved disabled wedding requires an explicit owner edit and republish. Preserve deep-link/session bypass, generic/personal privacy, Modern Classic, and current visual design.
+
+Source: owner's POST-INTEGRATION request and statement that the 5D manual functional walkthrough succeeded. [Focused fixes and verification](tasks/post_integration_guest_search_photobooth.md). No additional RSVP/5D rules or database operations are approved.
 
 ### D-059 — DEL-09a acceptance and Milestone 5D completion batch (2026-10-25)
 
-Status: **DEL-09a Photobooth owner-accepted; 5D implementation authorized and now awaiting owner acceptance.** The owner explicitly accepted the finalized single Photobooth opening. Freeze its approved implementation and retain its current design, motion, Hero handoff, source/snapshot boundaries and corrected photo framing.
+Status: **DEL-09a Photobooth owner-accepted; 5D implementation subsequently owner-accepted under D-060.** The owner explicitly accepted the finalized single Photobooth opening. Freeze its approved implementation and retain its current design, motion, Hero handoff, source/snapshot boundaries and corrected photo framing.
 
 The owner authorizes completion of Milestone 5D under the existing D-036 W01–W06 rules: expose the existing transactional withdrawal/reinstatement through authenticated owner workflows, exclude withdrawn invitations from active Attendance, retain guest/answer history, and reinstate without restoring old credentials or delegation. Do not redesign the rules or build a parallel RSVP system. Keep the app feature default-off and production-disabled until owner acceptance and outstanding engine/release gates are satisfied. No development DB migration/reset, dependencies, unrelated RSVP/5D scope, commits or pushes.
 

@@ -263,12 +263,12 @@ DEL-04 / D-045, 2026-10-22: DEL-04 reruns all 31 existing real-engine cases and 
 ## RF-024 — Retained guests need invitation withdrawal and active eligibility
 
 - Category: Approved MVP requirement / incomplete lifecycle implementation.
-- Description: Amended C04/D-021 preserve issued/delegated/responded guests and require 5D withdrawal before Seating. D-059 completes the default-off authenticated owner lifecycle, retention states, RSVP access guards and active-only Attendance reads. Owner acceptance and real InnoDB race evidence remain outstanding; production stays disabled.
+- Description: Amended C04/D-021 preserve issued/delegated/responded guests and require 5D withdrawal before Seating. D-059 completes the default-off authenticated owner lifecycle, retention states, RSVP access guards and active-only Attendance reads. The owner accepted the manual functional walkthrough under D-060; real InnoDB race evidence remains outstanding and production stays disabled.
 - Impact: Without a defined withdrawal workflow owners cannot safely remove an invitation while preserving answers, deny all self/delegated authority or distinguish active attendance/seating eligibility from retained history.
 - Priority: P1; required gate before any M6 development.
-- Status: Open; 5C accepted and W01–W06 approved under D-036. Owner HTTP/Attendance implementation is verified on isolated SQLite and browser fixture; production/default-off activation, explicit owner acceptance and genuine InnoDB schedules remain unverified. Do not infer pilot readiness.
-- Proposed action: Complete the owner manual acceptance checklist and implement/run the approved withdrawal races against an explicitly approved disposable InnoDB target before any production or future Seating activation. Preserve response history, tenant boundaries and old-token revocation. See the [5D readiness handoff](tasks/milestone5d_implementation_readiness.md) for exact evidence and acceptance steps.
-- Target milestone: Remaining 5D implementation/owner acceptance before customer pilot and any resumed M6; CMS planning does not waive this gate. M8 engine/release verification and RF-011 retention questions remain.
+- Status: Partially verified; 5C accepted, W01–W06 approved under D-036, and the 5D manual functional walkthrough owner-accepted under D-060. Owner HTTP/Attendance implementation is verified on isolated SQLite and browser fixture; genuine InnoDB schedules, deployment readiness and activation remain unverified. Do not infer pilot readiness.
+- Proposed action: Implement/run the approved withdrawal races against an explicitly verified disposable InnoDB target before any production or future Seating activation. Preserve response history, tenant boundaries and old-token revocation. See the [5D readiness handoff](tasks/milestone5d_implementation_readiness.md) for exact evidence and remaining gates.
+- Target milestone: Real 5D disposable-InnoDB verification before customer pilot and any resumed M6; manual acceptance is recorded under D-060. CMS planning does not waive this gate. M8 engine/release verification and RF-011 retention questions remain.
 
 ## RF-025 — RSVP Access copy and sibling-action failures
 
@@ -490,3 +490,23 @@ Final commands (with isolated process-only environment): php artisan test --comp
 361 -> 308 audit: before activation GuestRsvpTest had 40 expanded cases and InvitationLinkTest had 22 (recovered from tracked pre-activation source and enumerated with PHPUnit --list-tests). Current counts are 3 and 5: 62 -> 8, a reduction of 54 obsolete group-authority cases. PersonalRsvpHttpTest gained one invalid legacy-configuration case: 361 - 54 + 1 = 308. No test-suite configuration change explains the decrease. Current focused coverage totals 83: 38 personal HTTP + 37 personal service + 3 response-integrity + 5 permanent-retirement/logging cases. Authorization, private snapshots/media, validation, stale/partial/no-op responses, retention and atomic rollback are covered by the current model; shared group-wide authority/version expectations are intentionally retired. No unexplained count discrepancy found. Original 19 plus four added engine cases now give 308 + 23 = 331.
 
 Limits: this verifies these controlled schedules on one MySQL version/isolation configuration, not arbitrary interleavings or production load. Remaining capacity/final-member/group/parent races and future withdrawal/seating integration remain RF-003/M8. External logs, credential-example, key custody, backups/retention and deployment risks remain open. 5C manual owner acceptance was subsequently confirmed in D-023, including the UI bug-fix retests; that confirmation does not broaden this engine evidence. Ongoing owner QA was not interrupted by the audit.
+
+## RF-033 — Guest Management state-filtered search exception
+
+- Category: Confirmed bug / query construction.
+- Description: The 5D Active/Withdrawn/All state predicate was applied within a search callback that did not capture the eligibility service or selected state. The connected Laravel log also recorded a relation-type `TypeError` from an earlier `InvitationEligibility::constrain()` signature that rejected the `HasMany` passed by eager loading; the current service had already been widened to accept both `Builder` and `Relation`.
+- Impact: Searching Guest Management could produce an HTTP 500 instead of returning matching groups, including while filtering withdrawn history.
+- Priority: P1 for owner operations.
+- Status: Resolved in the current source; focused in-memory SQLite HTTP regression covers partial/literal wildcard/empty/no-result searches across all three states. Disposable MySQL compatibility remains unverified and is tracked in QA-OPS-14.
+- Proposed action: Preserve explicit closure captures and the `Builder|Relation` service contract; rerun Guest Management HTTP regressions after related query changes. Do not expose exception details to the owner UI.
+- Target milestone: Focused post-integration correction, 2026-10-25.
+
+## RF-034 — New Enchanted wedding missed the Photobooth opening
+
+- Category: Confirmed integration/default mismatch.
+- Description: The tested new wedding used Enchanted schema v2, but its draft and published revision had `experience.enabled=false`; the previous fresh-document starter also defaulted it off. The immutable renderer correctly omitted the opening for both generic and authorized personal visits. Existing saved records must keep that explicit choice.
+- Impact: A newly published Enchanted website had no first-visit Photobooth even though the owner expected the approved experience.
+- Priority: P1 for Enchanted onboarding.
+- Status: Fresh starter documents now default to the approved Photobooth settings. Existing saved drafts/revisions remain unchanged; the account-3/wedding-3 retained example remains disabled until the owner explicitly enables, saves and republishes it. Feature tests verify new registration through generic and personal publication. Port-8000 manual confirmation is pending.
+- Proposed action: Keep the default scoped to newly created starter documents, retain the checkbox opt-out and explicit immutable publication, and never rewrite saved state as a repair. The exact owner steps and URLs are in the [post-integration handoff](tasks/post_integration_guest_search_photobooth.md).
+- Target milestone: Focused post-integration correction, 2026-10-25.

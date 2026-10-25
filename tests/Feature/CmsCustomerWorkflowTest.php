@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\InvitationGroup;
 use App\Models\User;
 use App\Models\WebsiteDraft;
 use App\Models\Wedding;
 use App\Services\CmsEditorPreview;
+use App\Services\PersonalInvitationLink;
 use App\Services\WeddingPublication;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -90,6 +92,35 @@ class CmsCustomerWorkflowTest extends TestCase
         $this->assertNotSame($first->id, $wedding->fresh()->published_revision_id);
         $this->assertSame('Our actual customer invitation', $first->fresh()->content['sections'][0]['data']['message']);
         $this->assertDatabaseCount('website_revisions', 2);
+    }
+
+    public function test_new_customer_can_opt_in_to_photobooth_and_publish_it_for_public_and_personal_visitors(): void
+    {
+        config(['rsvp.mode' => 'personal']);
+        $this->post('/register', ['name' => 'Photobooth Customer', 'email' => 'photobooth-customer@example.test', 'password' => 'CustomerPass123!', 'password_confirmation' => 'CustomerPass123!'])
+            ->assertRedirect('/dashboard');
+        $owner = User::sole();
+        $wedding = $this->createWedding();
+        $cms = $this->cms($wedding);
+        $document = $this->getJson($cms.'/draft')->assertOk()->json('document');
+        $this->assertTrue($document['content']['experience']['enabled']);
+        $this->assertSame('photobooth', $document['content']['experience']['intro_style']);
+        $this->putJson($cms.'/draft', ['document' => $document, 'draft_version' => 0])->assertOk();
+        $public = '/w/'.$wedding->public_slug;
+        $this->postJson('/accounts/'.$wedding->account_id.'/weddings/'.$wedding->id.'/publish', $this->publication($wedding))->assertOk();
+        $this->get($public)->assertOk()->assertSee('ee-bootstrap-open', false)
+            ->assertViewHas('presentation', fn (array $presentation): bool => $presentation['opening']['style'] === 'photobooth'
+                && $presentation['wedding']['partner_one_name'] === 'Customer Alex')
+            ->assertDontSee('Private RSVP guest');
+
+        $group = InvitationGroup::factory()->for($wedding)->create();
+        $guest = $group->guests()->create(['name' => 'Private RSVP guest']);
+        $link = app(PersonalInvitationLink::class)->execute($owner, $wedding->fresh(), $group, $guest, 'generate', 0, 0);
+        $this->assertSame('active', $link['status']);
+        $this->get('/rsvp/'.$link['token'])->assertOk()->assertSee('ee-bootstrap-open', false)
+            ->assertViewHas('presentation', fn (array $presentation): bool => $presentation['opening']['style'] === 'photobooth')
+            ->assertSee('Private RSVP guest');
+        $this->get('/rsvp/'.$link['token'])->assertOk()->assertSee('ee-bootstrap-open', false);
     }
 
     public function test_stale_legacy_and_cms_tabs_cannot_overwrite_each_others_first_saved_template(): void

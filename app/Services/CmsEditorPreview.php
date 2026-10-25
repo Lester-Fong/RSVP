@@ -61,7 +61,7 @@ final class CmsEditorPreview
             'guestGuideSwatches' => CmsV2Contract::MAX_GUEST_GUIDE_SWATCHES, 'guestGuideFaqs' => CmsV2Contract::MAX_GUEST_GUIDE_FAQS];
     }
 
-    /** Code-owned starter copy, not invented customer biography or persisted draft content.
+    /** Code-owned starter copy and optional introduction defaults; saved drafts are never rewritten here.
      * @return array<string, mixed>
      */
     public static function document(): array
@@ -91,7 +91,10 @@ final class CmsEditorPreview
         return ['schema_version' => 2, 'template_key' => 'enchanted-editorial', 'template_version' => 1,
             'content' => ['theme' => ['palette' => 'blush-terracotta', 'font_pair' => 'editorial-serif'],
                 'photo_slots' => ['hero' => null, 'details' => null, 'story' => null],
-                'experience' => ['enabled' => false], 'sections' => $sections]];
+                'experience' => ['enabled' => true, 'intro_style' => 'photobooth', 'intro_version' => 1,
+                    'intro_settings' => ['opening_text' => 'We are getting married', 'open_label' => 'Open Invitation',
+                        'font_preset' => 'editorial-serif', 'palette_preset' => 'ivory-ink', 'variant' => ['print_preset' => 'three-frame']]],
+                'sections' => $sections]];
     }
 
     public static function error(Throwable $exception, Request $request): Response

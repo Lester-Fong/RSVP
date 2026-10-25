@@ -480,7 +480,7 @@ Scope and review each area separately before implementation. These capabilities 
 - [ ] Implement approved CMS-A–E slices with isolated regressions, public/no-JS/personal RSVP privacy, media/runtime and visual/accessibility checks; obtain owner acceptance. No completion or acceptance is inferred from this plan.
 - [ ] Before pilot, accept required 5D/M7/M8 work and explicitly settle Seating's eventual MVP/pilot placement. Preserve production logging/credential/key/retention and remaining race findings.
 
-### Milestone 5D — Invitation Withdrawal and Active Guest Eligibility (implementation complete; owner acceptance pending)
+### Milestone 5D — Invitation Withdrawal and Active Guest Eligibility (owner-accepted; InnoDB gate remains)
 
 - [x] Record D-021 direction and sequence after 5C/before any Seating development. Retain issued/delegated/responded guests, answers and timestamps; withdrawal must deny self/delegated authority and exclude withdrawn people from active counts.
 - [x] Inspect current Guest/credential/delegation/RSVP locks, retention/cascades, Attendance queries and portal workflows. Prepare [the 5D withdrawal proposal](tasks/milestone5d_invitation_withdrawal.md): nullable timestamp, authority/retention/reinstatement options, active counts, owner UX, races/tests and small implementation batches. Planning only; no application/database/test changes.
@@ -490,7 +490,14 @@ Scope and review each area separately before implementation. These capabilities 
 - [x] Focused isolated schema/model/upgrade verification: `GuestWithdrawalFoundationTest` **7 passed / 53 assertions**. Exact regression/quality evidence and outstanding engine gates are recorded in the readiness closeout; full withdrawal is not implemented or accepted.
 - [x] 5D.1b (D-037): internal lifecycle, exact confirmation versions, atomic revocation/reinstatement, fail-closed eligibility/schema and retained guest/parent guards implemented behind a default-off dependency. No enabled normal-app binding, new routes/UI or Attendance changes. Focused **48 passed / 238 assertions**; affected regression **230 passed / 1,921 assertions / zero skips**, scoped Pint and 11 PHP syntax checks passed. [Exact evidence/boundary](tasks/milestone5d_implementation_readiness.md#14-5d1b-internal-lifecycle-closeout).
 - [x] D-059 authorizes 5D.2 integration under existing W01–W06 only. Active-only Attendance, retained Active/Withdrawn/All guest management, owner-scoped inspect/confirm, RSVP Access withdrawn-state messaging and future-compatible disabled default are implemented. 89 focused Laravel passes / 676 assertions, one connected isolated Edge workflow, typecheck/lint/format/build/Pint/syntax pass; exact evidence and the MySQL incident correction are recorded in the readiness handoff.
-- [ ] Owner manually verifies withdrawal/reinstatement and representative release at port 8000, then explicitly accepts 5D. Real disposable-InnoDB races remain unverified; no MySQL development DB testing is permitted. Keep production inactive, Seating deferred and RF-024 open until required gates close.
+- [x] Owner completed the manual functional walkthrough and accepted 5D (D-060). This does not close disposable-InnoDB race, database safety, or release gates.
+- [ ] Execute the approved real disposable-InnoDB withdrawal/reinstatement race matrix when an independently verified disposable target is available. No MySQL development DB testing is permitted. Keep production inactive, Seating deferred and RF-024 open until required gates close.
+
+### POST-INTEGRATION — Guest search and Photobooth onboarding (2026-10-25)
+
+- [x] Fix state-aware Guest Management query closure capture and cover Active/Withdrawn/All, special-character, empty and no-result search in isolated HTTP tests.
+- [x] Default only fresh Enchanted starter documents to the approved Photobooth opening; preserve owner opt-out, immutable publication, and every existing saved draft/revision. New-customer public/personal HTTP flow passes in isolated SQLite.
+- [ ] Owner verifies the existing retained wedding search and explicitly enables, saves and republishes its currently disabled Photobooth snapshot at port 8000. Browser harness visual regression remains unrun in this session; real customer MySQL access still awaits the separate DEV-ENV decision. See [focused handoff](tasks/post_integration_guest_search_photobooth.md).
 
 ### Milestone 6 — Seating Planner (historical proposal; D-051 indefinitely defers advanced drag-and-drop outside MVP priorities)
 

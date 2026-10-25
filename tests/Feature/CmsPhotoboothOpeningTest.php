@@ -22,10 +22,12 @@ class CmsPhotoboothOpeningTest extends TestCase
         $this->withoutVite();
     }
 
-    public function test_opening_is_opt_in_and_live_changes_require_explicit_republish(): void
+    public function test_new_documents_start_with_photobooth_and_saved_changes_require_explicit_republish(): void
     {
         [$owner, $wedding, $url] = $this->wedding();
         $document = CmsEditorPreview::document();
+        $this->assertSame($this->experience(), $document['content']['experience']);
+        $document['content']['experience'] = ['enabled' => false];
         $this->actingAs($owner)->putJson($url.'/draft', ['document' => $document, 'draft_version' => 0])->assertOk();
         $this->publish($wedding);
         $first = $wedding->fresh()->publishedRevision;

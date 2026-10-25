@@ -83,6 +83,38 @@ class PersonalRsvpHttpTest extends TestCase
             ->where('summary.invited', 0)->where('summary.attending', 0));
     }
 
+    public function test_guest_search_works_across_invitation_states_and_escapes_like_wildcards(): void
+    {
+        config(['rsvp.mode' => 'personal', 'rsvp.withdrawal_enabled' => true]);
+        $this->app->forgetInstance(InvitationEligibility::class);
+        [$owner, $wedding, $group, $guests] = $this->personalFixture();
+        $group->update(['label' => 'O_Rourke 100%!']);
+        $guests[0]->forceFill(['withdrawn_at' => now()])->save();
+        $this->assertTrue(app(InvitationEligibility::class)->enabled);
+        $this->actingAs($owner);
+        $page = $this->guestPage($wedding);
+
+        $this->get($page.'?search=Mar&invitation_state=active')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('filters.search', 'Mar')->where('filters.invitation_state', 'active')
+            ->has('groups.data', 1)->where('groups.data.0.guests.0.name', 'Maria'));
+        $this->get($page.'?search=Juan&invitation_state=withdrawn')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('filters.invitation_state', 'withdrawn')->has('groups.data', 1)
+            ->where('groups.data.0.guests.0.name', 'Juan')->where('groups.data.0.guests.0.invitation_state', 'withdrawn'));
+        $this->get($page.'?search=Juan&invitation_state=all')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia
+            ->where('filters.invitation_state', 'all')->has('groups.data', 1)
+            ->where('groups.data.0.guests.0.name', 'Juan'));
+        $this->get($page.'?search=O_Rourke&invitation_state=all')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia
+            ->has('groups.data', 1)->where('groups.data.0.label', 'O_Rourke 100%!'));
+        $this->get($page.'?search=%25&invitation_state=all')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia
+            ->has('groups.data', 1)->where('groups.data.0.label', 'O_Rourke 100%!'));
+        $this->get($page.'?search=%21&invitation_state=all')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia
+            ->has('groups.data', 1)->where('groups.data.0.label', 'O_Rourke 100%!'));
+        $this->get($page.'?search=Missing&invitation_state=all')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia
+            ->has('groups.data', 0));
+        $this->get($page.'?invitation_state=all')->assertOk()->assertInertia(fn (Assert $inertia) => $inertia
+            ->has('groups.data.0.guests', 4));
+    }
+
     public function test_withdrawal_owner_routes_are_tenant_scoped_and_hidden_when_gate_is_off(): void
     {
         [$owner, $wedding, $group, $guests] = $this->personalFixture();
