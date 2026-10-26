@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import '@/../css/enchanted-photobooth.css';
-import { photoboothPhotos } from '@/lib/photobooth-opening';
+import { observePhotoboothImages, photoboothPhotos } from '@/lib/photobooth-opening';
 import type { EnchantedEditorialPresentation } from '@/types/enchanted-editorial';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import EditorialPhoto from './EditorialPhoto.vue';
@@ -9,26 +9,30 @@ import EnchantedBotanical from './EnchantedBotanical.vue';
 const props = defineProps<{ presentation: EnchantedEditorialPresentation; ready: boolean; dateLabel: string }>();
 const emit = defineEmits<{ open: [] }>();
 const dialog = ref<HTMLElement | null>(null),
+    strip = ref<HTMLElement | null>(null),
     openButton = ref<HTMLButtonElement | null>(null);
 const stage = ref<'preparing' | 'printing' | 'settled'>('preparing');
 const photos = computed(() => photoboothPhotos(props.presentation));
 const frames = computed(() => (photos.value.length ? photos.value : [null]));
 const fontsReady = ref(false);
+const imagesReady = ref(false);
 const initials = computed(() =>
     [props.presentation.wedding.partner_one_name, props.presentation.wedding.partner_two_name].map((name) => Array.from(name.trim())[0]).join(' & '),
 );
 let timer: ReturnType<typeof setTimeout> | undefined, motion: MediaQueryList | undefined;
+let preparationTimer: ReturnType<typeof setTimeout> | undefined, stopImages: (() => void) | undefined;
 let previousOverflow = '',
     opened = false,
     disposed = false;
 function settle() {
-    if (props.ready) {
+    if (!opened && !disposed && imagesReady.value && props.ready) {
         stage.value = 'settled';
         clearTimeout(timer);
     }
 }
 function prepare() {
-    if (!props.ready || stage.value !== 'preparing') return;
+    if (opened || disposed || !props.ready || !imagesReady.value || stage.value !== 'preparing') return;
+    clearTimeout(preparationTimer);
     if (motion?.matches) settle();
     else {
         stage.value = 'printing';
@@ -36,9 +40,11 @@ function prepare() {
     }
 }
 function open() {
-    if (!opened) {
+    if (!opened && !disposed) {
         opened = true;
         clearTimeout(timer);
+        clearTimeout(preparationTimer);
+        stopImages?.();
         try {
             dialog.value?.getAnimations({ subtree: true }).forEach((animation) => animation.pause());
         } catch {
@@ -77,18 +83,39 @@ onMounted(async () => {
     motion = matchMedia('(prefers-reduced-motion: reduce)');
     motion.addEventListener('change', motionChanged);
     document.addEventListener('visibilitychange', visibilityChanged);
+    window.addEventListener('pagehide', open);
     void document.fonts.ready.then(() => {
         if (!disposed) fontsReady.value = true;
     });
-    prepare();
+    preparationTimer = setTimeout(open, 8000);
+    if (strip.value) {
+        stopImages = observePhotoboothImages(strip.value, {
+            pending: () => {
+                imagesReady.value = false;
+                if (stage.value !== 'preparing') {
+                    stage.value = 'preparing';
+                    // Hide the invalidated strip before the exit transition retains its DOM.
+                    void nextTick(open);
+                }
+            },
+            ready: () => {
+                imagesReady.value = true;
+                prepare();
+            },
+            failed: () => void nextTick(open),
+        });
+    }
     await nextTick();
-    openButton.value?.focus({ preventScroll: true });
+    if (!opened && !disposed) openButton.value?.focus({ preventScroll: true });
 });
 onBeforeUnmount(() => {
     clearTimeout(timer);
+    clearTimeout(preparationTimer);
+    stopImages?.();
     disposed = true;
     motion?.removeEventListener('change', motionChanged);
     document.removeEventListener('visibilitychange', visibilityChanged);
+    window.removeEventListener('pagehide', open);
     document.body.style.overflow = previousOverflow;
 });
 </script>
@@ -132,7 +159,7 @@ onBeforeUnmount(() => {
                     <span class="ee-booth-light"></span>
                 </div>
                 <div class="ee-booth-paper-channel">
-                    <div class="ee-booth-strip" @animationend.self="settle">
+                    <div ref="strip" class="ee-booth-strip" @animationend.self="settle">
                         <div v-for="(photo, index) in frames" :key="index" class="ee-booth-print">
                             <EditorialPhoto v-if="photo" :photo="{ ...photo, crop: 'natural', frame: 'fill' }" fit="cover" eager />
                             <template v-else

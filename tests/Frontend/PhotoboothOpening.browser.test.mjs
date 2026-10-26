@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdir, readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { createCmsEditorPreview } from './cms-editor-preview.mjs';
 
@@ -39,28 +39,23 @@ before(async () => {
             const uploaded = page.waitForResponse(
                 (response) => response.request().method() === 'POST' && response.url() === host.previewUrl + '/images',
             );
-            const source = await readFile(resolve('storage/app/private/dev-preview/enchanted-editorial/' + photo));
             const resized = await page.evaluate(
-                async ({ source, width, height }) => {
-                    const image = new Image();
-                    image.src = 'data:image/jpeg;base64,' + source;
-                    await image.decode();
+                ({ width, height, photo }) => {
                     const canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
-                    const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-                    canvas
-                        .getContext('2d')
-                        .drawImage(
-                            image,
-                            (width - image.naturalWidth * scale) / 2,
-                            (height - image.naturalHeight * scale) / 2,
-                            image.naturalWidth * scale,
-                            image.naturalHeight * scale,
-                        );
+                    const context = canvas.getContext('2d');
+                    const gradient = context.createLinearGradient(0, 0, width, height);
+                    gradient.addColorStop(0, '#b67d64');
+                    gradient.addColorStop(1, '#334e48');
+                    context.fillStyle = gradient;
+                    context.fillRect(0, 0, width, height);
+                    context.fillStyle = '#fff8e8';
+                    context.font = '32px serif';
+                    context.fillText(photo, 30, height / 2);
                     return canvas.toDataURL('image/jpeg').split(',')[1];
                 },
-                { source: source.toString('base64'), width, height },
+                { width, height, photo },
             );
             await dialog.locator('input[type=file]').setInputFiles({ name: photo, mimeType: 'image/jpeg', buffer: Buffer.from(resized, 'base64') });
             const response = await uploaded;
@@ -98,9 +93,10 @@ const assertHeroOutline = async (page) => {
     assert.equal(outline, 'none', 'Hero keeps focus without a presentation outline.');
 };
 async function assertFilledFrames(page) {
-    await page.waitForFunction(() =>
-        [...document.querySelectorAll('.ee-booth-print img')].every((image) => image.complete && image.naturalWidth > 0),
-    );
+    await page.waitForFunction(() => {
+        const images = [...document.querySelectorAll('.ee-booth-print img')];
+        return images.length === 3 && images.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+    });
     const frames = await page.locator('.ee-booth-print').evaluateAll((elements) =>
         elements.map((frame) => {
             const image = frame.querySelector('img');
@@ -339,19 +335,15 @@ run('Photobooth reduced motion, failed images and suppressed animation always of
         const page = await context.newPage();
         await page.route('**/media/**', (route) => route.abort());
         await page.goto(publicUrl());
-        await page.locator('[data-print-state="settled"]').waitFor();
-        assert.equal(await page.locator('.ee-booth-strip').evaluate((element) => element.getAnimations().length), 0);
-        assert.equal(await page.locator('.ee-booth-print img').count(), 0);
+        await page.locator('[data-ee-phase="landed"]').waitFor();
+        assert.equal(await page.locator('.ee-photobooth').count(), 0, 'Broken photographs bypass the sequence without revealing empty frames.');
         await page.setViewportSize({ width: 844, height: 390 });
-        assert.ok(await page.getByRole('button', { name: 'Skip animation', exact: false }).isVisible());
         assert.ok(
             await page.locator('.ee-loading-bird').evaluate((element) => {
                 const bounds = element.getBoundingClientRect();
                 return bounds.left >= 0 && bounds.right <= innerWidth;
             }),
         );
-        await page.getByRole('button', { name: 'Open Invitation', exact: true }).click();
-        await page.locator('[data-ee-phase="landed"]').waitFor();
     } finally {
         await context.close();
     }
@@ -388,6 +380,354 @@ run('Photobooth no-JS and unavailable session storage keep the published invitat
         }
     }
     console.log('Photobooth screenshots and motion: ' + artifacts);
+});
+
+async function recordReadiness(context, { holdDecode = false, noDecode = false } = {}) {
+    await context.addInitScript(
+        ({ holdDecode, noDecode }) => {
+            const decoded = new WeakMap();
+            window.boothEvidence = { states: [], violations: [], starts: 0 };
+            window.releaseBoothDecode = () => {};
+            const gate = new Promise((resolve) => (window.releaseBoothDecode = resolve));
+            const decode = HTMLImageElement.prototype.decode;
+            if (noDecode) HTMLImageElement.prototype.decode = undefined;
+            else
+                HTMLImageElement.prototype.decode = async function () {
+                    await decode.call(this);
+                    if (this.closest('.ee-booth-print')) {
+                        const source = this.currentSrc;
+                        if (holdDecode) await gate;
+                        decoded.set(this, source);
+                    }
+                };
+            let previous;
+            function sample() {
+                const booth = document.querySelector('.ee-photobooth');
+                const state = booth?.dataset.printState;
+                const images = [...document.querySelectorAll('.ee-booth-print img')];
+                if (state !== previous) {
+                    window.boothEvidence.states.push({
+                        state: state || 'absent',
+                        at: performance.now(),
+                        ready: images.filter((i) => i.complete && i.naturalWidth && i.naturalHeight).length,
+                    });
+                    if (state === 'printing') window.boothEvidence.starts++;
+                    previous = state;
+                }
+                if (state === 'printing' || state === 'settled') {
+                    if (
+                        images.length !== 3 ||
+                        images.some((i) => !i.complete || !i.naturalWidth || !i.naturalHeight || (!noDecode && decoded.get(i) !== i.currentSrc))
+                    ) {
+                        window.boothEvidence.violations.push({ state, at: performance.now() });
+                    }
+                }
+                requestAnimationFrame(sample);
+            }
+            requestAnimationFrame(sample);
+        },
+        { holdDecode, noDecode },
+    );
+}
+
+for (const [device, width, height] of [
+    ['desktop', 1440, 1000],
+    ['mobile', 390, 844],
+]) {
+    run(`Photobooth ${device}: uncached staggered slow downloads wait before one complete print/drop/settle`, async () => {
+        const context = await browser.newContext({ viewport: { width, height }, recordVideo: { dir: artifacts } });
+        await recordReadiness(context);
+        const page = await context.newPage();
+        const video = page.video();
+        const requests = new Map();
+        const releases = [];
+        try {
+            await page.route('**/media/**', async (route) => {
+                const url = route.request().url();
+                if (!requests.has(url)) requests.set(url, new Promise((resolve) => releases.push(resolve)));
+                await requests.get(url);
+                await route.continue();
+            });
+            await page.goto(publicUrl(), { waitUntil: 'domcontentloaded' });
+            await page.locator('[data-print-state="preparing"]').waitFor();
+            await page.waitForFunction(() => document.querySelectorAll('.ee-booth-print img').length === 3);
+            await page.waitForTimeout(1000);
+            assert.equal(requests.size, 3);
+            await page.screenshot({ path: join(artifacts, `${device}-slow-idle.png`) });
+            for (let i = 0; i < 3; i++) {
+                releases[i]();
+                if (i < 2) {
+                    await page.waitForFunction(
+                        (count) =>
+                            [...document.querySelectorAll('.ee-booth-print img')].filter((i) => i.complete && i.naturalWidth > 0).length === count,
+                        i + 1,
+                    );
+                    await page.waitForTimeout(800);
+                    assert.equal(await page.locator('.ee-photobooth').getAttribute('data-print-state'), 'preparing');
+                    assert.equal(await page.locator('.ee-booth-strip').evaluate((el) => getComputedStyle(el).visibility), 'hidden');
+                }
+            }
+            await page.locator('[data-print-state="printing"]').waitFor();
+            await assertFilledFrames(page);
+            await page.waitForTimeout(1400);
+            await page.screenshot({ path: join(artifacts, `${device}-slow-printing.png`) });
+            await page.locator('[data-print-state="settled"]').waitFor();
+            await assertFilledFrames(page);
+            await page.screenshot({ path: join(artifacts, `${device}-slow-settled.png`) });
+            const evidence = await page.evaluate(() => window.boothEvidence);
+            assert.deepEqual(evidence.violations, []);
+            assert.equal(evidence.starts, 1);
+            await writeFile(join(artifacts, `${device}-slow-timing.json`), JSON.stringify(evidence, null, 2));
+        } finally {
+            releases.forEach((release) => release());
+            await context.close();
+            await video.saveAs(join(artifacts, `${device}-slow-wait-then-print.webm`));
+        }
+    });
+}
+
+run('Photobooth waits for actual element decode after every download completes, including in fresh tabs', async () => {
+    const context = await browser.newContext();
+    await recordReadiness(context, { holdDecode: true });
+    try {
+        for (let visit = 0; visit < 2; visit++) {
+            const page = await context.newPage();
+            await page.goto(publicUrl());
+            await assertFilledFrames(page);
+            await page.waitForTimeout(350);
+            assert.equal(await page.locator('.ee-photobooth').getAttribute('data-print-state'), 'preparing');
+            await page.evaluate(() => window.releaseBoothDecode());
+            await page.locator('[data-print-state="printing"]').waitFor();
+            await page.waitForFunction(() => window.boothEvidence.starts === 1);
+            assert.deepEqual(await page.evaluate(() => window.boothEvidence.violations), []);
+            assert.equal(await page.evaluate(() => window.boothEvidence.starts), 1);
+            await page.close();
+        }
+    } finally {
+        await context.close();
+    }
+});
+
+run('Photobooth revalidates cached complete strip images without refetching or bypassing decode', async () => {
+    const context = await browser.newContext();
+    await recordReadiness(context, { holdDecode: true });
+    try {
+        const page = await context.newPage();
+        let imageRequests = 0;
+        page.on('request', (request) => {
+            if (request.resourceType() === 'image' && request.url().includes('/media/')) imageRequests++;
+        });
+        await page.goto(publicUrl());
+        await assertFilledFrames(page);
+        const initialRequests = imageRequests;
+        await page.locator('.ee-booth-print img').evaluateAll((images) =>
+            images.forEach((image) => {
+                image.srcset = image.src + ' 1x';
+            }),
+        );
+        await page.waitForTimeout(350);
+        await assertFilledFrames(page);
+        assert.equal(imageRequests, initialRequests, 'The browser reuses the loaded pixels for the same selected published URLs.');
+        assert.equal(await page.locator('.ee-photobooth').getAttribute('data-print-state'), 'preparing');
+        await page.evaluate(() => window.releaseBoothDecode());
+        await page.locator('[data-print-state="printing"]').waitFor();
+        await page.waitForFunction(() => window.boothEvidence.starts === 1);
+        assert.deepEqual(await page.evaluate(() => window.boothEvidence.violations), []);
+        assert.equal(await page.evaluate(() => window.boothEvidence.starts), 1);
+    } finally {
+        await context.close();
+    }
+});
+
+run('Photobooth invalidates stale decodes for changed responsive sources and bypasses source changes after printing starts', async () => {
+    const context = await browser.newContext({ deviceScaleFactor: 2 });
+    await recordReadiness(context, { holdDecode: true });
+    const page = await context.newPage();
+    let release;
+    const gate = new Promise((resolve) => (release = resolve));
+    try {
+        await page.route('**/*booth-responsive*', async (route) => {
+            await gate;
+            await route.continue();
+        });
+        await page.goto(publicUrl());
+        await assertFilledFrames(page);
+        await page
+            .locator('.ee-booth-print img')
+            .nth(1)
+            .evaluate((image) => {
+                image.srcset = `${image.src}?booth-responsive=1 1x, ${image.src}?booth-responsive=2 2x`;
+            });
+        await page.evaluate(() => window.releaseBoothDecode());
+        await page.waitForTimeout(500);
+        assert.equal(
+            await page.locator('.ee-photobooth').getAttribute('data-print-state'),
+            'preparing',
+            'Old decode completions cannot release a changed strip.',
+        );
+        release();
+        await page.locator('[data-print-state="printing"]').waitFor();
+        assert.match(
+            await page
+                .locator('.ee-booth-print img')
+                .nth(1)
+                .evaluate((i) => i.currentSrc),
+            /booth-responsive=2$/,
+        );
+        assert.deepEqual(await page.evaluate(() => window.boothEvidence.violations), []);
+        await page
+            .locator('.ee-booth-print img')
+            .nth(2)
+            .evaluate((image) => {
+                image.src += '?booth-responsive=changed';
+            });
+        await page.locator('.ee-photobooth').waitFor({ state: 'detached' });
+        assert.equal(await page.evaluate(() => window.boothEvidence.starts), 1);
+        assert.deepEqual(await page.evaluate(() => window.boothEvidence.violations), []);
+    } finally {
+        release();
+        await context.close();
+    }
+});
+
+run('Photobooth supports browsers without decode and never settles early when reduced motion changes during loading', async () => {
+    const context = await browser.newContext();
+    await recordReadiness(context, { noDecode: true });
+    const page = await context.newPage();
+    let release;
+    const gate = new Promise((resolve) => (release = resolve));
+    try {
+        await page.route('**/media/**', async (route) => {
+            await gate;
+            await route.continue();
+        });
+        await page.goto(publicUrl(), { waitUntil: 'domcontentloaded' });
+        await page.locator('[data-print-state="preparing"]').waitFor();
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.waitForTimeout(300);
+        assert.equal(await page.locator('.ee-photobooth').getAttribute('data-print-state'), 'preparing');
+        assert.equal(await page.locator('.ee-booth-strip').evaluate((el) => getComputedStyle(el).visibility), 'hidden');
+        release();
+        await page.locator('[data-print-state="settled"]').waitFor();
+        await assertFilledFrames(page);
+        assert.deepEqual(await page.evaluate(() => window.boothEvidence.violations), []);
+        assert.equal(await page.evaluate(() => window.boothEvidence.starts), 0);
+    } finally {
+        release();
+        await context.close();
+    }
+});
+
+run('Photobooth permanently stalled photographs bypass within the bounded deadline without printing', async () => {
+    const context = await browser.newContext();
+    await recordReadiness(context);
+    try {
+        const page = await context.newPage();
+        await page.route('**/media/**', () => {});
+        await page.goto(publicUrl(), { waitUntil: 'domcontentloaded' });
+        await page.locator('[data-print-state="preparing"]').waitFor();
+        await page.locator('.ee-photobooth').waitFor({ state: 'detached', timeout: 10500 });
+        await page.locator('[data-ee-phase="landed"]').waitFor();
+        assert.equal(await page.evaluate(() => window.boothEvidence.starts), 0);
+        assert.deepEqual(await page.evaluate(() => window.boothEvidence.violations), []);
+        assert.equal(await page.locator('.ee-loaded-content').getAttribute('inert'), null);
+    } finally {
+        await context.close();
+    }
+});
+
+run('Photobooth one failed photo or a decode rejection bypasses without printing broken frames', async () => {
+    for (const failure of ['request', 'decode']) {
+        const context = await browser.newContext();
+        await recordReadiness(context);
+        if (failure === 'decode')
+            await context.addInitScript(() => {
+                const decode = HTMLImageElement.prototype.decode;
+                HTMLImageElement.prototype.decode = function () {
+                    return this.closest('.ee-booth-print') ? Promise.reject(new DOMException('Invalid image', 'EncodingError')) : decode.call(this);
+                };
+            });
+        try {
+            const page = await context.newPage();
+            if (failure === 'request') {
+                let failed;
+                await page.route('**/media/**', (route) => {
+                    failed ||= route.request().url();
+                    return route.request().url() === failed ? route.abort() : route.continue();
+                });
+            }
+            await page.goto(publicUrl());
+            await page.locator('[data-ee-phase="landed"]').waitFor();
+            assert.equal(await page.locator('.ee-photobooth').count(), 0);
+            assert.equal(await page.evaluate(() => window.boothEvidence.starts), 0);
+            assert.deepEqual(await page.evaluate(() => window.boothEvidence.violations), []);
+        } finally {
+            await context.close();
+        }
+    }
+});
+
+run('Photobooth loading personal entry: Open, Skip and Escape cancel late decodes without restart or RSVP writes', async () => {
+    for (const action of ['Open Invitation', 'Skip animation', 'Escape']) {
+        const context = await browser.newContext();
+        await recordReadiness(context, { holdDecode: true });
+        try {
+            const page = await context.newPage();
+            const errors = [],
+                writes = [];
+            page.on('pageerror', (error) => errors.push(error.message));
+            page.on('request', (request) => {
+                if (request.method() === 'POST') writes.push(request.url());
+            });
+            await page.goto(host.owner.personal.representativeUrl);
+            await assertFilledFrames(page);
+            const initialResponse = await page.getByLabel('Maya Santos', { exact: true }).inputValue();
+            assert.equal(await page.locator('.ee-photobooth').getAttribute('data-print-state'), 'preparing');
+            if (action === 'Escape') await page.keyboard.press('Escape');
+            else await page.getByRole('button', { name: action, exact: action === 'Open Invitation' }).click();
+            await page.locator('.ee-photobooth').waitFor({ state: 'detached' });
+            await page.evaluate(() => window.releaseBoothDecode());
+            await page.locator('[data-ee-phase="landed"]').waitFor();
+            await page.waitForTimeout(200);
+            assert.equal(await page.evaluate(() => window.boothEvidence.starts), 0);
+            assert.equal(await page.locator('.ee-photobooth').count(), 0);
+            assert.equal(await page.getByLabel('Maya Santos', { exact: true }).inputValue(), initialResponse);
+            assert.deepEqual(writes, []);
+            assert.deepEqual(errors, []);
+        } finally {
+            await context.close();
+        }
+    }
+});
+
+run('Photobooth unmount cancels an already queued source-change exit without marking the session opened', async () => {
+    const context = await browser.newContext();
+    try {
+        const page = await context.newPage(),
+            errors = [];
+        page.on('pageerror', (error) => errors.push(error.message));
+        await page.goto(publicUrl());
+        await page.locator('[data-print-state="printing"]').waitFor();
+        const key = await page.evaluate(() => {
+            const presentation = JSON.parse(document.getElementById('enchanted-data').textContent);
+            const key = `ee:photobooth:1:${presentation.opening.weddingKey}`;
+            const image = document.querySelector('.ee-booth-print img');
+            image.src += '?unmount-regression';
+            image.dispatchEvent(new Event('load'));
+            document.getElementById('public-enchanted').__vue_app__.unmount();
+            return key;
+        });
+        await page.waitForTimeout(200);
+        assert.equal(
+            await page.evaluate((key) => sessionStorage.getItem(key), key),
+            null,
+            'A stale queued exit cannot change session behavior after unmount.',
+        );
+        assert.equal(await page.evaluate(() => document.body.style.overflow), '');
+        assert.deepEqual(errors, []);
+    } finally {
+        await context.close();
+    }
 });
 
 run('Photobooth uses honest zero/one/two-photo published strips and keeps long published names usable on narrow screens', async () => {

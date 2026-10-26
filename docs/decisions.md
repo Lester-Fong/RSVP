@@ -1,6 +1,16 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-25 (D-060 records 5D manual acceptance and the fresh Enchanted Photobooth default; D-059 and earlier decisions preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-26 (D-061 records final DEL-09a image-readiness acceptance, scoped commit/push and DEL-10 audit-only authorization; prior decisions preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-061 — DEL-09a image-readiness acceptance and DEL-10 audit kickoff (2026-10-26)
+
+Status: **DEL-09a Photobooth Image Readiness is OWNER-ACCEPTED.** The owner passed all four final checks: all three photos are ready before printing on a slow connection; Open/Skip work immediately during loading; failed/timed-out photos gracefully bypass printing; printing, falling and settling remain visually correct on desktop/mobile. Preserve the approved visuals and animations; no further visual changes are requested.
+
+The owner authorizes a focused commit and push of the image-readiness implementation, relevant tests and acceptance documentation to `integration/m5-premium-wedding-20261025`, followed by verification of the remote SHA and existing Draft PR #1. No master merge or deployment is authorized.
+
+DEL-10 is authorized for read-only reconnaissance and a documented execution plan only. Audit the entire invitation MVP, including DEL-05 acceptance, 5D engine/release gates, real-account customer flow, privacy/security, normal development MySQL versus retained synthetic SQLite, CI and operations. Do not implement DEL-10 application features/refactors, activate production-disabled features, begin ALB-01, modify development MySQL or weaken fail-closed tests. Detailed release/implementation actions require the subsequent scoped authorization identified in that plan.
+
+Source: owner's **DEL-09a CLOSEOUT → DEL-10 FINAL QA KICKOFF**, with four explicit passed checks. [Implementation and acceptance evidence](tasks/premium_delight_experience.md#image-readiness-correction--2026-10-26). Earlier milestone and independent release gates remain separate.
 
 ### D-060 — Milestone 5D manual acceptance and fresh Enchanted opening default (2026-10-25)
 

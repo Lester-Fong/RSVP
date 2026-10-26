@@ -246,6 +246,9 @@
 .ee-photobooth[data-print-state='printing'] .ee-booth-strip {
     animation: ee-photo-print 3000ms 350ms cubic-bezier(0.33, 0, 0.18, 1) both;
 }
+.ee-photobooth[data-print-state='preparing'] .ee-booth-strip {
+    visibility: hidden;
+}
 .ee-photobooth[data-print-state='settled'] .ee-booth-strip {
     transform: translateY(18px) rotate(-2deg);
 }

@@ -1,5 +1,15 @@
 # Wedding RSVP SaaS — Milestone Checklist
 
+## DEL-09a — image-readiness correction (2026-10-26)
+
+- [x] Record owner Search 6/6 acceptance and Photobooth functional integration 7/7 pass; preserve approved design and unrelated release gates.
+- [x] Gate printing on the actual rendered strip images' successful load, intrinsic dimensions and decode; handle responsive sources and reject stale completions/duplicate starts.
+- [x] Preserve immediate Open/Skip/Escape; bypass on image failure or eight-second preparation deadline; hide unprepared strips with reduced motion and before source-change exit.
+- [x] Run 100 isolated SQLite Laravel cases/588 assertions and 7 frontend cases; capture/inspect actual port-8000 desktop/mobile slow-network motion with 3/3 decoded photos before the single print start. [Commands, remaining verification and evidence](tasks/premium_delight_experience.md#image-readiness-correction--2026-10-26); [risk register](risks_and_followups.md#rf-035--photobooth-printed-before-visible-images-were-ready).
+- [x] Acceptance closeout reruns the complete 21/21 browser file, 100 PHP cases/588 assertions, 7 frontend cases and app/fixture types/scoped lint/format/build. No failures/skips; this supersedes the earlier 20-full-plus-4-focused browser boundary. Exact commands/evidence are in the closeout.
+- [x] D-061: owner passes all four final checks (slow-network readiness, immediate Open/Skip, failed/timed-out bypass, desktop/mobile motion); DEL-09a image readiness is accepted and frozen.
+- [ ] Close out the scoped integration commit/push and Draft PR #1 SHA check; then deliver the DEL-10 audit plan for owner review. No master merge, deployment or development MySQL changes.
+
 ## DEL-09a / D-059 — owner acceptance recorded (2026-10-25)
 
 - [x] Record the owner's acceptance of the finalized Photobooth Opening; freeze its approved implementation and retain its separate browser/device/security gates.

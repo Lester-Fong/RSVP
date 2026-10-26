@@ -510,3 +510,14 @@ Limits: this verifies these controlled schedules on one MySQL version/isolation 
 - Status: Fresh starter documents now default to the approved Photobooth settings. Existing saved drafts/revisions remain unchanged; the account-3/wedding-3 retained example remains disabled until the owner explicitly enables, saves and republishes it. Feature tests verify new registration through generic and personal publication. Port-8000 manual confirmation is pending.
 - Proposed action: Keep the default scoped to newly created starter documents, retain the checkbox opt-out and explicit immutable publication, and never rewrite saved state as a repair. The exact owner steps and URLs are in the [post-integration handoff](tasks/post_integration_guest_search_photobooth.md).
 - Target milestone: Focused post-integration correction, 2026-10-25.
+
+## RF-035 — Photobooth printed before visible images were ready
+
+- Category: Confirmed bug / asynchronous image readiness.
+- Description: The opening trusted the invitation loader's ready event, which deliberately avoids blocking entry on images. The second/third strip images could remain incomplete when printing started. Reduced-motion CSS could also expose an unprepared strip.
+- Impact: Empty/unfinished photo frames during the approved premium introduction; indefinite loading must not become the repair.
+- Priority: P1 for Photobooth acceptance.
+- Status: Closed under D-061: explicit owner acceptance of all four final image-readiness/access/failure/desktop-mobile-motion checks. Actual-element decode/dimension/current-source checks, cancellation, immediate exits and the eight-second fail-open deadline remain regression-protected.
+- Evidence: [Focused closeout, tests and port-8000 slow-network motion](tasks/premium_delight_experience.md#image-readiness-correction--2026-10-26); QA-DEL-15. Desktop/mobile recorded one print start only after all three actual photos decoded, with no incomplete-frame samples/errors/POSTs and unchanged retained SQLite checksum. Publishing/media/guard regressions: 100 PHP cases/588 assertions; no MySQL operations.
+- Proposed action: Preserve the accepted design and readiness regressions. DEL-10 audits independent device/security/engine gates; no additional visual change, draft/private fallback lookup or publication/data change is authorized.
+- Target milestone: DEL-09a accepted 2026-10-26; scoped commit/push authorized by D-061, with DEL-10 audit next.
