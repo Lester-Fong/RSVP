@@ -521,3 +521,13 @@ Limits: this verifies these controlled schedules on one MySQL version/isolation 
 - Evidence: [Focused closeout, tests and port-8000 slow-network motion](tasks/premium_delight_experience.md#image-readiness-correction--2026-10-26); QA-DEL-15. Desktop/mobile recorded one print start only after all three actual photos decoded, with no incomplete-frame samples/errors/POSTs and unchanged retained SQLite checksum. Publishing/media/guard regressions: 100 PHP cases/588 assertions; no MySQL operations.
 - Proposed action: Preserve the accepted design and readiness regressions. DEL-10 audits independent device/security/engine gates; no additional visual change, draft/private fallback lookup or publication/data change is authorized.
 - Target milestone: DEL-09a accepted 2026-10-26; scoped commit/push authorized by D-061, with DEL-10 audit next.
+
+## RF-036 — GitHub CI coverage and full-suite assertion blocker
+
+- Category: Confirmed CI/release evidence gap and existing test expectation mismatch.
+- Impact: The previous `main`/`develop` filters did not verify Draft PR #1 targeting `master`; a successful build/isolated feature subset did not establish an all-green application suite.
+- Priority: P1 before relying on PR checks or declaring release readiness.
+- Status: D-062 repairs event coverage, runtimes, least privilege, lock installs and non-mutating checks with explicit isolated SQLite. Local full suite reports 772 cases/4,954 assertions, one failure and 45 disabled InnoDB skips. Actual GitHub workflow evidence is pending publication/inspection; no green result is inferred.
+- Evidence: `CmsReusableContentTest.php:92` expects five intro registrations while the accepted registry contains six including Photobooth; source/guard/tests/lockfiles remain unchanged. [DEL-10 execution record](tasks/premium_delight_experience.md#del-101102--execution-record); QA-CI-01/02.
+- Action: Inspect actual pushed workflow/jobs and resolve configuration/prerequisite problems only. A separately authorized application-test expectation correction is needed before the full suite can pass. Never hide the failure, exclude the test, run MySQL fixtures against development or broadly reformat/upgrade dependencies.
+- Target milestone: DEL-10.2, with independent DEL-10.3–10.8 owner/engine/security/device/operations gates preserved.

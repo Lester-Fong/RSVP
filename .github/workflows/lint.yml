@@ -3,43 +3,75 @@ name: linter
 on:
   push:
     branches:
-      - develop
-      - main
+      - master
+      - 'integration/**'
   pull_request:
     branches:
-      - develop
-      - main
+      - master
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality:
+    name: Non-mutating quality checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      DB_URL: ''
+      DATABASE_URL: ''
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      SESSION_PATH: /
+      CMS_MYSQL_TEST_ENABLED: 'false'
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.2'
+          tools: composer:v2
+          extensions: mbstring, dom, xml, xmlwriter
+          coverage: none
 
-      - name: Install Dependencies
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install locked dependencies without application hooks
         run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          npm install
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts --no-plugins
+          npm ci
 
-      - name: Run Pint
-        run: vendor/bin/pint
+      - name: Check PHP formatting
+        run: php vendor/bin/pint --test --format agent
 
-      - name: Format Frontend
-        run: npm run format
+      - name: Check TypeScript
+        run: npm run typecheck
 
-      - name: Lint Frontend
-        run: npm run lint
+      - name: Check fixture TypeScript
+        run: node node_modules/vue-tsc/bin/vue-tsc.js --noEmit -p tests/Frontend/fixtures/tsconfig.json
 
-      # - name: Commit Changes
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: fix code style
-      #     commit_options: '--no-verify'
+      - name: Check ESLint
+        run: npx --no-install eslint . --max-warnings=0
+
+      - name: Check resources formatting
+        run: npm run format:check
+
+      - name: Check workflow formatting
+        run: npx --no-install prettier --check '.github/workflows/*.yml'
+
+      - name: Verify checks left tracked files unchanged
+        run: git diff --exit-code

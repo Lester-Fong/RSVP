@@ -83,6 +83,14 @@ The project's `App\Console\Commands\Serve` extends Laravel's standard developmen
 
 ## Build, check, and test
 
+### GitHub Actions (DEL-10.2)
+
+`tests.yml` and `lint.yml` run for pull requests targeting `master` (including drafts), and pushes to `master` or `integration/**`. Both use PHP 8.2, Node 22, `composer install`/`npm ci` from the committed lockfiles, read-only repository permissions and checkout without persisted credentials. They do not need production secrets, run a MySQL service, deploy or push formatter changes.
+
+The test job sets the process-only testing/in-memory SQLite, blank database URLs, array cache/session and temporary config/routes/storage paths before any Laravel boot. It generates an ephemeral CI key, verifies the existing bootstrap/resolved-connection guard plus actual in-memory PDO, and checks GD/EXIF support before tests. PHP prerequisites are installed only on the disposable runner. No `.env` copy, key-writing Artisan command, Ziggy regeneration or application migration is needed. The full PHP suite runs with disposable MySQL opt-ins disabled; their skips remain unverified engine coverage. Fifteen explicitly listed Node contract/renderer cases run alongside the build; browser/physical-device suites remain separate prerequisites, not silent CI passes.
+
+The quality job uses `php vendor/bin/pint --test --format agent`, `npx --no-install eslint . --max-warnings=0`, TypeScript checks, `npm run format:check` and workflow-only Prettier `--check`; it asserts tracked files stayed unchanged. Do not substitute the local fix-style `npm run lint`/`npm run format`, mask exit codes or reformat unrelated files to make CI green. A failing application assertion, dependency or unrelated style issue must be reported for its own scoped approval. See the [canonical DEL-10 execution record and actual run evidence](docs/tasks/premium_delight_experience.md#del-101102--execution-record).
+
 ```powershell
 npm.cmd run build
 npm.cmd run typecheck
