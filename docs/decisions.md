@@ -1,6 +1,14 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-26 (D-061 records final DEL-09a image-readiness acceptance, scoped commit/push and DEL-10 audit-only authorization; prior decisions preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-26 (D-062 authorizes DEL-10.1 evidence reconciliation and DEL-10.2 CI repair; D-061 acceptance/publication and prior decisions preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-062 — DEL-10.1 evidence reconciliation and DEL-10.2 CI repair (2026-10-26)
+
+Status: **Owner authorizes the first two existing DEL-10 submilestones.** Reconcile actual acceptance/verification evidence without closing unresolved gates; repair Actions for `master` PRs and integration pushes, using compatible runtimes, locked dependencies, least privilege, non-mutating quality checks and guarded isolated SQLite. Validate, make focused commits, push the existing integration branch and inspect actual workflow/job results, including Draft PR #1.
+
+Application feature changes, broad dependency upgrades, unrelated formatting, production activation, real MySQL migrations/resets, Album, visual enhancements, merge and deployment remain excluded. DEL-09a at `c14771a` is accepted/frozen. Preserve D-060's 5D manual acceptance while keeping its disposable-InnoDB/production gates, and preserve DEL-05 manual acceptance requirements. Application/dependency/formatting failures outside CI scope must remain visible blockers for owner review, not be suppressed or silently repaired. The remaining six DEL-10 submilestones retain their existing approval boundaries.
+
+Source: owner's **DEL-10.1 + DEL-10.2 — Release Evidence Reconciliation and GitHub CI Repair**. [Canonical plan and execution evidence](tasks/premium_delight_experience.md#del-10--invitation-mvp-readiness-audit-and-execution-plan-2026-10-26).
 
 ### D-061 — DEL-09a image-readiness acceptance and DEL-10 audit kickoff (2026-10-26)
 

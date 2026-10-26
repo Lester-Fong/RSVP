@@ -1,5 +1,12 @@
 # Wedding RSVP SaaS — Milestone Checklist
 
+## DEL-10.1 / DEL-10.2 — D-062 (2026-10-26)
+
+- [x] Reconcile DEL-09a acceptance/publication, 5D manual acceptance versus engine/production gates, DEL-05/CMS pending owner checks, actual gallery implementation and QA inventory counts against evidence. Preserve the existing eight-submilestone plan and historical results.
+- [x] Review existing workflows, lockfiles, runtimes, guard and prerequisites; run non-mutating baseline quality checks and the full isolated SQLite suite. Record the existing intro-registry assertion failure without changing/excluding application tests or claiming green CI.
+- [ ] Validate/publish focused CI repair, inspect actual Draft PR #1 workflow/job results and record exact run links, failures/skips and remaining gates. [Execution record](tasks/premium_delight_experience.md#del-101102--execution-record).
+- [ ] Owner reviews the application-test expectation blocker and subsequent bounded work. No DEL-09a change, production activation, MySQL migration/reset, merge or deployment.
+
 ## DEL-09a — image-readiness correction (2026-10-26)
 
 - [x] Record owner Search 6/6 acceptance and Photobooth functional integration 7/7 pass; preserve approved design and unrelated release gates.
