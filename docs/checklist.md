@@ -4,14 +4,15 @@
 
 - [x] Owner accepts DEL-10.1; preserve DEL-09a/5D manual acceptance and outstanding DEL-05, InnoDB/security/production gates.
 - [x] Diagnose the three failures; align both Inertia finders without weakening existence checks, verify the six unavailable introductions, and preserve extension inheritance with bounded subprocess readiness/diagnostics and real >2 MiB upload assertions. Focused Windows 92 cases/186 assertions and Linux finder 3 cases/19 assertions pass.
-- [ ] Complete full safe verification, publish focused fixes and inspect actual Linux PR/push tests and quality. Close only CI reproducibility after green results. [Current evidence](tasks/premium_delight_experience.md#del-102b--ci-portability-corrections-2026-10-26).
+- [x] Complete safe verification and push `30f94e8`: all four Linux PR/push test/quality workflows pass. Full PHP: 775 cases/4,983 assertions, 730 passed, zero failures/errors, 45 InnoDB skips. DEL-10.2 CI reproducibility achieved; independent release gates remain open. [Exact runs and current evidence](tasks/premium_delight_experience.md#del-102b--ci-portability-corrections-2026-10-26).
+- [ ] Owner reviews closeout; next bounded authorization is DEL-10.3 fresh-customer evidence, with normal MySQL/customer writes requiring separate explicit approval. DEL-05 owner review remains independent.
 
 ## DEL-10.1 / DEL-10.2 — D-062 (2026-10-26)
 
 - [x] Reconcile DEL-09a acceptance/publication, 5D manual acceptance versus engine/production gates, DEL-05/CMS pending owner checks, actual gallery implementation and QA inventory counts against evidence. Preserve the existing eight-submilestone plan and historical results.
 - [x] Review existing workflows, lockfiles, runtimes, guard and prerequisites; run non-mutating baseline quality checks and the full isolated SQLite suite. Record the existing intro-registry assertion failure without changing/excluding application tests or claiming green CI.
 - [x] Validate/publish focused CI repair and inspect actual draft-PR/integration-push workflows: quality passes; isolation/build/15 Node cases pass; full Linux PHP suite reports 20 failures, one error and 45 InnoDB skips. Exact run links and the corrected initial context-validation error are in the [execution record](tasks/premium_delight_experience.md#del-101102--execution-record).
-- [ ] Owner reviews the application-test expectation blocker and subsequent bounded work. No DEL-09a change, production activation, MySQL migration/reset, merge or deployment.
+- [x] Owner authorizes the three portability corrections under D-063; DEL-10.2b resolves them with actual green Linux PR/push evidence. No DEL-09a change, production activation, MySQL migration/reset, merge or deployment.
 
 ## DEL-09a — image-readiness correction (2026-10-26)
 
