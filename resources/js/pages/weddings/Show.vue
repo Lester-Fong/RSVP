@@ -60,7 +60,7 @@ const formatDate = (date: string | null) => {
 
             <PublicationPanel :account-id="account.id" :wedding-id="wedding.id" :publication="publication" />
             <div v-if="cmsEditorUrl" class="flex flex-wrap gap-3">
-                <Link :href="cmsEditorUrl" class="text-sm underline underline-offset-4">Edit wedding website</Link>
+                <a :href="cmsEditorUrl" class="text-sm underline underline-offset-4">Edit wedding website</a>
                 <a v-if="cmsSavedPreviewUrl" :href="cmsSavedPreviewUrl" target="_blank" rel="noopener" class="text-sm underline underline-offset-4"
                     >Review saved website</a
                 >

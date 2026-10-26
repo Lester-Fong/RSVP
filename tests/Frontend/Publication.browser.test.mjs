@@ -46,7 +46,7 @@ test('publication controls, anonymous snapshot rendering and unpublishing', { sk
         await page.getByLabel('Password', { exact: true }).fill(password);
         await page.getByLabel('Confirm password').fill(password);
         await page.getByRole('button', { name: 'Create account', exact: true }).click();
-        await page.waitForURL('**/dashboard');
+        await page.waitForURL('**/onboarding');
         await page.goto(`${origin}/weddings/create`);
         await page.getByLabel('Partner 1 name').fill('Publishing Alex');
         await page.getByLabel('Partner 2 name').fill('Publishing Jamie');
@@ -54,6 +54,8 @@ test('publication controls, anonymous snapshot rendering and unpublishing', { sk
         await page.getByLabel(/Wedding time/).fill('16:30');
         await page.getByLabel(/Ceremony venue/).fill('Our chapel');
         await page.getByRole('button', { name: 'Create wedding', exact: true }).click();
+        await page.waitForURL('**/onboarding/congratulations');
+        await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
         assert.equal(await page.getByRole('button', { name: 'Publish invitation', exact: true }).isDisabled(), true);

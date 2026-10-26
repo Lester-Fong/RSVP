@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\GuestInvitationLifecycleController;
 use App\Http\Controllers\InvitationGroupController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PersonalInvitationController;
 use App\Http\Controllers\PersonalRsvpAccessController;
 use App\Http\Controllers\PublicRsvpController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\WeddingAttendanceController;
 use App\Http\Controllers\WeddingController;
 use App\Http\Controllers\WeddingInvitationController;
 use App\Http\Controllers\WeddingPublicationController;
+use App\Http\Middleware\EnsureWeddingOnboarded;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -57,12 +59,14 @@ Route::post('rsvp/{token}/responses', [PersonalInvitationController::class, 'sto
     ->middleware('throttle:personal-rsvp-write')->name('public.personal-rsvp.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', DashboardController::class)->name('dashboard');
+    Route::get('onboarding', [OnboardingController::class, 'show'])->name('onboarding');
+    Route::get('onboarding/congratulations', [OnboardingController::class, 'congratulations'])->block()->name('onboarding.congratulations');
+    Route::get('dashboard', DashboardController::class)->middleware(EnsureWeddingOnboarded::class)->name('dashboard');
 
     Route::get('weddings/create', [WeddingController::class, 'create'])->name('weddings.create');
-    Route::post('weddings', [WeddingController::class, 'storeFirst'])->name('weddings.store');
+    Route::post('weddings', [WeddingController::class, 'storeFirst'])->block()->name('weddings.store');
 
-    Route::scopeBindings()->prefix('accounts/{account}')->name('accounts.')->group(function () {
+    Route::scopeBindings()->prefix('accounts/{account}')->name('accounts.')->middleware(EnsureWeddingOnboarded::class)->group(function () {
         Route::prefix('weddings/{wedding}/cms-preview')->name('weddings.cms-preview.')->group(function () {
             Route::get('draft', [CmsEditorPreviewController::class, 'draft'])->middleware('throttle:cms-editor-read')->name('draft');
             Route::put('draft', [CmsEditorPreviewController::class, 'save'])->middleware('throttle:cms-editor-save');
@@ -74,7 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('validate', [CmsEditorPreviewController::class, 'validateContent'])->middleware('throttle:cms-editor-validation')->name('validate');
         });
         Route::get('weddings/create', [WeddingController::class, 'createInAccount'])->name('weddings.create');
-        Route::post('weddings', [WeddingController::class, 'store'])->name('weddings.store');
+        Route::post('weddings', [WeddingController::class, 'store'])->block()->name('weddings.store');
         Route::get('weddings/{wedding}', [WeddingController::class, 'show'])->name('weddings.show');
         Route::get('weddings/{wedding}/preview', [WeddingController::class, 'preview'])->name('weddings.preview');
         Route::get('weddings/{wedding}/guests', [InvitationGroupController::class, 'index'])->name('weddings.guests.index');

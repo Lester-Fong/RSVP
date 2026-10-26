@@ -29,7 +29,7 @@ beforeEach(async () => {
     await page.getByLabel('Email address').fill(info.owner.email);
     await page.getByLabel('Password', { exact: true }).fill(info.owner.password);
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
     await openEditor();
 });
 afterEach(async () => {
@@ -42,6 +42,21 @@ after(async () => {
 });
 const run = (name, fn) => test(name, { skip: !enabled }, fn);
 const frame = () => page.frameLocator('iframe[title="Wedding website preview"]');
+async function enterInvitation(tab) {
+    await tab.locator('.ee-photobooth, [data-ee-phase="landed"]').first().waitFor();
+    const open = tab.getByRole('button', { name: 'Open Invitation', exact: true });
+    if (await open.isVisible()) await open.click();
+}
+async function useWebsiteLoader() {
+    // The accepted Photobooth Open intentionally bypasses network gates. Test the ordinary loader with that optional intro off.
+    await page.getByRole('button', { name: 'Welcome', exact: true }).click();
+    const opening = page.getByLabel('Photobooth opening', { exact: true });
+    if (await opening.isChecked()) {
+        await opening.uncheck();
+        await save();
+        await publish();
+    }
+}
 async function openEditor() {
     await page.goto(info.previewUrl);
     await page.getByRole('heading', { name: 'Make it yours' }).waitFor();
@@ -83,6 +98,7 @@ run('DEL03b1 fresh editor, library and published website contain no default phot
     await publish();
     const visitor = await context.newPage();
     await visitor.goto(publicUrl);
+    await enterInvitation(visitor);
     await visitor.locator('[data-ee-phase="landed"]').waitFor();
     assert.equal(await visitor.locator('img, .ee-photo-fallback').count(), 0);
     await visitor.screenshot({ path: join(artifacts, 'fresh-published-1440.png'), fullPage: true });
@@ -98,6 +114,7 @@ run('DEL03b1 editor publish/republish requires saved state, supports cancel and 
     assert.equal(await page.getByRole('button', { name: /^(Republish|Published)$/ }).isDisabled(), true);
     const visitor = await context.newPage();
     await visitor.goto(publicUrl);
+    await enterInvitation(visitor);
     assert.equal(await visitor.getByText('Private polish story', { exact: true }).count(), 0);
     await save();
     await visitor.reload();
@@ -131,6 +148,7 @@ run('DEL03b1 stale editor publication fails accessibly without discarding local 
 });
 
 run('DEL03b1 bootstrap and image readiness overlays prevent incomplete display, then land and reanchor the bird', async () => {
+    await useWebsiteLoader();
     const current = await props();
     const png = await page.evaluate(() => {
         const canvas = document.createElement('canvas');
@@ -225,6 +243,7 @@ run('DEL03b1 reduced motion disables loader flight/hover; failed images settle t
     const visitor = await context.newPage();
     await visitor.route('**/media/*', (route) => route.abort('failed'));
     await visitor.goto(publicUrl);
+    await enterInvitation(visitor);
     await visitor.locator('[data-ee-phase="landed"]').waitFor();
     assert.equal(await visitor.locator('.ee-photo-fallback').count(), 1);
     assert.equal(await visitor.locator('.ee-hummingbird').evaluate((el) => getComputedStyle(el).animationName), 'none');
@@ -296,6 +315,7 @@ run('DEL03b1 live and saved private previews wait for their first photograph and
 });
 
 run('DEL03b1 published content remains covered until fonts settle and script failure leaves readable server content', async () => {
+    await useWebsiteLoader();
     const visitor = await context.newPage();
     let release;
     const gate = new Promise((resolve) => {

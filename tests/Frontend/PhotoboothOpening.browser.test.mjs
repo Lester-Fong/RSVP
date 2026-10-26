@@ -21,7 +21,7 @@ before(async () => {
         await page.getByLabel('Email address').fill(host.owner.email);
         await page.getByLabel('Password', { exact: true }).fill(host.owner.password);
         await page.getByRole('button', { name: 'Log in', exact: true }).click();
-        await page.waitForURL('**/dashboard');
+        await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         await page.goto(host.previewUrl);
         await page.getByLabel('Photobooth opening', { exact: true }).check();
         for (const [section, label, photo, width, height, frame, crop] of [
@@ -759,7 +759,7 @@ run('Photobooth uses honest zero/one/two-photo published strips and keeps long p
         await editor.getByLabel('Email address').fill(host.owner.email);
         await editor.getByLabel('Password', { exact: true }).fill(host.owner.password);
         await editor.getByRole('button', { name: 'Log in', exact: true }).click();
-        await editor.waitForURL('**/dashboard');
+        await editor.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         await editor.goto(host.previewUrl);
         const props = await editor.locator('#app').evaluate((element) => JSON.parse(element.dataset.page).props);
         csrf = props.csrfToken;

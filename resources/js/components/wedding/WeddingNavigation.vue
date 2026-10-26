@@ -11,7 +11,9 @@ const items = [
 
 <template>
     <nav aria-label="Wedding workspace" class="flex min-w-0 flex-wrap gap-x-5 border-b sm:gap-x-7">
-        <Link
+        <!-- A document boundary lets the editor's native unsaved warning protect browser Back as well as links. -->
+        <component
+            :is="item.key === 'invitation' ? 'a' : Link"
             v-for="item in items"
             :key="item.key"
             :href="route(item.route, { account: accountId, wedding: weddingId })"
@@ -24,6 +26,6 @@ const items = [
             "
         >
             {{ item.label }}
-        </Link>
+        </component>
     </nav>
 </template>

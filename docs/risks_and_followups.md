@@ -531,3 +531,23 @@ Limits: this verifies these controlled schedules on one MySQL version/isolation 
 - Evidence: The `26daace` baseline had 20 Linux failures/one error. Shared lowercase Inertia configuration resolves 19 assertion failures, the catalog test now checks all six legitimate unavailable entries, and inherited extension configuration plus bounded startup/socket checks resolves the server probe error. Windows full suite and focused Linux finder cases also pass. [Exact runs, diagnosis and coverage](tasks/premium_delight_experience.md#del-102b--ci-portability-corrections-2026-10-26); QA-CI-01/02.
 - Action: Preserve locked installs, least privilege, real failure propagation, existence/availability/upload assertions and fail-closed SQLite isolation. Keep opt-in InnoDB skips explicit; do not connect CI to development MySQL or infer approval for production/merge/deployment. No remaining blocker in this bounded CI slice.
 - Target milestone: DEL-10.2 complete for CI reproducibility; independent DEL-10.3–10.8 owner/engine/security/device/operations gates remain open.
+
+## RF-037 — ONB-01 owner acceptance, engine proof and legacy cardinality
+
+- Category: Approved product-rule change; remaining release verification/data-compatibility gates.
+- Impact: The old customer paths allowed multiple weddings. D-064 now requires one ordinary owner workspace/one wedding; existing historical violations cannot be deleted/reassigned or silently made inaccessible to satisfy a new index. The relational schema remains 1:N for those exceptions and future membership architecture.
+- Priority: P1 before deployment and final DEL-10.3 customer acceptance.
+- Status: ONB-01 functionally owner-accepted under D-065; automated SQLite/browser evidence passed. Genuine InnoDB concurrency proof remains pending. Both creation endpoints use one locked transaction service; no customer path creates a second owner account/wedding. Legacy conflicts block creation and retain authorized access. No new schema constraint or normal MySQL operation.
+- Evidence: Full PHP 786 cases/5,142 assertions (741 passed, zero failures/errors, 45 unchanged MySQL skips); 26 distinct browser cases passed. Pre-owner automated-run retained inventory 4/4/4, no duplicate cardinalities, unchanged full DB hash during that run; historical multi-record fixtures are preserved. Normal MySQL/deployment inventory is not newly verified. [Exact evidence and owner walkthrough](tasks/cms_customer_workflow_integration.md#onb-01--single-wedding-onboarding-2026-10-26); QA-ONB-01–04.
+- Action: QA-ONB-04 is owner-accepted; obtain separate CMS-UX-01 visual approval before publication/proceeding to DEL-10.3. Execute separately approved disposable InnoDB schedules for same-user/different sessions, shared owners, both endpoints and profile deletion. Before any later uniqueness migration, inventory/backup every target read-only, obtain explicit owner resolution for legacy violations and rehearse migration/rollback on a disposable copy. Do not weaken guards or add unapproved transfer/archive/role features. Future creation/import/operator paths must use the approved invariant boundary or receive separate review.
+- Target milestone: ONB-01 acceptance → DEL-10.3, with engine/security/production gates retained.
+
+## RF-038 — CMS-UX-01 final editor visual acceptance
+
+- Category: Owner-requested usability refinement / remaining manual verification.
+- Impact: The global sidebar constrained the preview; desktop spacing and navigation consumed editing room at 100% zoom.
+- Priority: P1 for this owner delivery, not a new production activation authorization.
+- Status: Full-width compact editor implemented; final visual acceptance pending (QA-CMSUX-02).
+- Evidence: 78 browser, 125 PHP and 15 Node passes, zero failures/skips in this selection; dedicated shell, real responsive iframe, native Back warnings and quality/build evidence in the [existing workflow record](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26). ONB-01 remains functionally accepted.
+- Action: Review the editor at port 8000 at normal/200% zoom, desktop/tablet/mobile, keyboard and save/preview/publish. Preserve retained data. No commit/push before approval; keep ONB-01 and CMS-UX-01 as separate focused changes when authorized.
+- Target milestone: CMS-UX-01 visual acceptance before publication/proceeding to DEL-10.3; independent engine/security/deployment gates remain open.

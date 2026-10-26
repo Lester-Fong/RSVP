@@ -34,7 +34,7 @@ beforeEach(async () => {
     await page.getByLabel('Email address').fill(info.owner.email);
     await page.getByLabel('Password', { exact: true }).fill(info.owner.password);
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
 });
 afterEach(async () => {
     if (!enabled) return;
@@ -48,6 +48,11 @@ after(async () => {
 const run = (name, action) => test(name, { skip: !enabled }, action);
 const section = (name) => page.getByRole('navigation', { name: 'Editor sections' }).getByRole('button', { name, exact: true }).click();
 const source = async () => (await (await context.request.get(info.previewUrl + '/draft')).json()).document;
+async function enterInvitation(tab) {
+    await tab.locator('.ee-photobooth, [data-ee-phase="landed"]').first().waitFor();
+    const open = tab.getByRole('button', { name: 'Open Invitation', exact: true });
+    if (await open.isVisible()) await open.click();
+}
 async function openEditor() {
     await page.goto(info.previewUrl);
     await page.getByRole('heading', { name: 'Make it yours' }).waitFor();
@@ -165,6 +170,7 @@ run('DEL03b saved draft publishes, remains immutable during unsaved and saved ed
     await publish();
     await capture(page, 'owner-published-1440');
     await visitor.goto(publicUrl);
+    await enterInvitation(visitor);
     await visitor.getByText('First published story', { exact: true }).waitFor();
     await visitor.getByRole('heading', { name: 'A little while until forever', exact: true }).waitFor();
     assert.equal(await visitor.locator('#countdown .ee-landing-marker').getAttribute('data-landing-id'), 'section:countdown');
@@ -220,6 +226,7 @@ run('DEL04.2 published Guest Guide exposes one accessible section, safe generic 
     await publish();
 
     await visitor.goto(publicUrl);
+    await enterInvitation(visitor);
     await visitor.setViewportSize({ width: 1440, height: 900 });
     const guideNav = visitor.locator('nav.ee-navigation a[href="#guest-guide"]');
     assert.equal(await guideNav.count(), 1);
@@ -277,6 +284,7 @@ run(
     async () => {
         await ensurePublished();
         await visitor.goto(publicUrl);
+        await enterInvitation(visitor);
         const photo = await visitor.locator('.ee-gallery-slide img').last().getAttribute('src');
         assert.equal((await anonymous.request.get(info.origin + photo)).status(), 200);
         await openEditor();
@@ -315,6 +323,7 @@ run(
         });
         await visitor.emulateMedia({ reducedMotion: 'no-preference' });
         await visitor.goto(publicUrl);
+        await enterInvitation(visitor);
         const menu = visitor.getByRole('button', { name: 'Open wedding menu', exact: true });
         await menu.click();
         await visitor.getByRole('navigation', { name: 'Wedding sections' }).getByRole('link', { name: 'Photos', exact: true }).click();
@@ -376,6 +385,7 @@ run('DEL03b escaped Blade fallback has the same visible story, milestones, photo
         assert.ok(await fallback.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
         await fallback.screenshot({ path: join(artifacts, 'no-js-390.png'), fullPage: true });
         await visitor.goto(publicUrl);
+        await enterInvitation(visitor);
         await visitor.evaluate(() => document.fonts.ready);
         for (const selector of ['.ee-hero-main', '.ee-details-main', '.ee-story-main', '.ee-gallery-photo']) {
             const measure = (element) => {

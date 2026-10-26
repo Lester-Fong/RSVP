@@ -33,11 +33,13 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
         await page.getByLabel('Password', { exact: true }).fill(password);
         await page.getByLabel('Confirm password').fill(password);
         await page.getByRole('button', { name: 'Create account', exact: true }).click();
-        await page.waitForURL('**/dashboard');
+        await page.waitForURL('**/onboarding');
         await page.goto(origin + '/weddings/create');
         await page.getByLabel('Partner 1 name').fill('Guest QA Alex');
         await page.getByLabel('Partner 2 name').fill('Guest QA Jamie');
         await page.getByRole('button', { name: 'Create wedding', exact: true }).click();
+        await page.waitForURL('**/onboarding/congratulations');
+        await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
         const nav = page.getByRole('navigation', { name: 'Wedding workspace', exact: true });

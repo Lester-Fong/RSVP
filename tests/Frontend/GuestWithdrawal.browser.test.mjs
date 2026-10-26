@@ -16,7 +16,7 @@ test('owner withdraws and reinstates an invitation while active attendance and R
         await page.getByLabel('Email address').fill(preview.owner.email);
         await page.getByLabel('Password', { exact: true }).fill(preview.owner.password);
         await page.getByRole('button', { name: 'Log in', exact: true }).click();
-        await page.waitForURL('**/dashboard');
+        await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         await page.goto(preview.origin + '/accounts/1/weddings/1/guests');
         await page.waitForFunction(() => document.querySelector('[data-testid="people-total"]')?.textContent?.trim() === '4');
         await page.getByRole('button', { name: 'Withdraw', exact: true }).first().click();

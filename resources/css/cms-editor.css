@@ -2,7 +2,7 @@
     overflow-wrap: anywhere;
 }
 :where(.cms-editor, .cms-picker, .cms-confirm) .cms-input {
-    @apply mt-1 block min-h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground;
+    @apply mt-1 block min-h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-base text-foreground lg:text-sm;
 }
 :where(.cms-editor, .cms-picker, .cms-confirm) .cms-label {
     @apply block text-sm font-medium;
@@ -124,13 +124,13 @@
 }
 @media (min-width: 1024px) {
     .cms-workspace {
-        height: calc(100dvh - 5rem);
+        height: 100dvh;
         display: flex;
         flex-direction: column;
         min-height: 0;
         overflow: hidden;
     }
-    .cms-workspace > header {
+    .cms-workspace > :not(.cms-split) {
         flex-shrink: 0;
     }
     .cms-split {
@@ -162,6 +162,29 @@
         flex: 1;
         min-height: 0;
         height: 100%;
+    }
+}
+
+/* Short or magnified windows use document scrolling so the controls remain reachable. */
+@media (min-width: 1024px) and (max-height: 600px) {
+    .cms-workspace {
+        height: auto;
+        overflow: visible;
+    }
+    .cms-workspace .cms-editor-pane,
+    .cms-editor-fields {
+        overflow: visible;
+    }
+    .cms-preview-pane iframe {
+        flex: none;
+        height: 75dvh;
+        min-height: 320px;
+    }
+}
+
+@media (max-width: 1023px) {
+    .cms-editor .cms-chip-name {
+        font-size: 16px;
     }
 }
 

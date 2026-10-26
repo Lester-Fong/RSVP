@@ -72,7 +72,7 @@ async function storyPublication() {
         await editor.getByLabel('Email address').fill(host.owner.email);
         await editor.getByLabel('Password', { exact: true }).fill(host.owner.password);
         await editor.getByRole('button', { name: 'Log in', exact: true }).click();
-        await editor.waitForURL('**/dashboard');
+        await editor.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const draft = await (await owner.request.get(host.previewUrl + '/draft')).json();
         const story = draft.document.content.sections.find((section) => section.type === 'story');
         story.data.milestones = [

@@ -33,7 +33,7 @@ class CmsCustomerWorkflowTest extends TestCase
         $this->assertAuthenticatedAs($owner);
         $wedding = $this->createWedding();
         $this->assertDatabaseHas('account_members', ['account_id' => $wedding->account_id, 'user_id' => $owner->id, 'role' => 'owner']);
-        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->has('weddings', 1)->where('weddings.0.id', $wedding->id));
+        $this->get('/dashboard')->assertRedirect('/accounts/'.$wedding->account_id.'/weddings/'.$wedding->id);
         $cms = $this->cms($wedding);
         $this->get($this->edit($wedding))->assertRedirect($cms);
         $this->get($cms)->assertOk()->assertHeader('Cache-Control', 'no-store, private')->assertInertia(fn (Assert $page) => $page
@@ -50,17 +50,15 @@ class CmsCustomerWorkflowTest extends TestCase
         $this->assertDatabaseCount('website_revisions', 0);
     }
 
-    public function test_existing_account_wedding_creation_uses_the_same_default_and_preserves_other_weddings(): void
+    public function test_existing_account_second_wedding_creation_is_rejected_and_preserves_the_saved_legacy_draft(): void
     {
         $owner = User::factory()->create();
         $this->actingAs($owner);
         $first = $this->createWedding();
         WebsiteDraft::factory()->for($first)->create();
         $legacy = $first->websiteDraft->getAttributes();
-        $this->post('/accounts/'.$first->account_id.'/weddings', ['partner_one_name' => 'Second Alex', 'partner_two_name' => 'Second Jamie'])->assertSessionHasNoErrors();
-        $second = Wedding::query()->latest('id')->firstOrFail();
-        $this->get($this->edit($second))->assertRedirect($this->cms($second));
-        $this->assertSame($first->account_id, $second->account_id);
+        $this->postJson('/accounts/'.$first->account_id.'/weddings', ['partner_one_name' => 'Second Alex', 'partner_two_name' => 'Second Jamie'])->assertConflict();
+        $this->assertDatabaseCount('weddings', 1);
         $this->assertSame($legacy, $first->websiteDraft->fresh()->getAttributes());
         $this->assertDatabaseCount('accounts', 1);
         $this->assertDatabaseCount('website_drafts', 1);
@@ -131,6 +129,7 @@ class CmsCustomerWorkflowTest extends TestCase
         $this->putJson($this->cms($first).'/draft', ['document' => $document, 'draft_version' => 0])->assertOk();
         $this->putJson('/accounts/'.$first->account_id.'/weddings/'.$first->id.'/invitation', ['content' => WebsiteDraft::defaultContent(), 'draft_version' => 0])->assertConflict();
         $this->assertSame(2, $first->websiteDraft()->sole()->schema_version);
+        $this->actingAs(User::factory()->create());
         $second = $this->createWedding();
         $this->put('/accounts/'.$second->account_id.'/weddings/'.$second->id.'/invitation', ['content' => WebsiteDraft::defaultContent(), 'draft_version' => 0])->assertSessionHasNoErrors();
         $this->putJson($this->cms($second).'/draft', ['document' => $document, 'draft_version' => 0])->assertConflict();

@@ -10,6 +10,7 @@ import type { AccountSummary, WeddingDetails } from '@/types';
 const props = defineProps<{
     account: AccountSummary | null;
     wedding?: WeddingDetails;
+    onboarding?: boolean;
 }>();
 
 const editing = Boolean(props.wedding);
@@ -95,6 +96,7 @@ const submit = () => {
         <div class="flex flex-wrap items-center gap-3">
             <Button type="submit" :disabled="form.processing">{{ editing ? 'Save changes' : 'Create wedding' }}</Button>
             <Link
+                v-if="!onboarding"
                 :href="account && wedding ? route('accounts.weddings.show', { account: account.id, wedding: wedding.id }) : route('dashboard')"
                 class="text-sm text-muted-foreground underline-offset-4 hover:underline"
             >

@@ -43,12 +43,14 @@ test('attendance monitors live responses with filters, bounded group details and
         await page.getByLabel('Password', { exact: true }).fill(password);
         await page.getByLabel('Confirm password', { exact: true }).fill(password);
         await page.getByRole('button', { name: 'Create account', exact: true }).click();
-        await page.waitForURL('**/dashboard');
+        await page.waitForURL('**/onboarding');
         await page.goto(origin + '/weddings/create');
         await page.getByLabel('Partner 1 name').fill('RSVP Published Alex');
         await page.getByLabel('Partner 2 name').fill('RSVP Published Jamie');
         await page.getByLabel(/Wedding date/).fill('2027-05-12');
         await page.getByRole('button', { name: 'Create wedding', exact: true }).click();
+        await page.waitForURL('**/onboarding/congratulations');
+        await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
         await page.getByRole('link', { name: 'Invitation', exact: true }).click();

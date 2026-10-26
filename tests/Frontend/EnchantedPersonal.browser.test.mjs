@@ -38,7 +38,7 @@ beforeEach(async () => {
     await page.getByLabel('Email address').fill(info.owner.email);
     await page.getByLabel('Password', { exact: true }).fill(info.owner.password);
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
 });
 afterEach(async () => {
     if (!enabled) return;

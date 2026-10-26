@@ -7,7 +7,7 @@ import EntourageSectionEditor from '@/components/cms/EntourageSectionEditor.vue'
 import GallerySectionEditor from '@/components/cms/GallerySectionEditor.vue';
 import StorySectionEditor from '@/components/cms/StorySectionEditor.vue';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import AppLayout from '@/layouts/AppLayout.vue';
+import CmsEditorLayout from '@/layouts/CmsEditorLayout.vue';
 import { editorErrorMessages, editorPresentation, editorRequest, editorSectionLabels as labels, newGuestGuideSection } from '@/lib/cms-editor';
 import { guestGuideValidationIssues } from '@/lib/cms-guest-guide';
 import { photoboothExperience } from '@/lib/photobooth-opening';
@@ -258,16 +258,15 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <AppLayout
-        ><Head title="Wedding website" />
-        <div class="cms-editor cms-workspace mx-auto w-full min-w-0 max-w-[1600px] p-4 md:p-7">
-            <header class="mb-6 flex flex-wrap items-start justify-between gap-4 border-b pb-5">
+    <CmsEditorLayout>
+        <Head title="Wedding website" />
+        <div class="cms-editor cms-workspace w-full min-w-0 p-4">
+            <header class="flex flex-wrap items-start justify-between gap-3 border-b pb-2">
                 <div class="min-w-0">
                     <p class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Private workspace · website editor</p>
-                    <h1 class="mt-2 text-2xl font-medium tracking-tight">Make it yours</h1>
-                    <p class="mt-2 max-w-xl text-sm text-muted-foreground">
-                        Explore your invitation. Edits stay in this tab until you save the draft. Saved drafts and uploaded photographs are private;
-                        saving does not publish your website.
+                    <h1 class="mt-1 text-xl font-medium tracking-tight">Make it yours</h1>
+                    <p class="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
+                        Drafts and photographs are private. Save, review, then publish when ready.
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -288,7 +287,7 @@ onBeforeUnmount(() => {
                     />
                 </div>
             </header>
-            <p role="status" class="cms-draft-state mb-3 text-xs" :data-dirty="dirty">
+            <p role="status" class="cms-draft-state py-1.5 text-xs" :data-dirty="dirty">
                 <span aria-hidden="true">{{ dirty ? '◌' : '✓' }}</span>
                 {{ dirty ? 'Unsaved changes' : draftVersion ? 'All changes saved' : 'No saved draft yet' }} · Wedding timezone: {{ timeZone }}
             </p>
@@ -323,35 +322,39 @@ onBeforeUnmount(() => {
                     </div></DialogContent
                 ></Dialog
             >
-            <div class="mb-5 flex gap-2 lg:hidden">
+            <div class="mb-3 flex flex-wrap gap-2 lg:hidden">
                 <button class="cms-secondary" :aria-pressed="view === 'edit'" @click="view = 'edit'">Edit sections</button
                 ><button class="cms-secondary" :aria-pressed="view === 'preview'" @click="view = 'preview'">View website preview</button>
             </div>
-            <div class="cms-split grid min-w-0 gap-6 lg:grid-cols-[minmax(300px,390px)_minmax(0,1fr)]">
-                <section class="cms-editor-pane min-w-0" :class="view === 'preview' ? 'hidden lg:block' : ''" aria-label="Website editing controls">
-                    <nav aria-label="Editor sections" class="cms-editor-nav mb-5 flex flex-wrap gap-x-4 gap-y-2 border-b pb-4">
-                        <button
-                            v-for="section in content.content.sections"
-                            :key="section.id"
-                            class="min-h-11 py-2 text-sm"
-                            :class="selected === section.id ? 'font-semibold underline decoration-1 underline-offset-8' : 'text-muted-foreground'"
-                            :aria-current="selected === section.id ? 'step' : undefined"
-                            @click="selected = section.id"
-                        >
-                            {{ labels[section.type] }}
-                        </button>
-                        <button
-                            v-if="
-                                props.capabilities[content.template_key]?.includes('guest_guide') &&
-                                !content.content.sections.some((section) => section.type === 'guest_guide')
-                            "
-                            type="button"
-                            class="cms-secondary"
-                            @click="addGuestGuide"
-                        >
-                            Add Guest Guide
-                        </button>
-                    </nav>
+            <nav
+                aria-label="Editor sections"
+                class="cms-editor-nav mb-2 flex flex-wrap gap-x-1 border-b pb-1"
+                :class="view === 'preview' ? 'hidden lg:flex' : ''"
+            >
+                <button
+                    v-for="section in content.content.sections"
+                    :key="section.id"
+                    class="min-h-11 rounded-md px-3 py-2 text-sm"
+                    :class="selected === section.id ? 'bg-muted font-semibold' : 'text-muted-foreground hover:bg-muted'"
+                    :aria-current="selected === section.id ? 'step' : undefined"
+                    @click="selected = section.id"
+                >
+                    {{ labels[section.type] }}
+                </button>
+                <button
+                    v-if="
+                        props.capabilities[content.template_key]?.includes('guest_guide') &&
+                        !content.content.sections.some((section) => section.type === 'guest_guide')
+                    "
+                    type="button"
+                    class="cms-secondary"
+                    @click="addGuestGuide"
+                >
+                    Add Guest Guide
+                </button>
+            </nav>
+            <div class="cms-split grid min-w-0 gap-4 lg:grid-cols-[clamp(340px,27vw,400px)_minmax(0,1fr)]">
+                <section class="cms-editor-pane min-w-0" :class="view === 'preview' ? 'hidden lg:flex' : ''" aria-label="Website editing controls">
                     <div class="cms-editor-fields" tabindex="0" role="region" aria-label="Section fields">
                         <p v-if="!content.content.sections.length" class="mb-4 text-sm text-muted-foreground">
                             This draft has no content sections. Its saved data has been preserved.
@@ -385,7 +388,7 @@ onBeforeUnmount(() => {
                             :key="section.id"
                             :aria-label="labels[section.type] + ' editing'"
                             :data-editor-section="section.id"
-                            class="space-y-5"
+                            class="space-y-4"
                         >
                             <div class="flex flex-wrap items-center justify-between gap-3">
                                 <h2 class="text-lg font-medium">{{ labels[section.type] }}</h2>
@@ -714,8 +717,8 @@ onBeforeUnmount(() => {
                         </section>
                     </div>
                 </section>
-                <section class="cms-preview-pane min-w-0" :class="view === 'edit' ? 'hidden lg:block' : ''" aria-label="Live invitation preview">
-                    <div class="mb-3 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+                <section class="cms-preview-pane min-w-0" :class="view === 'edit' ? 'hidden lg:flex' : ''" aria-label="Live invitation preview">
+                    <div class="mb-2 flex flex-wrap justify-between gap-1 text-xs text-muted-foreground">
                         <span>Enchanted Editorial · live preview</span
                         ><span>{{
                             publishingEnabled
@@ -741,6 +744,7 @@ onBeforeUnmount(() => {
                 @selected="choose"
                 @selected-many="chooseMany"
                 @assets="rememberAssets"
-            /></div
-    ></AppLayout>
+            />
+        </div>
+    </CmsEditorLayout>
 </template>

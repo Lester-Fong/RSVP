@@ -1,5 +1,21 @@
 # Wedding RSVP SaaS — Milestone Checklist
 
+## ONB-01 — D-064 (2026-10-26)
+
+- [x] Record the newly approved one-couple/one-owner-workspace/one-wedding rule; supersede the historical multi-wedding customer assumption and bounded P-009 direction without erasing earlier acceptance or adding role/archive/transfer features.
+- [x] Centralize both creation paths under user/account/wedding transaction locks, empty-workspace reuse, idempotent first-route retries and second/legacy-conflict rejection; preserve tenant scopes and existing saved/public data. No schema or normal MySQL change.
+- [x] Dedicated mandatory onboarding, consumed saved-name congratulations/static reduced motion, sole-wedding dashboard reuse and explicit legacy review/access. Authentication essentials/public invitations remain outside the guard.
+- [x] Full guarded SQLite: 786 cases/5,142 assertions, 741 passed, zero failures/errors, 45 unchanged InnoDB skips. 26 distinct browser cases, 15 Node contracts, types/lint/format/build pass. Retained port-8000 preview identified/available and DB hash unchanged. [Exact evidence and walkthrough](tasks/cms_customer_workflow_integration.md#onb-01--single-wedding-onboarding-2026-10-26).
+- [x] Owner confirms all ONB-01 manual checks passed; QA-ONB-04 functionally owner-accepted under D-065. Separate CMS-UX-01 visual approval remains required before commit/push.
+- [ ] QA-ONB-03 independent-process InnoDB schedules and per-target legacy inventory/constraint review remain gated. No provision/migration/reset, production activation, merge or deployment.
+
+## CMS-UX-01 — D-065 (2026-10-26)
+
+- [x] Dedicated full-width editor shell only; compact heading/status and shared section navigation; responsive controls/real iframe with independent desktop scrolling and document-flow mobile/short-window fallback. Global sidebar remains on other authenticated pages.
+- [x] Existing native unsaved guards preserved; editor entry uses document navigation so browser Back also warns. No CMS document/backend/schema/invitation visual or feature-gate change.
+- [x] Safe verification: 125 PHP/1,161 assertions; 78 distinct browser and 15 Node passes, zero failures/skips; types, full non-mutating ESLint, format, build and diff checks pass. The 45 opt-in InnoDB cases are not newly executed/verified. [Exact evidence](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26).
+- [ ] Final owner visual acceptance: [existing workflow record](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26), QA-CMSUX-01/02. No commit/push yet.
+
 ## DEL-10.2b — D-063 (2026-10-26)
 
 - [x] Owner accepts DEL-10.1; preserve DEL-09a/5D manual acceptance and outstanding DEL-05, InnoDB/security/production gates.

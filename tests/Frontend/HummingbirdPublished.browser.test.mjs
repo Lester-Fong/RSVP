@@ -132,7 +132,7 @@ run('DEL07b personal RSVP controls, saved preview and live editor keep one corre
         await page.getByLabel('Email address').fill(info.owner.email);
         await page.getByLabel('Password', { exact: true }).fill(info.owner.password);
         await page.getByRole('button', { name: 'Log in', exact: true }).click();
-        await page.waitForURL('**/dashboard');
+        await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         await page.goto(info.previewUrl);
         const frame = page.frameLocator('iframe[title="Wedding website preview"]');
         await frame.locator('[data-ee-phase="landed"]').waitFor();

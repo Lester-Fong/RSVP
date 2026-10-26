@@ -39,7 +39,7 @@ beforeEach(async () => {
     await page.getByLabel('Email address').fill(info.owner.email);
     await page.getByLabel('Password', { exact: true }).fill(info.owner.password);
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
     await page.goto(info.previewUrl);
     await page.getByRole('heading', { name: 'Make it yours' }).waitFor();
     await page.getByText('Preview content checked', { exact: true }).waitFor();
@@ -1049,7 +1049,7 @@ run('DEL02d desktop panes scroll independently with reachable navigation and com
     for (const width of [1440, 1024]) {
         await page.setViewportSize({ width, height: 850 });
         const navigationBounds = await page.getByRole('navigation', { name: 'Editor sections' }).evaluate((nav) => {
-            const pane = nav.closest('.cms-editor-pane').getBoundingClientRect();
+            const pane = nav.closest('.cms-workspace').getBoundingClientRect();
             return {
                 pane: { top: pane.top, bottom: pane.bottom },
                 buttons: [...nav.querySelectorAll('button')].map((button) => ({

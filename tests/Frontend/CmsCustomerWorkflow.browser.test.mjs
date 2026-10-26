@@ -54,8 +54,7 @@ async function registerWedding() {
     await page.getByLabel('Password', { exact: true }).fill(password);
     await page.getByLabel('Confirm password', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Create account', exact: true }).click();
-    await page.waitForURL('**/dashboard');
-    await page.getByRole('link', { name: 'Create your first wedding', exact: true }).first().click();
+    await page.waitForURL('**/onboarding');
     await page.getByLabel('Partner 1 name').fill('Marina Customer');
     await page.getByLabel('Partner 2 name').fill('Elias Customer');
     await page.getByLabel(/Wedding date/).fill('2028-04-16');
@@ -63,11 +62,13 @@ async function registerWedding() {
     await page.getByLabel('Ceremony venue').fill('Our real customer chapel');
     await page.getByLabel('Reception venue').fill('Our real customer garden');
     await page.getByRole('button', { name: 'Create wedding', exact: true }).click();
+    await page.waitForURL('**/onboarding/congratulations');
+    await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
     await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
     overview = page.url();
     assert.notEqual(overview, host.previewUrl.replace('/cms-preview', ''));
     await page.goto(host.origin + '/dashboard');
-    await page.getByRole('heading', { name: 'Marina Customer & Elias Customer', exact: true }).click();
+    await page.getByRole('heading', { name: 'Marina Customer & Elias Customer', exact: true }).waitFor();
     await page.getByRole('link', { name: 'Invitation', exact: true }).click();
     await page.waitForURL('**/cms-preview');
     cms = page.url();
