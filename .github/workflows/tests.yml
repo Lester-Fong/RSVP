@@ -25,9 +25,6 @@ jobs:
       APP_ENV: testing
       APP_DEBUG: 'false'
       APP_URL: http://localhost
-      APP_CONFIG_CACHE: ${{ runner.temp }}/rsvp-tests/config.php
-      APP_ROUTES_CACHE: ${{ runner.temp }}/rsvp-tests/routes.php
-      LARAVEL_STORAGE_PATH: ${{ runner.temp }}/rsvp-tests/storage
       DB_CONNECTION: sqlite
       DB_DATABASE: ':memory:'
       DB_URL: ''
@@ -67,10 +64,16 @@ jobs:
       - name: Prepare isolated runtime
         shell: bash
         run: |
-          mkdir -p "$LARAVEL_STORAGE_PATH"/{app/private,framework/cache/data,framework/sessions,framework/views,logs}
-          printf 'APP_KEY=base64:%s\n' "$(php -r 'echo base64_encode(random_bytes(32));')" >> "$GITHUB_ENV"
-          test ! -e "$APP_CONFIG_CACHE"
-          test ! -e "$APP_ROUTES_CACHE"
+          ci_runtime="$RUNNER_TEMP/rsvp-tests"
+          mkdir -p "$ci_runtime/storage"/{app/private,framework/cache/data,framework/sessions,framework/views,logs}
+          {
+            printf 'APP_CONFIG_CACHE=%s\n' "$ci_runtime/config.php"
+            printf 'APP_ROUTES_CACHE=%s\n' "$ci_runtime/routes.php"
+            printf 'LARAVEL_STORAGE_PATH=%s\n' "$ci_runtime/storage"
+            printf 'APP_KEY=base64:%s\n' "$(php -r 'echo base64_encode(random_bytes(32));')"
+          } >> "$GITHUB_ENV"
+          test ! -e "$ci_runtime/config.php"
+          test ! -e "$ci_runtime/routes.php"
 
       - name: Install locked dependencies
         run: |
