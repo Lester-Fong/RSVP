@@ -1,5 +1,11 @@
 # Wedding RSVP SaaS — Milestone Checklist
 
+## DEL-10.2b — D-063 (2026-10-26)
+
+- [x] Owner accepts DEL-10.1; preserve DEL-09a/5D manual acceptance and outstanding DEL-05, InnoDB/security/production gates.
+- [x] Diagnose the three failures; align both Inertia finders without weakening existence checks, verify the six unavailable introductions, and preserve extension inheritance with bounded subprocess readiness/diagnostics and real >2 MiB upload assertions. Focused Windows 92 cases/186 assertions and Linux finder 3 cases/19 assertions pass.
+- [ ] Complete full safe verification, publish focused fixes and inspect actual Linux PR/push tests and quality. Close only CI reproducibility after green results. [Current evidence](tasks/premium_delight_experience.md#del-102b--ci-portability-corrections-2026-10-26).
+
 ## DEL-10.1 / DEL-10.2 — D-062 (2026-10-26)
 
 - [x] Reconcile DEL-09a acceptance/publication, 5D manual acceptance versus engine/production gates, DEL-05/CMS pending owner checks, actual gallery implementation and QA inventory counts against evidence. Preserve the existing eight-submilestone plan and historical results.

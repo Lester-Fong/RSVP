@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Str;
 use RuntimeException;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
@@ -17,24 +18,36 @@ class DevelopmentServerTest extends TestCase
         fclose($listener);
         $name = '_runtime_test_'.Str::uuid().'.php';
         $fixture = public_path($name);
+        $cachePrefix = sys_get_temp_dir().'/rsvp-runtime-test-'.Str::uuid();
         $process = new Process([PHP_BINARY, '-d', 'upload_max_filesize=2M', '-d', 'post_max_size=3M', '-d', 'memory_limit=128M',
             base_path('artisan'), 'serve', '--host=127.0.0.1', '--port='.$port, '--tries=0', '--no-reload', '--no-interaction'],
-            base_path(), ['PHP_INI_SCAN_DIR' => '', 'APP_CONFIG_CACHE' => sys_get_temp_dir().'/rsvp-runtime-test-no-config.php',
-                'APP_ROUTES_CACHE' => sys_get_temp_dir().'/rsvp-runtime-test-no-routes.php']);
+            base_path(), ['APP_CONFIG_CACHE' => $cachePrefix.'-config.php',
+                'APP_ROUTES_CACHE' => $cachePrefix.'-routes.php']);
+        $process->setTimeout(15);
         $probe = <<<'PHP'
 <?php
 header('Content-Type: application/json');
 echo json_encode(['upload' => ini_get('upload_max_filesize'), 'post' => ini_get('post_max_size'),
     'memory' => ini_get('memory_limit'), 'exif' => extension_loaded('exif'),
+    'sqlite' => extension_loaded('pdo_sqlite'), 'gd' => extension_loaded('gd'),
     'error' => $_FILES['hero_photo']['error'] ?? null, 'size' => $_FILES['hero_photo']['size'] ?? null]);
 PHP;
         $handle = fopen($fixture, 'x');
-        fwrite($handle, $probe);
-        fclose($handle);
+        $this->assertIsResource($handle);
 
         try {
+            fwrite($handle, $probe);
+            fclose($handle);
             $process->start();
-            $process->waitUntil(fn (string $type, string $output): bool => str_contains($process->getOutput(), 'Server running on'));
+            try {
+                $started = $process->waitUntil(fn (string $type, string $output): bool => str_contains($process->getOutput(), 'Server running on'));
+            } catch (ProcessTimedOutException $exception) {
+                throw new RuntimeException('Development server startup timed out. '.$this->processDiagnostics($process), 0, $exception);
+            }
+            $this->assertTrue($started, $this->processDiagnostics($process));
+            $socket = @stream_socket_client('tcp://127.0.0.1:'.$port, $errorCode, $errorMessage, 1);
+            $this->assertIsResource($socket, $errorMessage.' '.$this->processDiagnostics($process));
+            fclose($socket);
             $image = imagecreatetruecolor(800, 980);
             ob_start();
             imagepng($image, null, 0);
@@ -51,10 +64,21 @@ PHP;
             $result = json_decode($response, true, flags: JSON_THROW_ON_ERROR);
 
             $this->assertSame(['upload' => '5M', 'post' => '8M', 'memory' => '256M', 'exif' => true,
+                'sqlite' => true, 'gd' => true,
                 'error' => UPLOAD_ERR_OK, 'size' => strlen($png)], $result);
         } finally {
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
             $process->stop();
             unlink($fixture);
         }
+    }
+
+    private function processDiagnostics(Process $process): string
+    {
+        return sprintf('PHP: %s; ini: %s; scanned: %s; exit: %s; stdout: %s; stderr: %s',
+            PHP_BINARY, php_ini_loaded_file() ?: 'none', php_ini_scanned_files() ?: 'none',
+            var_export($process->getExitCode(), true), $process->getOutput(), $process->getErrorOutput());
     }
 }

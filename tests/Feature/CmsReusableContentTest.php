@@ -89,7 +89,7 @@ class CmsReusableContentTest extends TestCase
         $registry = app(WebsiteDesignRegistry::class);
 
         $this->assertSame(['enabled' => false], $document->publicContent()['experience']);
-        $this->assertCount(5, $registry->introductions());
+        $this->assertSame(['royal-wax-seal', 'classic-ivory-letter', 'botanical-bloom', 'modern-folded-card', 'romantic-photo-reveal', 'photobooth'], array_column($registry->introductions(), 'key'));
         $this->assertSame([], $registry->availableIntroductions());
         $this->assertSame(['modern-classic'], array_column($registry->availableTemplates(), 'key'));
         $this->assertFalse($registry->template('enchanted-editorial', 1, 2)->available);

@@ -306,6 +306,8 @@ All eight entries are proposed coverage, not executable test files or new execut
 
 ## GitHub CI — DEL-10.2
 
+**D-063 / DEL-10.2b:** DEL-10.1 is owner-accepted; the three portability fixes are authorized and locally pass 775 PHP cases/4,979 assertions (730 passed, zero failures/errors, 45 InnoDB skips). New-head Linux PR/push checks remain pending; retain the blocked CI row until actual results are inspected. [Current execution evidence](../tasks/premium_delight_experience.md#del-102b--ci-portability-corrections-2026-10-26).
+
 | ID | Affected feature / exact scenario | Priority / gate | Status | Test or proposed coverage | Environment / prerequisites | Run at | Last evidence / risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | QA-CI-01 | Master-targeted draft PR and integration push run isolated PHP 8.2 full suite, guard/preflight, build and explicit Node contracts without production credentials | P1 B | Blocked - full application suite fails on Linux | tests.yml; full PHPUnit; 15 Node contract/renderer cases | Disposable GitHub Ubuntu runner, in-memory SQLite, no MySQL service/opt-in | Each master PR / integration push | Actual PR tests run 40267037464 and push 40267032993: preflight, 11 guard tests/14 assertions, build and 15 Node cases pass; full PHP 772 cases/4,734 assertions, 20 failures, one error, 45 InnoDB skips. Existing intro-count, Inertia page-path casing and subprocess HTTP probe failures need separate authorization; RF-036. |

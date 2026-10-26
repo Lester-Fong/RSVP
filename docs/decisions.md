@@ -1,6 +1,14 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-26 (D-062 authorizes DEL-10.1 evidence reconciliation and DEL-10.2 CI repair; D-061 acceptance/publication and prior decisions preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-26 (D-063 accepts DEL-10.1 and authorizes bounded DEL-10.2b portability fixes; prior acceptance and release gates preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-063 — DEL-10.1 acceptance and DEL-10.2b CI portability corrections (2026-10-26)
+
+Status: **DEL-10.1 is owner-accepted; the three identified CI failures may be corrected.** Align Inertia's application/test page paths with the lowercase Vue directory, validate the six-entry introduction catalog before correcting its stale assertion, and diagnose/fix the development-server test's startup/extension portability. Preserve component-existence, design availability, receiving-process upload limits and fail-closed SQLite assertions. Run focused/full isolated verification, quality/build and actual Linux PR/push jobs; make focused commits and push the existing integration branch.
+
+Green CI may close DEL-10.2 reproducibility only. Independent InnoDB, security, deployment and owner-acceptance gates remain open. No normal development MySQL operations, visual changes, dependency upgrades, Album, production activation, unrelated refactoring, master merge or deployment.
+
+Source: owner's **DEL-10.2b — Resolve CI Portability Failures and Achieve Green GitHub Actions**. [Execution evidence](tasks/premium_delight_experience.md#del-102b--ci-portability-corrections-2026-10-26).
 
 ### D-062 — DEL-10.1 evidence reconciliation and DEL-10.2 CI repair (2026-10-26)
 
