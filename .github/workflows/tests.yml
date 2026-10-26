@@ -65,12 +65,14 @@ jobs:
         shell: bash
         run: |
           ci_runtime="$RUNNER_TEMP/rsvp-tests"
+          ci_app_key="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
+          printf '::add-mask::%s\n' "$ci_app_key"
           mkdir -p "$ci_runtime/storage"/{app/private,framework/cache/data,framework/sessions,framework/views,logs}
           {
             printf 'APP_CONFIG_CACHE=%s\n' "$ci_runtime/config.php"
             printf 'APP_ROUTES_CACHE=%s\n' "$ci_runtime/routes.php"
             printf 'LARAVEL_STORAGE_PATH=%s\n' "$ci_runtime/storage"
-            printf 'APP_KEY=base64:%s\n' "$(php -r 'echo base64_encode(random_bytes(32));')"
+            printf 'APP_KEY=%s\n' "$ci_app_key"
           } >> "$GITHUB_ENV"
           test ! -e "$ci_runtime/config.php"
           test ! -e "$ci_runtime/routes.php"

@@ -4,7 +4,7 @@
 
 - [x] Reconcile DEL-09a acceptance/publication, 5D manual acceptance versus engine/production gates, DEL-05/CMS pending owner checks, actual gallery implementation and QA inventory counts against evidence. Preserve the existing eight-submilestone plan and historical results.
 - [x] Review existing workflows, lockfiles, runtimes, guard and prerequisites; run non-mutating baseline quality checks and the full isolated SQLite suite. Record the existing intro-registry assertion failure without changing/excluding application tests or claiming green CI.
-- [ ] Validate/publish focused CI repair, inspect actual Draft PR #1 workflow/job results and record exact run links, failures/skips and remaining gates. [Execution record](tasks/premium_delight_experience.md#del-101102--execution-record).
+- [x] Validate/publish focused CI repair and inspect actual draft-PR/integration-push workflows: quality passes; isolation/build/15 Node cases pass; full Linux PHP suite reports 20 failures, one error and 45 InnoDB skips. Exact run links and the corrected initial context-validation error are in the [execution record](tasks/premium_delight_experience.md#del-101102--execution-record).
 - [ ] Owner reviews the application-test expectation blocker and subsequent bounded work. No DEL-09a change, production activation, MySQL migration/reset, merge or deployment.
 
 ## DEL-09a — image-readiness correction (2026-10-26)
