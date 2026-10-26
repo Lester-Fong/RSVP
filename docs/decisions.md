@@ -1,6 +1,14 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-26 (D-065 records ONB-01 owner acceptance and authorizes the separate CMS-UX-01 refinement; independent release gates preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-26 (D-066 records both owner acceptances and the future BRAND-01 pre-launch requirement; independent release gates preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-066 — ONB-01/CMS-UX-01 acceptance and BRAND-01 pre-launch scope (2026-10-26)
+
+Status: **ONB-01 and CMS-UX-01 OWNER-ACCEPTED.** The owner confirms mandatory single-wedding onboarding, congratulations, returning and legacy customer behavior, second-wedding denial and CMS integration. The owner also approves the final full-width CMS editor screenshot, desktop 100% proportions, separate scrolling, Save/Publish, unsaved Back safeguards, mobile and zoom behavior. The accepted implementations and invitation visuals are frozen; this acceptance does not close DEL-10.3's complete customer journey or independent database, security and release gates.
+
+**BRAND-01 is a required pre-launch customer UX milestone, authorized for tracking and future owner-reviewed design only.** Its future scope is a wedding-service landing page; cohesive Login/Register and recovery/verification screens; removal of Laravel Starter Kit branding, repository and developer-documentation links from customer pages; and integration of the accepted onboarding/dashboard/editor journey. Direction: premium, romantic, modern and trustworthy for Filipino couples first, with accessible responsive language. No final name/logo, unimplemented feature claims, unapproved pricing or automatic payments. The owner must review brand identity and visual direction before implementation. No BRAND-01 code is authorized in this closeout.
+
+The owner authorizes publishing the accepted ONB-01/CMS-UX-01 work to the existing integration branch and inspecting PR/push CI. No master merge, deployment, normal development MySQL change or production activation. [Accepted workflow evidence](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26); [DEL-10 release plan](tasks/premium_delight_experience.md#del-10--invitation-mvp-readiness-audit-and-execution-plan).
 
 ### D-065 — ONB-01 acceptance and CMS-UX-01 editor refinement (2026-10-26)
 

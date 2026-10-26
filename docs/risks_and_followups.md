@@ -1,6 +1,6 @@
 # Risks and follow-ups
 
-Reviewed: 2026-10-25 (ALB-00 documentation only). This is the issue register; architecture and decisions remain the sources for implemented contracts and approved product behavior. Review relevant entries during each authorized implementation/fix and update evidence, status and next action. No unattended maintenance is configured.
+Reviewed: 2026-10-26 (D-066 ONB-01/CMS-UX-01 owner acceptance and BRAND-01 pre-launch scope). This is the issue register; architecture and decisions remain the sources for implemented contracts and approved product behavior. Review relevant entries during each authorized implementation/fix and update evidence, status and next action. No unattended maintenance is configured.
 
 The [QA verification register](qa/verification_register.md) owns executable checks, missing coverage, prerequisites, gate timing and last execution evidence. It preserves historical MySQL execution, including DEL-04's 45 enumerated cases, separately from Planned races and new ALB obligations. Maintain findings here and checks there; ALB-00 ran no application or engine tests and closes no existing security gate.
 
@@ -539,15 +539,25 @@ Limits: this verifies these controlled schedules on one MySQL version/isolation 
 - Priority: P1 before deployment and final DEL-10.3 customer acceptance.
 - Status: ONB-01 functionally owner-accepted under D-065; automated SQLite/browser evidence passed. Genuine InnoDB concurrency proof remains pending. Both creation endpoints use one locked transaction service; no customer path creates a second owner account/wedding. Legacy conflicts block creation and retain authorized access. No new schema constraint or normal MySQL operation.
 - Evidence: Full PHP 786 cases/5,142 assertions (741 passed, zero failures/errors, 45 unchanged MySQL skips); 26 distinct browser cases passed. Pre-owner automated-run retained inventory 4/4/4, no duplicate cardinalities, unchanged full DB hash during that run; historical multi-record fixtures are preserved. Normal MySQL/deployment inventory is not newly verified. [Exact evidence and owner walkthrough](tasks/cms_customer_workflow_integration.md#onb-01--single-wedding-onboarding-2026-10-26); QA-ONB-01–04.
-- Action: QA-ONB-04 is owner-accepted; obtain separate CMS-UX-01 visual approval before publication/proceeding to DEL-10.3. Execute separately approved disposable InnoDB schedules for same-user/different sessions, shared owners, both endpoints and profile deletion. Before any later uniqueness migration, inventory/backup every target read-only, obtain explicit owner resolution for legacy violations and rehearse migration/rollback on a disposable copy. Do not weaken guards or add unapproved transfer/archive/role features. Future creation/import/operator paths must use the approved invariant boundary or receive separate review.
+- Action: QA-ONB-04 and the separate CMS-UX-01 visual check are owner-accepted under D-066. Execute separately approved disposable InnoDB schedules for same-user/different sessions, shared owners, both endpoints and profile deletion. Before any later uniqueness migration, inventory/backup every target read-only, obtain explicit owner resolution for legacy violations and rehearse migration/rollback on a disposable copy. Do not weaken guards or add unapproved transfer/archive/role features. Future creation/import/operator paths must use the approved invariant boundary or receive separate review.
 - Target milestone: ONB-01 acceptance → DEL-10.3, with engine/security/production gates retained.
 
-## RF-038 — CMS-UX-01 final editor visual acceptance
+## RF-038 — CMS-UX-01 editor visual acceptance
 
-- Category: Owner-requested usability refinement / remaining manual verification.
+- Category: Owner-requested usability refinement / accepted manual verification.
 - Impact: The global sidebar constrained the preview; desktop spacing and navigation consumed editing room at 100% zoom.
 - Priority: P1 for this owner delivery, not a new production activation authorization.
-- Status: Full-width compact editor implemented; final visual acceptance pending (QA-CMSUX-02).
+- Status: Resolved for this editor refinement: owner accepts the final screenshot and all requested functional, responsive and zoom checks under D-066 / QA-CMSUX-02. This is not broader DEL-10.3 or production acceptance.
 - Evidence: 78 browser, 125 PHP and 15 Node passes, zero failures/skips in this selection; dedicated shell, real responsive iframe, native Back warnings and quality/build evidence in the [existing workflow record](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26). ONB-01 remains functionally accepted.
-- Action: Review the editor at port 8000 at normal/200% zoom, desktop/tablet/mobile, keyboard and save/preview/publish. Preserve retained data. No commit/push before approval; keep ONB-01 and CMS-UX-01 as separate focused changes when authorized.
-- Target milestone: CMS-UX-01 visual acceptance before publication/proceeding to DEL-10.3; independent engine/security/deployment gates remain open.
+- Action: No further CMS editor change requested. Preserve owner-approved appearance and data; carry remaining full customer journey, engine, security and deployment checks into DEL-10.
+- Target milestone: CMS-UX-01 acceptance complete; independent DEL-10.3–10.8 gates remain open.
+
+## RF-039 — BRAND-01 customer-facing pre-launch UX
+
+- Category: Approved future pre-launch UX requirement; not implemented.
+- Impact: Current landing/auth/customer shell still exposes Laravel Starter Kit branding and developer navigation, so the customer journey is visually inconsistent before deployment.
+- Priority: P1 before customer-facing launch.
+- Status: D-066 approves the BRAND-01 scope and tracking only. Final product name/logo and visual direction need owner review; QA-BRAND-01 remains Planned.
+- Evidence: Owner-identified starter-kit UI on customer-facing pages; accepted ONB-01/CMS-UX-01 journey remains intact. [BRAND-01 roadmap and DEL-10 gate](mvp_roadmap.md).
+- Action: In a separately authorized milestone, agree on identity and visual direction, then implement the landing, auth/recovery/verification and customer shell, and verify accessibility, responsive behavior, authentication and tenant/security boundaries. Avoid unsupported feature, price and payment claims.
+- Target milestone: BRAND-01 before customer-facing deployment; no implementation in this closeout.

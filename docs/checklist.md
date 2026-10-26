@@ -6,7 +6,7 @@
 - [x] Centralize both creation paths under user/account/wedding transaction locks, empty-workspace reuse, idempotent first-route retries and second/legacy-conflict rejection; preserve tenant scopes and existing saved/public data. No schema or normal MySQL change.
 - [x] Dedicated mandatory onboarding, consumed saved-name congratulations/static reduced motion, sole-wedding dashboard reuse and explicit legacy review/access. Authentication essentials/public invitations remain outside the guard.
 - [x] Full guarded SQLite: 786 cases/5,142 assertions, 741 passed, zero failures/errors, 45 unchanged InnoDB skips. 26 distinct browser cases, 15 Node contracts, types/lint/format/build pass. Retained port-8000 preview identified/available and DB hash unchanged. [Exact evidence and walkthrough](tasks/cms_customer_workflow_integration.md#onb-01--single-wedding-onboarding-2026-10-26).
-- [x] Owner confirms all ONB-01 manual checks passed; QA-ONB-04 functionally owner-accepted under D-065. Separate CMS-UX-01 visual approval remains required before commit/push.
+- [x] Owner confirms all ONB-01 manual checks passed; QA-ONB-04 functionally owner-accepted under D-065/D-066. This does not close the complete DEL-10.3 journey.
 - [ ] QA-ONB-03 independent-process InnoDB schedules and per-target legacy inventory/constraint review remain gated. No provision/migration/reset, production activation, merge or deployment.
 
 ## CMS-UX-01 — D-065 (2026-10-26)
@@ -14,7 +14,18 @@
 - [x] Dedicated full-width editor shell only; compact heading/status and shared section navigation; responsive controls/real iframe with independent desktop scrolling and document-flow mobile/short-window fallback. Global sidebar remains on other authenticated pages.
 - [x] Existing native unsaved guards preserved; editor entry uses document navigation so browser Back also warns. No CMS document/backend/schema/invitation visual or feature-gate change.
 - [x] Safe verification: 125 PHP/1,161 assertions; 78 distinct browser and 15 Node passes, zero failures/skips; types, full non-mutating ESLint, format, build and diff checks pass. The 45 opt-in InnoDB cases are not newly executed/verified. [Exact evidence](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26).
-- [ ] Final owner visual acceptance: [existing workflow record](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26), QA-CMSUX-01/02. No commit/push yet.
+- [x] Final owner visual acceptance under D-066 / QA-CMSUX-02: approved screenshot and full-width editor; desktop 100% layout, independent scrolling, Save/Publish, unsaved browser/return Back, mobile and zoom checks passed. [Existing evidence](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26).
+
+## BRAND-01 — D-066 required pre-launch customer UX
+
+- [x] Track the approved future scope: wedding-service landing page; cohesive Login/Register and recovery/verification screens; remove starter-kit branding, GitHub and developer-documentation links from customer dashboard/application shell; integrate the accepted onboarding/dashboard/editor journey. No application implementation in this closeout.
+- [ ] Owner reviews final name/logo and visual direction before BRAND-01 design implementation; do not invent these or advertise unfinished features, pricing or automatic payments.
+- [ ] Implement and verify accessible, responsive customer-facing branding and authentication without changing authorization or production feature restrictions; obtain owner visual acceptance before customer-facing deployment. QA-BRAND-01 remains Planned.
+
+## DEL-10.3 — next bounded customer-journey QA
+
+- [ ] Execute fresh customer → onboarding → CMS Save/private preview → Publish and explicit Republish; verify guest management, generic/personal RSVP and attendance with isolated data, snapshot immutability and tenant/privacy denial. Reconcile accepted ONB-01/CMS-UX-01 slices without marking QA-CMS-15 complete.
+- [ ] Complete DEL-05 combined Story/RSVP owner visual acceptance and existing/legacy customer checks; retain separate disposable-InnoDB, normal MySQL, security, operations, physical-device and BRAND-01 pre-launch gates. See the [existing eight-batch plan](tasks/premium_delight_experience.md#del-10--invitation-mvp-readiness-audit-and-execution-plan).
 
 ## DEL-10.2b — D-063 (2026-10-26)
 
