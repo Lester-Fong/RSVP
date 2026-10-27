@@ -9,7 +9,6 @@ const props = withDefaults(
         label: string;
         images: readonly EditorImage[];
         clearable?: boolean;
-        defaultCrop?: CmsImageReference['crop'];
         field?: string;
     }>(),
     { clearable: true },
@@ -18,8 +17,7 @@ const emit = defineEmits<{ pick: [choice: PhotoChoice] }>();
 function pick() {
     emit('pick', {
         label: props.label,
-        choose: (image) =>
-            (model.value = { ...image, crop: model.value?.crop ?? props.defaultCrop ?? 'natural', frame: model.value?.frame ?? 'fill' }),
+        choose: (image) => (model.value = { ...image, crop: 'natural', frame: model.value?.frame ?? 'fill' }),
     });
 }
 </script>

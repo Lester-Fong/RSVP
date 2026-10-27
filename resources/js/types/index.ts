@@ -105,8 +105,6 @@ export interface GuestSummary {
 export interface InvitationGroupSummary {
     id: number;
     label: string;
-    contact_email: string | null;
-    contact_phone: string | null;
     guests_count: number;
     guests: GuestSummary[];
     link_status: InvitationLinkStatus;

@@ -69,8 +69,8 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
         assert.ok(await page.getByLabel('Group label', { exact: true }).evaluate((el) => document.activeElement === el));
         await totals(0, 0);
         await page.getByLabel('Group label', { exact: true }).fill('Santos Family');
-        await page.getByLabel('Contact email (optional)').fill('family@example.test');
-        await page.getByLabel('Contact phone (optional)').fill('+63 917 000 0000');
+        assert.equal(await page.getByLabel('Contact email (optional)').count(), 0);
+        assert.equal(await page.getByLabel('Contact phone (optional)').count(), 0);
         await page.getByLabel('Guest name', { exact: true }).fill('Anna Santos');
         await submit('Create group');
         await totals(1, 2);
@@ -96,7 +96,7 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
                 await page.screenshot({ path: join(tmpdir(), 'rsvp-guests-list-' + width + '-' + theme + '.png'), animations: 'disabled' });
                 await create.click();
                 assert.equal(await page.getByLabel('Group label', { exact: true }).inputValue(), '');
-                assert.equal(await page.getByLabel('Contact email (optional)').inputValue(), '');
+                assert.equal(await page.getByRole('columnheader', { name: 'Contact' }).count(), 0);
                 assert.equal(await page.getByLabel('Guest name', { exact: true }).inputValue(), '');
                 assert.equal(await page.getByRole('list', { name: 'Guests to add', exact: true }).count(), 0);
                 const dialog = page.getByRole('dialog');

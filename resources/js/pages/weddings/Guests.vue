@@ -107,7 +107,7 @@ const selectedGroup = ref<InvitationGroupSummary | null>(null);
 const selectedGuest = ref<GuestSummary | null>(null);
 const returnFocus = ref<HTMLElement | null>(null);
 const heading = ref<HTMLHeadingElement | null>(null);
-const groupForm = useForm({ label: '', contact_email: '', contact_phone: '', guests: [] as { name: string }[] });
+const groupForm = useForm({ label: '', guests: [] as { name: string }[] });
 const guestForm = useForm({ name: '' });
 const deleteForm = useForm({});
 const busy = computed(() => groupForm.processing || guestForm.processing || deleteForm.processing);
@@ -126,7 +126,7 @@ const title = computed(
 );
 const description = computed(() => {
     if (mode.value === 'create') return 'Create a family, couple or individual invitation. Add a name for every invited person.';
-    if (mode.value === 'group') return 'Update the label and optional contact information. This does not send an invitation.';
+    if (mode.value === 'group') return 'Update the group label. This does not send an invitation.';
     if (mode.value === 'deleteGroup')
         return 'This permanently deletes the group and all its named guests. Your wedding and invitation website will be kept.';
     if (mode.value === 'deleteGuest') return 'This permanently removes this person from the guest list. It cannot be undone.';
@@ -170,8 +170,6 @@ function showDialog(nextMode: Mode, group: InvitationGroupSummary | null, guest:
     groupForm
         .defaults({
             label: group?.label ?? '',
-            contact_email: group?.contact_email ?? '',
-            contact_phone: group?.contact_phone ?? '',
             guests: [] as { name: string }[],
         })
         .reset();
@@ -217,9 +215,7 @@ function submit() {
     if (mode.value === 'create') {
         groupForm.transform((data) => data).post(route('accounts.weddings.invitation-groups.store', parameters), options);
     } else if (mode.value === 'group') {
-        groupForm
-            .transform(({ label, contact_email, contact_phone }) => ({ label, contact_email, contact_phone }))
-            .patch(route('accounts.weddings.invitation-groups.update', groupParameters), options);
+        groupForm.transform(({ label }) => ({ label })).patch(route('accounts.weddings.invitation-groups.update', groupParameters), options);
     } else if (mode.value === 'add') {
         guestForm.post(route('accounts.weddings.guests.store', groupParameters), options);
     } else if (mode.value === 'rename') {
@@ -331,7 +327,6 @@ function confirmGuestRemoval() {
                     <thead class="border-b font-mono text-xs uppercase tracking-wider text-muted-foreground">
                         <tr>
                             <th scope="col" class="pb-3 pr-3 font-normal">Group / guests</th>
-                            <th scope="col" class="hidden w-1/4 pb-3 pr-3 font-normal md:table-cell">Contact</th>
                             <th scope="col" class="w-16 pb-3 text-right font-normal">People</th>
                             <th scope="col" class="w-14 pb-3"><span class="sr-only">Actions</span></th>
                         </tr>
@@ -341,12 +336,6 @@ function confirmGuestRemoval() {
                             <td class="min-w-0 py-5 pr-3">
                                 <p class="font-medium [overflow-wrap:anywhere]">{{ group.label }}</p>
                                 <p class="mt-1 font-mono text-xs text-muted-foreground">Personal RSVP access</p>
-                                <p
-                                    v-if="group.contact_email || group.contact_phone"
-                                    class="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere] md:hidden"
-                                >
-                                    {{ [group.contact_email, group.contact_phone].filter(Boolean).join(' · ') }}
-                                </p>
                                 <ul :id="'members-' + group.id" class="mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="Named guests">
                                     <li
                                         v-for="guest in displayedGuests(group)"
@@ -391,10 +380,6 @@ function confirmGuestRemoval() {
                                         {{ isExpanded(group) ? 'Show less' : 'Show ' + (group.guests.length - 5) + ' more' }}
                                     </button>
                                 </div>
-                            </td>
-                            <td class="hidden py-5 pr-3 text-muted-foreground [overflow-wrap:anywhere] md:table-cell">
-                                <p>{{ group.contact_email || 'No email' }}</p>
-                                <p class="mt-1">{{ group.contact_phone || 'No phone' }}</p>
                             </td>
                             <td class="py-5 text-right tabular-nums">{{ group.guests_count }}</td>
                             <td class="py-3 text-right">
@@ -468,26 +453,6 @@ function confirmGuestRemoval() {
                                     required
                                     placeholder="e.g. Santos Family"
                                     :aria-invalid="!!errorFor('label')"
-                                />
-                            </div>
-                            <div class="space-y-2">
-                                <Label for="field-contact_email">Contact email (optional)</Label
-                                ><Input
-                                    id="field-contact_email"
-                                    v-model="groupForm.contact_email"
-                                    type="email"
-                                    maxlength="254"
-                                    :aria-invalid="!!errorFor('contact_email')"
-                                />
-                            </div>
-                            <div class="space-y-2">
-                                <Label for="field-contact_phone">Contact phone (optional)</Label
-                                ><Input
-                                    id="field-contact_phone"
-                                    v-model="groupForm.contact_phone"
-                                    type="tel"
-                                    maxlength="50"
-                                    :aria-invalid="!!errorFor('contact_phone')"
                                 />
                             </div>
                             <GuestNameTags

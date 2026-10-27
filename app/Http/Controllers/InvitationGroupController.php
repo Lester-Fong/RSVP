@@ -47,7 +47,6 @@ class InvitationGroupController extends Controller
             ->withCount(['guests' => fn (Builder $query) => $eligibility->constrain($query, $invitationState)])->orderByDesc('id')->paginate(25)->appends(['search' => $search, 'invitation_state' => $invitationState]);
         $groups->through(fn (InvitationGroup $group): array => [
             'id' => $group->id, 'label' => $group->label,
-            'contact_email' => $group->contact_email, 'contact_phone' => $group->contact_phone,
             'guests_count' => $group->guests_count,
             'link_status' => $group->linkStatus(), 'link_version' => $group->invitation_link_version,
             'guests' => $group->guests->map(fn ($guest): array => ['id' => $guest->id, 'name' => $guest->name, 'has_response' => $guest->rsvpResponse !== null,

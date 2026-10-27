@@ -55,7 +55,7 @@ test('attendance monitors live responses with filters, bounded group details and
         const overview = page.url();
         await page.getByRole('link', { name: 'Invitation', exact: true }).click();
         await page.getByRole('button', { name: 'Save Draft', exact: true }).click();
-        await page.getByText('Draft saved', { exact: true }).waitFor();
+        await page.getByText(/Draft saved privately\. Your published website has not changed\./).waitFor();
         await page.goto(overview);
         await page.getByRole('button', { name: 'Publish invitation', exact: true }).click();
         await finish('Publish now');
@@ -65,7 +65,6 @@ test('attendance monitors live responses with filters, bounded group details and
         await page.getByRole('link', { name: 'Guests', exact: true }).click();
         await page.getByRole('button', { name: 'New invitation group', exact: true }).click();
         await page.getByLabel('Group label', { exact: true }).fill('Santos Family');
-        await page.getByLabel('Contact email (optional)').fill('private-rsvp@example.test');
         for (let index = 0; index < members.length; index++) {
             await page.getByLabel('Guest name', { exact: true }).fill(members[index]);
             await page.getByRole('button', { name: 'Add another guest', exact: true }).click();
@@ -91,11 +90,19 @@ test('attendance monitors live responses with filters, bounded group details and
         await page.keyboard.press('Escape');
         await page.getByRole('dialog').waitFor({ state: 'hidden' });
         await guest.goto(url);
-        const form = guest.locator('.invitation-rsvp');
+        await guest.locator('.ee-booth-skip, [data-ee-phase="landed"]').first().waitFor();
+        const skip = guest.getByRole('button', { name: 'Skip animation', exact: false });
+        if (await skip.isVisible()) await skip.click();
+        await guest.locator('[data-ee-phase="landed"]').waitFor();
+        const form = guest.getByRole('heading', { name: 'Your RSVP', exact: true }).locator('..');
         await form.getByLabel('Juan Santos', { exact: true }).selectOption('attending');
         await form.getByLabel('Maria Santos', { exact: true }).selectOption('declined');
+        const submitted = guest.waitForResponse(
+            (response) => response.request().method() === 'POST' && new URL(response.url()).pathname.endsWith('/responses'),
+        );
         await form.getByRole('button', { name: 'Save responses', exact: true }).click();
-        await form.getByRole('status').waitFor();
+        assert.equal((await submitted).status(), 200);
+        await form.locator('time').first().waitFor();
         assert.equal(submissionRequests, 1);
         assert.equal(setupRequests, 1);
         await page.goto(overview);
@@ -192,8 +199,15 @@ test('attendance monitors live responses with filters, bounded group details and
         await page.screenshot({ path: join(tmpdir(), 'rsvp-5b-guests-390-dark.png'), animations: 'disabled' });
         await guest.bringToFront();
         await form.getByLabel('Juan Santos', { exact: true }).selectOption('declined');
+        const updated = guest.waitForResponse(
+            (response) => response.request().method() === 'POST' && new URL(response.url()).pathname.endsWith('/responses'),
+        );
         await form.getByRole('button', { name: 'Save responses', exact: true }).click();
-        await form.getByRole('status').waitFor();
+        assert.equal((await updated).status(), 200);
+        await form
+            .getByText(/Saved:\s*Declining/)
+            .first()
+            .waitFor();
         await page.bringToFront();
         await page.getByRole('button', { name: 'Refresh', exact: true }).click();
         await page.waitForFunction(() => document.querySelector('[data-testid="attendance-declined"]').textContent === '2');

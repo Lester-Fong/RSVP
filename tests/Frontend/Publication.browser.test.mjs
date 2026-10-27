@@ -6,7 +6,7 @@ import test from 'node:test';
 
 const enabled = process.env.QA_ISOLATED_SQLITE === '1' && process.env.QA_PLAYWRIGHT_MODULE && process.env.QA_BASE_URL;
 
-test('publication controls, anonymous snapshot rendering and unpublishing', { skip: !enabled }, async () => {
+test('legacy Modern Classic publication controls, anonymous snapshot rendering and unpublishing', { skip: !enabled }, async () => {
     const origin = process.env.QA_BASE_URL;
     assert.match(origin, /^http:\/\/127\.0\.0\.1:\d+$/);
     const { chromium } = await import(process.env.QA_PLAYWRIGHT_MODULE);
@@ -59,6 +59,20 @@ test('publication controls, anonymous snapshot rendering and unpublishing', { sk
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
         assert.equal(await page.getByRole('button', { name: 'Publish invitation', exact: true }).isDisabled(), true);
+        const csrf = (await context.cookies()).find((cookie) => cookie.name === 'XSRF-TOKEN');
+        const legacyDraft = await context.request.put(overview + '/invitation', {
+            maxRedirects: 0,
+            headers: { 'X-XSRF-TOKEN': decodeURIComponent(csrf.value) },
+            data: {
+                draft_version: 0,
+                content: {
+                    introduction_message: 'Joyfully invite you to celebrate their wedding',
+                    closing_message: 'We look forward to celebrating with you',
+                    sections: { ceremony: true, reception: true, closing: true },
+                },
+            },
+        });
+        assert.equal(legacyDraft.status(), 302);
         await page.getByRole('link', { name: 'Invitation', exact: true }).click();
         await page.waitForURL('**/invitation/edit');
         const editor = page.url();

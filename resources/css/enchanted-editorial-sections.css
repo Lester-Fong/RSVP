@@ -362,6 +362,7 @@
 .ee-guide-swatches {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 16px 20px;
     padding: 0;
     margin: 26px 0 0;
@@ -626,13 +627,15 @@
     padding-block: 110px 100px;
 }
 .ee-entourage-groups {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     column-gap: 12%;
     row-gap: 55px;
     margin-top: 60px;
 }
 .ee-entourage-group {
+    flex: 0 1 44%;
     text-align: center;
     min-width: 0;
 }
@@ -660,7 +663,7 @@
     overflow-wrap: anywhere;
 }
 .ee-entourage-wide {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
 }
 .ee-entourage-wide ul {
     display: grid;

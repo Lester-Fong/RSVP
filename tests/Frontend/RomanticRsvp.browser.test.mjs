@@ -42,6 +42,9 @@ const confirmation = (tab = page) => tab.locator('[data-rsvp-confirmation]');
 const submit = (tab = page) => tab.getByRole('button', { name: 'Save responses', exact: true });
 async function visit(tab = page) {
     await tab.goto(personal);
+    await tab.locator('.ee-booth-skip, [data-ee-phase="landed"]').first().waitFor();
+    const skip = tab.getByRole('button', { name: 'Skip animation', exact: false });
+    if (await skip.isVisible()) await skip.click();
     await tab.locator('[data-ee-phase="landed"]').waitFor();
     await tab.getByLabel('Maya Santos', { exact: true }).waitFor();
 }
@@ -147,7 +150,8 @@ for (const [device, width, height] of [
         await submit().focus();
         await page.keyboard.press('Enter');
         await saved('attending');
-        assert.match(await confirmation().innerText(), /2 attending.*0 declining.*0 awaiting/s);
+        assert.match(await confirmation().innerText(), /We can't wait to celebrate with you/);
+        assert.equal(await confirmation().locator('.ee-rsvp-confirmation-summary').count(), 0);
         const animation = await confirmation().evaluate(
             (element) => element.querySelector('.ee-rsvp-confirmation-botanical').getAnimations()[0]?.animationName,
         );
@@ -205,14 +209,15 @@ run('DEL05 partial and mixed saves are neutral; decline is respectful and reduce
     await choose('attending');
     await submit().click();
     await saved('mixed');
-    assert.match(await confirmation().innerText(), /1 attending.*1 awaiting.*Unanswered/s);
+    assert.match(await confirmation().innerText(), /Thank you for sharing your plans/);
+    assert.equal(await confirmation().locator('.ee-rsvp-confirmation-summary').count(), 0);
     assert.equal(await confirmation().getAttribute('data-rsvp-celebrating'), 'false');
     assert.equal(await confirmation().evaluate((element) => element.getAnimations({ subtree: true }).length), 0);
     await choose(null, 'declined');
     assert.equal(await confirmation().count(), 0);
     await submit().click();
     await saved('mixed');
-    assert.match(await confirmation().innerText(), /1 attending.*1 declining.*0 awaiting/s);
+    assert.match(await confirmation().innerText(), /Thank you for sharing your plans/);
     await page.screenshot({ path: join(artifacts, 'mixed.png') });
     await choose('declined');
     await submit().click();

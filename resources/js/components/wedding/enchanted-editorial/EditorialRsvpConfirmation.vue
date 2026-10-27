@@ -45,9 +45,5 @@ const heading = computed(
                       : 'You can return to update the people listed here.'
             }}
         </p>
-        <p class="rsvp-note ee-rsvp-confirmation-summary">
-            {{ counts.attending }} attending · {{ counts.declined }} declining · {{ counts.pending }} awaiting a response.
-            <span v-if="counts.pending">Unanswered people remain pending.</span>
-        </p>
     </div>
 </template>

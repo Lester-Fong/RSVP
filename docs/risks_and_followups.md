@@ -1,5 +1,7 @@
 # Risks and follow-ups
 
+UX-02 review / 2026-10-27: bounded customer refinements are implemented and awaiting owner acceptance under D-067; GUEST-HUB-01 remains proposed. The DEL-10.3 disposable CMS editor stall and all independent release gates remain open. See RF-026 and the QA register.
+
 Reviewed: 2026-10-26 (D-066 ONB-01/CMS-UX-01 owner acceptance and BRAND-01 pre-launch scope). This is the issue register; architecture and decisions remain the sources for implemented contracts and approved product behavior. Review relevant entries during each authorized implementation/fix and update evidence, status and next action. No unattended maintenance is configured.
 
 The [QA verification register](qa/verification_register.md) owns executable checks, missing coverage, prerequisites, gate timing and last execution evidence. It preserves historical MySQL execution, including DEL-04's 45 enumerated cases, separately from Planned races and new ALB obligations. Maintain findings here and checks there; ALB-00 ran no application or engine tests and closes no existing security gate.
@@ -283,6 +285,10 @@ DEL-04 / D-045, 2026-10-22: DEL-04 reruns all 31 existing real-engine cases and 
 
 ## RF-026 — CMS v2 schema, publication and media privacy boundaries
 
+UX-02 / 2026-10-27: new/replacement CMS photos now use Natural crop while saved crop/frame values and immutable publications remain untouched; focused disposable editor/published checks pass. Owner visual acceptance is pending. The DEL-10.3 full-editor disposable-host stall below is unaffected; two broader Editorial fixture failures involve absent optional private-photo originals and do not establish a CMS application defect.
+
+DEL-10.3 / 2026-10-27: fresh disposable-SQLite customer/legacy browser selections and the guarded full PHP suite pass the affected public/private, immutable revision, media, guest and RSVP checks; [exact execution and owner queue](tasks/premium_delight_experience.md#del-103--isolated-execution-and-owner-acceptance-queue-2026-10-26). CMS polish has one complete 7/7 pass and an intermittent failed run. The editor's first-failure timeline confirms login/session/wedding routing succeeds before queued build/media requests and `/up` stall on its single-process disposable PHP host; the exact blocked request remains unproven. A full 39-case diagnostic executed 36 passes/3 experimental cleanup failures; temporary fixture changes were removed, so the unmodified file remains unverified as a complete pass. Priority P1 before QA-CMS-15 closeout: prove the fixture stall and repeat both complete files on fresh hosts. No application authentication behavior was changed. QA-CMS-15 remains owner pending; composite InnoDB races, normal MySQL, deployed ACL/privacy/recovery and media retention gates remain open.
+
 DEL-09a / D-058: one opt-in photobooth uses the existing experience branch, strict preset/version validation and immutable visible-media projection. Saving does not enable a live intro; explicit republish does. Old disabled documents/history, tenant checks, generic/personal privacy and production hard denial stay intact. No new media grants, upload pipeline, migration or transaction lock order. [Exact checks and acceptance](tasks/premium_delight_experience.md#del-09a--enchanted-editorial-photobooth-opening). Composite engine/operational release gates remain open; isolated SQLite is not new InnoDB evidence.
 
 CMS-INTEGRATION / D-057, 2026-10-25: real customer Invitation routing now defaults only unconfigured local/testing weddings to the existing Enchanted CMS; reads do not persist defaults, and v1/history are preserved. Focused first-save template races, cross-account denial and immutable saved/live/media visibility are verified; production hard denial and existing publication services are unchanged. [Evidence and QA-CMS-15 owner acceptance](tasks/cms_customer_workflow_integration.md). This bounded integration does not close composite engine, privacy, operational or public-release gates.
@@ -320,6 +326,8 @@ CMS-B.2b (D-030): complete trial uses proposed display-only story/gallery/entour
 - Target milestone: Proposed CMS-A/B/C/E implementation and owner acceptance; new engine/deployment evidence in CMS/M8.
 
 ## RF-027 — Rich-media runtime, licensing and mobile accessibility
+
+DEL-10.3 / 2026-10-26: current disposable browser runs pass 21 Photobooth, seven connected Story/RSVP, twelve Story/bird and two published/personal bird cases; one optional retained-preview Story case was skipped. Accepted artwork/motion source was not edited. Combined DEL-05 Story/RSVP owner visual acceptance, physical-device/assistive review, rights and measured cold/slow-network budgets remain open. [Walkthrough and limits](tasks/premium_delight_experience.md#del-103--isolated-execution-and-owner-acceptance-queue-2026-10-26).
 
 DEL-09a final feedback (2026-10-25): the confirmed Hero focus rectangle and inconsistent strip framing are corrected in presentation only. Eleven browser cases, mixed-orientation full-frame measurements and actual desktop/mobile Open/Skip/printing/settled captures verify the fix; interactive keyboard focus remains visible. [Exact evidence](tasks/premium_delight_experience.md#final-owner-feedback--hero-outline-and-strip-framing-2026-10-25). Final owner acceptance and all broader device/rights/performance obligations remain open; this does not resolve RF-027 as a whole.
 

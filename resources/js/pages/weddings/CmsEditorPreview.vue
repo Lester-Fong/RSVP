@@ -428,7 +428,6 @@ onBeforeUnmount(() => {
                                     v-model="slots.hero"
                                     label="Main wedding photo"
                                     field="content.photo_slots.hero"
-                                    default-crop="landscape"
                                     :images="images"
                                     @pick="pick"
                                 />
@@ -447,7 +446,6 @@ onBeforeUnmount(() => {
                                     v-model="slots.details"
                                     label="Wedding details photo"
                                     field="content.photo_slots.details"
-                                    default-crop="portrait"
                                     :images="images"
                                     @pick="pick"
                             /></template>
@@ -476,7 +474,6 @@ onBeforeUnmount(() => {
                                     v-model="slots.story"
                                     label="Our Story photo"
                                     field="content.photo_slots.story"
-                                    default-crop="portrait"
                                     :images="images"
                                     @pick="pick" /><StorySectionEditor
                                     v-model="content.content.sections[content.content.sections.indexOf(section)] as Editable<typeof section>"

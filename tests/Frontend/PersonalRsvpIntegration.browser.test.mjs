@@ -24,6 +24,12 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
     const artifacts = await mkdtemp(join(tmpdir(), 'rsvp-5c3a-connected-'));
     console.log('Connected personal-mode screenshots: ' + artifacts);
     const button = (name) => page.getByRole('button', { name, exact: true });
+    async function enterInvitation(tab) {
+        await tab.locator('.ee-booth-skip, [data-ee-phase="landed"]').first().waitFor();
+        const skip = tab.getByRole('button', { name: 'Skip animation', exact: false });
+        if (await skip.isVisible()) await skip.click();
+        await tab.locator('[data-ee-phase="landed"]').waitFor();
+    }
     async function access() {
         await button('Actions for Santos Family').click();
         await page.getByRole('menuitem', { name: 'RSVP Access', exact: true }).click();
@@ -76,7 +82,7 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         const overview = page.url();
         await page.getByRole('link', { name: 'Invitation', exact: true }).click();
         await button('Save Draft').click();
-        await page.getByText('Draft saved', { exact: true }).waitFor();
+        await page.getByText(/Draft saved privately\. Your published website has not changed\./).waitFor();
         await page.goto(overview);
         await button('Publish invitation').click();
         await button('Publish now').click();
@@ -86,7 +92,6 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         await page.waitForURL('**/guests');
         await button('New invitation group').click();
         await page.getByLabel('Group label', { exact: true }).fill('Santos Family');
-        await page.getByLabel('Contact email (optional)').fill('contact-must-stay-private@example.test');
         for (const name of ['Juan', 'Maria', 'Miguel', 'Andrea']) {
             await page.getByLabel('Guest name', { exact: true }).fill(name);
             await page.getByLabel('Guest name', { exact: true }).press('Enter');
@@ -106,7 +111,7 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         assert.equal(anonymous.headers()['set-cookie'], undefined);
         assert.deepEqual(await visitors.cookies(), []);
         const html = await (await visitors.request.get(juan)).text();
-        assert.doesNotMatch(html, /Maria|Miguel|Andrea|contact-must-stay-private/);
+        assert.doesNotMatch(html, /Maria|Miguel|Andrea/);
         assert.ok(!html.includes(new URL(juan).pathname.split('/').pop()));
         await access();
         await manage('Juan');
@@ -129,8 +134,9 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         await finished();
         await close();
         await guest.goto(juan);
+        await enterInvitation(guest);
         assert.equal(await guest.locator('select').count(), 2);
-        assert.doesNotMatch(await guest.locator('body').innerText(), /Maria|Andrea|contact-must-stay-private/);
+        assert.doesNotMatch(await guest.locator('body').innerText(), /Maria|Andrea/);
         assert.match(await guest.locator('body').innerText(), /Responding on behalf of Miguel/);
         const initial = await (await visitors.request.get(juan, { headers: { Accept: 'application/json' } })).json();
         const noCsrf = await visitors.request.post(juan + '/responses', {
@@ -145,15 +151,21 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
             if (request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/responses')) submissions++;
         });
         await guest.locator('select').first().selectOption('attending');
+        const submitted = guest.waitForResponse(
+            (response) => response.request().method() === 'POST' && new URL(response.url()).pathname.endsWith('/responses'),
+        );
         await guest.getByRole('button', { name: 'Save responses', exact: true }).click();
-        await guest.getByRole('status').waitFor();
+        assert.equal((await submitted).status(), 200);
+        await guest.getByRole('heading', { name: 'Your RSVP', exact: true }).locator('..').locator('time').waitFor();
         assert.equal(submissions, 1);
         assert.equal(await guest.locator('select').nth(1).inputValue(), 'pending');
-        assert.equal(await guest.locator('time').count(), 1);
+        assert.equal(await guest.getByRole('heading', { name: 'Your RSVP', exact: true }).locator('..').locator('time').count(), 1);
         await guest.reload();
+        await enterInvitation(guest);
         assert.equal(await guest.locator('select').first().inputValue(), 'attending');
         const stale = await visitors.newPage();
         await stale.goto(juan);
+        await enterInvitation(stale);
         await guest.locator('select').first().selectOption('declined');
         await guest.getByRole('button', { name: 'Save responses', exact: true }).click();
         await guest.getByRole('status').waitFor();
@@ -161,7 +173,7 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         await stale.getByRole('button', { name: 'Save responses', exact: true }).click();
         await stale.getByRole('status').waitFor();
         await guest.getByRole('button', { name: 'Reload saved choices', exact: true }).click();
-        await guest.getByRole('status').waitFor();
+        await guest.getByText('Saved choices and current access reloaded.', { exact: true }).waitFor();
         // A round trip to the previous choice still advances its version: an old changed write must conflict.
         await guest.locator('select').first().selectOption('attending');
         await guest.getByRole('button', { name: 'Save responses', exact: true }).click();
@@ -177,18 +189,19 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
             .waitFor();
         assert.ok(await stale.getByRole('button', { name: 'Save responses', exact: true }).isDisabled());
         await stale.getByRole('button', { name: 'Reload saved choices', exact: true }).click();
-        await stale.getByRole('status').waitFor();
+        await stale.getByText('Saved choices and current access reloaded.', { exact: true }).waitFor();
         assert.equal(await stale.locator('select').nth(1).inputValue(), 'attending');
         await stale.close();
         const mariaPage = await visitors.newPage();
         await mariaPage.goto(maria);
+        await enterInvitation(mariaPage);
         assert.equal(await mariaPage.locator('select').count(), 1);
         assert.doesNotMatch(await mariaPage.locator('body').innerText(), /Juan|Miguel|Andrea/);
         await mariaPage.close();
         for (const width of [1440, 1024, 390]) {
             await guest.setViewportSize({ width, height: 1000 });
             assert.ok(await guest.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-            await guest.locator('.invitation-rsvp').scrollIntoViewIfNeeded();
+            await guest.getByRole('heading', { name: 'Your RSVP', exact: true }).scrollIntoViewIfNeeded();
             await guest.screenshot({ path: join(artifacts, 'guest-' + width + '.png'), animations: 'disabled' });
         }
         for (const width of [1440, 1024, 390])
@@ -224,6 +237,7 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         assert.match(await (await visitors.request.get(rotated)).text(), /Miguel/);
         await close();
         await guest.goto(rotated);
+        await enterInvitation(guest);
         await access();
         await manage('Miguel');
         await button('Change or remove representative').click();
@@ -238,7 +252,7 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
             .getByText('Who this link can answer for has changed. Reload the invitation to review your current access.', { exact: true })
             .waitFor();
         await guest.getByRole('button', { name: 'Reload saved choices', exact: true }).click();
-        await guest.getByRole('status').waitFor();
+        await guest.getByText('Saved choices and current access reloaded.', { exact: true }).waitFor();
         assert.equal(await guest.locator('select').count(), 1);
         assert.doesNotMatch(await guest.locator('body').innerText(), /Miguel/);
         await page.reload();
@@ -305,7 +319,7 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         }
         assert.deepEqual(errors, []);
     } catch (error) {
-        throw new Error(String(error.message).replace(/[a-f0-9]{64,}/gi, '[redacted]'));
+        throw new Error(String(error.stack ?? error.message).replace(/[a-f0-9]{64,}/gi, '[redacted]'));
     } finally {
         await browser.close();
     }

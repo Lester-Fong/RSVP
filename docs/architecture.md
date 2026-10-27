@@ -622,6 +622,8 @@ The Attendance page reuses the portal layout and native tables/disclosures. Refr
 
 Guest Management still receives the existing bounded group/member payload. Collapsing to five names is presentation only; searching shows all saved members to preserve visibility under server-side collation. New-group tags serialize to the unchanged `guests: [{ name }]` array and existing Form Request validation. Enter/button add, removing unsaved tags, and committing the final typed name do not create records before Create group. No schema, ownership, deletion, RSVP, publishing or Modern Classic renderer changes.
 
+UX-02 / D-067 narrows the owner Guest Management Inertia projection and customer form payloads to group label/named guests; contact columns and historical values remain in storage and the established validated route for compatibility, but contact values are no longer sent in this page's props. No personal/public projection, authority or lifecycle contract changes. GUEST-HUB-01 is a separate proposed composition of existing Guest Management and Attendance routes/services; no route or schema change has been approved.
+
 ## 7E. Individual RSVP foundation — 5C.1a only (D-020)
 
 Implemented in source and verified against isolated SQLite; **not applied to development MySQL**. Three additive migrations: `2026_10_19_073458_create_guest_invitation_links_table`, `2026_10_19_073459_create_rsvp_delegations_table`, `2026_10_19_073459_add_rsvp_versions_to_guests_table`. No customer backfill, credential generation/revocation, delegation assignment, response rewrite or public cutover.

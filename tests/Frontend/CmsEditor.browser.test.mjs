@@ -202,6 +202,23 @@ run('DEL04.2 Guest Guide can be explicitly added to an older draft, edited, reor
     for (const width of [1440, 390]) {
         await page.setViewportSize({ width, height: 900 });
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+        assert.ok(
+            await preview()
+                .locator('.ee-guide-swatches')
+                .evaluate((list) => {
+                    const center = list.getBoundingClientRect().left + list.getBoundingClientRect().width / 2;
+                    const rows = new Map();
+                    for (const item of list.children) {
+                        const box = item.getBoundingClientRect();
+                        const key = Math.round(box.top);
+                        const row = rows.get(key) ?? { left: box.left, right: box.right };
+                        row.left = Math.min(row.left, box.left);
+                        row.right = Math.max(row.right, box.right);
+                        rows.set(key, row);
+                    }
+                    return rows.size > 0 && [...rows.values()].every((row) => Math.abs((row.left + row.right) / 2 - center) < 3);
+                }),
+        );
         await page.screenshot({ path: join(artifacts, `del04-2-guide-editor-${width}.png`), fullPage: true });
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
@@ -511,6 +528,43 @@ run('actual authenticated multipart upload, private resolution and live hero ass
     assert.equal(csrf.status(), 419);
     await page.getByText('Preview content checked', { exact: true }).waitFor();
     await page.screenshot({ path: join(artifacts, 'desktop-hero.png'), fullPage: true });
+});
+
+run('new and replacement photos use Natural crop across editor slots and collections', async () => {
+    const welcome = editor().getByRole('region', { name: 'Welcome editing' });
+    await welcome.getByRole('button', { name: 'Choose photo' }).click();
+    const first = await uploadPhoto();
+    await first.choice.click();
+    assert.equal(await welcome.getByLabel('Photo crop').inputValue(), 'natural');
+    await welcome.getByLabel('Photo crop').selectOption('portrait');
+    await welcome.getByLabel('Photo frame').selectOption('fit');
+    await welcome.getByRole('button', { name: 'Change photo' }).click();
+    const replacement = await uploadPhoto(900, 600);
+    await replacement.choice.click();
+    assert.equal(await welcome.getByLabel('Photo crop').inputValue(), 'natural');
+    assert.equal(await welcome.getByLabel('Photo frame').inputValue(), 'fit');
+
+    for (const [sectionName, regionName] of [
+        ['Wedding details', 'Wedding details editing'],
+        ['Our Story', 'Our Story editing'],
+    ]) {
+        await section(sectionName);
+        const region = editor().getByRole('region', { name: regionName });
+        await region.getByRole('button', { name: 'Choose photo' }).first().click();
+        await page.getByRole('dialog').getByRole('button', { name: 'Use photograph 1', exact: true }).click();
+        assert.equal(await region.getByLabel('Photo crop').first().inputValue(), 'natural');
+    }
+    await page.getByRole('button', { name: 'Add milestone', exact: true }).click();
+    const milestone = editor().getByRole('group', { name: 'Timeline milestone image' });
+    await milestone.getByRole('button', { name: 'Choose photo' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Use photograph 1', exact: true }).click();
+    assert.equal(await milestone.getByLabel('Photo crop').inputValue(), 'natural');
+
+    await section('Gallery');
+    await page.getByRole('button', { name: 'Add gallery photograph', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Use photograph 1', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Add selected photographs (1)', exact: true }).click();
+    assert.equal(await editor().getByRole('region', { name: 'Gallery editing' }).getByLabel('Photo crop').inputValue(), 'natural');
 });
 
 run('story edits, milestones and optional visibility update actual renderer without capability controls', async () => {

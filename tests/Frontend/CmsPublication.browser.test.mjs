@@ -216,6 +216,7 @@ run('DEL04.2 published Guest Guide exposes one accessible section, safe generic 
     await region.getByLabel('Show frequently asked questions').check();
     await region.getByLabel('Show Attire Guide').check();
     await region.getByLabel('Dress code', { exact: true }).fill('Garden formal');
+    for (let index = 0; index < 5; index++) await region.getByRole('button', { name: 'Add color', exact: true }).click();
     const saveButton = page.getByRole('button', { name: 'Save Draft', exact: true });
     if (await saveButton.isEnabled()) {
         await saveButton.click();
@@ -245,6 +246,21 @@ run('DEL04.2 published Guest Guide exposes one accessible section, safe generic 
         await visitor.setViewportSize({ width, height: 844 });
         await visitor.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth + 1);
         assert.ok(await visitor.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+        assert.ok(
+            await visitor.locator('#guest-guide .ee-guide-swatches').evaluate((list) => {
+                const center = list.getBoundingClientRect().left + list.getBoundingClientRect().width / 2;
+                const rows = new Map();
+                for (const item of list.children) {
+                    const box = item.getBoundingClientRect();
+                    const key = Math.round(box.top);
+                    const row = rows.get(key) ?? { left: box.left, right: box.right };
+                    row.left = Math.min(row.left, box.left);
+                    row.right = Math.max(row.right, box.right);
+                    rows.set(key, row);
+                }
+                return rows.size > 0 && [...rows.values()].every((row) => Math.abs((row.left + row.right) / 2 - center) < 3);
+            }),
+        );
         await visitor.screenshot({ path: join(artifacts, `del04-2-guide-public-${width}.png`), fullPage: true });
     }
     await visitor.getByRole('button', { name: 'Open wedding menu', exact: true }).click();

@@ -1,6 +1,12 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-26 (D-066 records both owner acceptances and the future BRAND-01 pre-launch requirement; independent release gates preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-27 (D-067 records UX-02 approval and GUEST-HUB-01 proposal boundaries; independent release gates preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-067 — UX-02 customer refinements; GUEST-HUB-01 assessment (2026-10-27)
+
+Status: **UX-02 implementation approved; owner visual acceptance pending.** Remove contact email/phone from customer group forms and listings while retaining stored historical values and existing invitation authority. Remove visible response counts from the Enchanted personal thank-you card without changing result semantics or private Attendance. Newly selected and replacement CMS photographs start at Natural crop; existing saved crop and Fit/Fill choices remain. Center one/final unpaired Entourage group and wrapped attire swatch rows without changing stored order, typography or approved artwork. No migration, publication rewrite, RSVP data change or production activation.
+
+**GUEST-HUB-01 is a proposed future interface, not implementation approval:** assess a combined private Guests & RSVPs page using current scoped CRUD, attendance and personal-access services. Preserve legacy route/bookmark compatibility, deletion/withdrawal history, representative eligibility, credential secrecy and tenant boundaries. Owner review is required before route, payload or workflow changes. BRAND-01 and DEL-10 release gates remain separate. [Implementation evidence and proposal](tasks/premium_delight_experience.md#ux-02-and-guest-hub-01-owner-feedback-2026-10-27).
 
 ### D-066 — ONB-01/CMS-UX-01 acceptance and BRAND-01 pre-launch scope (2026-10-26)
 

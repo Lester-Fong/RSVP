@@ -18,6 +18,13 @@ before(async () => {
 after(async () => browser?.close());
 const run = (name, fn) => test(name, { skip: !enabled }, fn);
 
+async function enterInvitation(scope) {
+    await scope.locator('.ee-booth-skip, [data-ee-phase="landed"]').first().waitFor();
+    const skip = scope.getByRole('button', { name: 'Skip animation', exact: false });
+    if (await skip.isVisible()) await skip.click();
+    await scope.locator('[data-ee-phase="landed"]').waitFor();
+}
+
 async function assertContact(tab, marker) {
     await tab.waitForTimeout(750);
     const result = await marker.evaluate((element) => {
@@ -56,7 +63,7 @@ run('DEL07b published loader retains one bird, accurate section/closing landings
         await page.locator('.ee-bootstrap-loader').waitFor({ state: 'visible' });
         assert.equal(await page.locator('.ee-server-content').isVisible(), false);
         releaseModule();
-        await page.locator('[data-ee-phase="landed"]').waitFor();
+        await enterInvitation(page);
         await page.locator('.ee-loading-bird').evaluate((element) => {
             window.__publishedBird = element;
             window.__publishedWings = [...element.querySelectorAll('.ee-bird-wing')].map((wing) => wing.getAnimations()[0]);
@@ -110,7 +117,7 @@ run('DEL07b personal RSVP controls, saved preview and live editor keep one corre
         const errors = [];
         page.on('pageerror', (error) => errors.push(error.message.replace(/[a-f0-9]{64}/g, '[redacted]')));
         await page.goto(info.owner.personal.representativeUrl);
-        await page.locator('[data-ee-phase="landed"]').waitFor();
+        await enterInvitation(page);
         const marker = page.locator('[data-landing-section="rsvp"], [data-landing-section="personal-rsvp"]').first();
         await marker.evaluate((element) => {
             const rect = element.querySelector('[data-nectar-center]').getBoundingClientRect();
@@ -135,11 +142,11 @@ run('DEL07b personal RSVP controls, saved preview and live editor keep one corre
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         await page.goto(info.previewUrl);
         const frame = page.frameLocator('iframe[title="Wedding website preview"]');
-        await frame.locator('[data-ee-phase="landed"]').waitFor();
+        await enterInvitation(frame);
         await assertContact(page, frame.locator('[data-landing-id="section:invitation"]'));
         assert.equal(await frame.locator('.ee-hummingbird').count(), 1);
         await page.goto(info.previewUrl + '/saved-preview');
-        await page.locator('[data-ee-phase="landed"]').waitFor();
+        await enterInvitation(page);
         await assertContact(page, page.locator('[data-landing-id="section:invitation"]'));
         assert.equal(await page.locator('.ee-hummingbird').count(), 1);
         assert.deepEqual(errors, []);

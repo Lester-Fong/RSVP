@@ -16,6 +16,12 @@
 - [x] Safe verification: 125 PHP/1,161 assertions; 78 distinct browser and 15 Node passes, zero failures/skips; types, full non-mutating ESLint, format, build and diff checks pass. The 45 opt-in InnoDB cases are not newly executed/verified. [Exact evidence](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26).
 - [x] Final owner visual acceptance under D-066 / QA-CMSUX-02: approved screenshot and full-width editor; desktop 100% layout, independent scrolling, Save/Publish, unsaved browser/return Back, mobile and zoom checks passed. [Existing evidence](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26).
 
+## UX-02 — D-067 customer refinements; GUEST-HUB-01 proposal
+
+- [x] Remove group contacts from owner forms/list payloads, remove public thank-you counts, default new/replacement CMS selections to Natural crop, and center unpaired Entourage groups and wrapped attire colors. Historical group contacts and saved crops, RSVP state, publication data and private Attendance remain intact.
+- [x] Focused guarded SQLite: 85 passed/1,126 assertions. Disposable Edge: 23 passes across selected guest, attendance, personal RSVP, editor, published Guide and Editorial checks; the broader Editorial file also had two unrelated missing-photo fixture failures and four optional-photo skips. Typecheck, scoped ESLint/Prettier and build pass. [Exact limits](tasks/premium_delight_experience.md#ux-02-and-guest-hub-01-owner-feedback-2026-10-27).
+- [ ] Owner checks UX-02 on the retained port-8000 preview; QA-UX02-01 remains manual pending. GUEST-HUB-01 is assessment only; agree on page/filter/history/bookmark behavior before authorizing implementation. The DEL-10.3 disposable CMS editor stall remains separately open.
+
 ## BRAND-01 — D-066 required pre-launch customer UX
 
 - [x] Track the approved future scope: wedding-service landing page; cohesive Login/Register and recovery/verification screens; remove starter-kit branding, GitHub and developer-documentation links from customer dashboard/application shell; integrate the accepted onboarding/dashboard/editor journey. No application implementation in this closeout.
@@ -24,8 +30,8 @@
 
 ## DEL-10.3 — next bounded customer-journey QA
 
-- [ ] Execute fresh customer → onboarding → CMS Save/private preview → Publish and explicit Republish; verify guest management, generic/personal RSVP and attendance with isolated data, snapshot immutability and tenant/privacy denial. Reconcile accepted ONB-01/CMS-UX-01 slices without marking QA-CMS-15 complete.
-- [ ] Complete DEL-05 combined Story/RSVP owner visual acceptance and existing/legacy customer checks; retain separate disposable-InnoDB, normal MySQL, security, operations, physical-device and BRAND-01 pre-launch gates. See the [existing eight-batch plan](tasks/premium_delight_experience.md#del-10--invitation-mvp-readiness-audit-and-execution-plan).
+- [x] Execute the disposable-SQLite/Edge fresh customer → onboarding → CMS Save/private preview → Publish/Republish/Unpublish, generic/personal RSVP, guest/attendance, privacy/tenant and legacy Classic selections. Full PHP 741 passed/45 InnoDB skipped; 75 completed browser passes plus six selected editor cases; CMS polish complete file 7/7 passed. The 39-case editor file stopped at 16 executed (5 passed, 11 failed, 23 unrun) after repeated-context login/session loss; one optional retained-preview Story case remains skipped. [Exact evidence and limits](tasks/premium_delight_experience.md#del-103--isolated-execution-and-owner-acceptance-queue-2026-10-26). This is automated evidence, not QA-CMS-15 owner acceptance.
+- [ ] Resolve disposable single-process server request stalls, then repeat complete 39-case editor and seven-case polish files on fresh hosts. The new timeline confirms authentication/session continuity in the reproduced first failure; temporary server/cleanup experiments did not produce a repeatable fix (full diagnostic 36 passed/3 experimental cleanup failures). Owner completes the full fresh-customer port-8000 checklist, existing/legacy compatibility review and combined DEL-05 Story/RSVP visual acceptance (QA-CMS-15, QA-DEL-03/12). Preserve separate disposable-InnoDB, normal MySQL, security/recovery, operations, physical-device and BRAND-01 gates. See the [existing execution record](tasks/premium_delight_experience.md#del-103--isolated-execution-and-owner-acceptance-queue-2026-10-26).
 
 ## DEL-10.2b — D-063 (2026-10-26)
 

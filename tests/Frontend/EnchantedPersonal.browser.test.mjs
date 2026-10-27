@@ -52,6 +52,9 @@ after(async () => {
 const run = (name, fn) => test(name, { skip: !enabled, timeout: 90000 }, fn);
 async function visit(tab = guest, url = representativeUrl) {
     await tab.goto(url);
+    await tab.locator('.ee-booth-skip, [data-ee-phase="landed"]').first().waitFor();
+    const skip = tab.getByRole('button', { name: 'Skip animation', exact: false });
+    if (await skip.isVisible()) await skip.click();
     await tab.locator('[data-ee-phase="landed"]').waitFor();
     await tab.getByRole('heading', { name: 'Your RSVP', exact: true }).waitFor();
 }

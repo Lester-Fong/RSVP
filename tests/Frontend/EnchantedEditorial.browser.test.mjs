@@ -76,6 +76,45 @@ async function contained() {
     assert.deepEqual(escaped, [], 'Text fits its own container, rather than being clipped');
 }
 
+test('one and final unpaired entourage groups center while pairs remain side by side', { skip: !enabled }, async () => {
+    await load();
+    const groups = page.locator('.ee-entourage-group');
+    await groups.evaluateAll((nodes) => nodes.slice(3).forEach((node) => node.remove()));
+    const positions = () =>
+        groups.evaluateAll((nodes) =>
+            nodes.map((node) => {
+                const box = node.getBoundingClientRect();
+                return { left: box.left, right: box.right, top: box.top };
+            }),
+        );
+    const center = await page.locator('.ee-entourage-groups').evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        return box.left + box.width / 2;
+    });
+    let boxes = await positions();
+    assert.equal(boxes.length, 3);
+    assert.ok(boxes[0].left < boxes[1].left && Math.abs(boxes[0].top - boxes[1].top) < 2);
+    assert.ok(Math.abs((boxes[2].left + boxes[2].right) / 2 - center) < 3);
+    await groups.first().evaluate((node) => node.classList.add('ee-entourage-wide'));
+    await groups.last().evaluate((node) => node.parentElement.append(node.cloneNode(true)));
+    boxes = await positions();
+    assert.equal(boxes.length, 4);
+    assert.ok(boxes[1].left < boxes[2].left && Math.abs(boxes[1].top - boxes[2].top) < 2);
+    assert.ok(Math.abs((boxes[3].left + boxes[3].right) / 2 - center) < 3);
+    await groups.last().evaluate((node) => node.remove());
+    await groups.first().evaluate((node) => node.classList.remove('ee-entourage-wide'));
+    await groups.last().evaluate((node) => node.remove());
+    boxes = await positions();
+    assert.equal(boxes.length, 2);
+    assert.ok(boxes[0].left < boxes[1].left && Math.abs(boxes[0].top - boxes[1].top) < 2);
+    await groups.last().evaluate((node) => node.remove());
+    boxes = await positions();
+    assert.equal(boxes.length, 1);
+    assert.ok(Math.abs((boxes[0].left + boxes[0].right) / 2 - center) < 3);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await contained();
+});
+
 test('photographic composition, loaded fonts and visual evidence at all target widths', { skip: !enabled || !photosAvailable }, async () => {
     for (const [width, height] of [
         [390, 844],
