@@ -1,8 +1,10 @@
 # Risks and follow-ups
 
-UX-02 review / 2026-10-27: bounded customer refinements are implemented and awaiting owner acceptance under D-067; GUEST-HUB-01 remains proposed. The DEL-10.3 disposable CMS editor stall and all independent release gates remain open. See RF-026 and the QA register.
+Current D-073 / 2026-10-28: The owner approves the Imbitado direction, CMS-UX-02 presentation and Guests & RSVPs consolidation, but rejected the first CMS-UX-03 density candidate as visually insufficient. A stronger editor-only revision awaits laptop owner review. Commercial name clearance, remaining functional/engine/security/device/release gates, the DEL-10.3 full-editor disposable-host stall and the separate 1024px public-RSVP browser failure remain open. See RF-041/RF-042 and the QA register.
 
-Reviewed: 2026-10-26 (D-066 ONB-01/CMS-UX-01 owner acceptance and BRAND-01 pre-launch scope). This is the issue register; architecture and decisions remain the sources for implemented contracts and approved product behavior. Review relevant entries during each authorized implementation/fix and update evidence, status and next action. No unattended maintenance is configured.
+At D-071 / 2026-10-27, CMS-UX-02 and GUEST-HUB-01 were implemented for owner review; D-072 above records their subsequent UX approval. UX-02 owner acceptance, the DEL-10.3 disposable CMS editor stall and all independent release gates remain open. See RF-041 and the QA register.
+
+Reviewed: 2026-10-28 (D-072 laptop-density owner-review candidate; UX-02 and DEL-10 gates unchanged). This is the issue register; architecture and decisions remain the sources for implemented contracts and approved product behavior. Review relevant entries during each authorized implementation/fix and update evidence, status and next action. No unattended maintenance is configured.
 
 The [QA verification register](qa/verification_register.md) owns executable checks, missing coverage, prerequisites, gate timing and last execution evidence. It preserves historical MySQL execution, including DEL-04's 45 enumerated cases, separately from Planned races and new ALB obligations. Maintain findings here and checks there; ALB-00 ran no application or engine tests and closes no existing security gate.
 
@@ -562,10 +564,40 @@ Limits: this verifies these controlled schedules on one MySQL version/isolation 
 
 ## RF-039 — BRAND-01 customer-facing pre-launch UX
 
-- Category: Approved future pre-launch UX requirement; not implemented.
-- Impact: Current landing/auth/customer shell still exposes Laravel Starter Kit branding and developer navigation, so the customer journey is visually inconsistent before deployment.
+- Category: Implemented customer UX candidate; owner visual approval and commercial name clearance pending.
+- Impact: Imbitado is selected for the customer-facing candidate, but trademark/name clearance, tagline/mark review and visual acceptance are not established for deployment.
 - Priority: P1 before customer-facing launch.
-- Status: D-066 approves the BRAND-01 scope and tracking only. Final product name/logo and visual direction need owner review; QA-BRAND-01 remains Planned.
-- Evidence: Owner-identified starter-kit UI on customer-facing pages; accepted ONB-01/CMS-UX-01 journey remains intact. [BRAND-01 roadmap and DEL-10 gate](mvp_roadmap.md).
-- Action: In a separately authorized milestone, agree on identity and visual direction, then implement the landing, auth/recovery/verification and customer shell, and verify accessibility, responsive behavior, authentication and tenant/security boundaries. Avoid unsupported feature, price and payment claims.
-- Target milestone: BRAND-01 before customer-facing deployment; no implementation in this closeout.
+- Status: D-069 selects Imbitado subject to clearance; the suggested tagline and paired-circle motif remain review candidates. QA-BRAND-01 is manual acceptance pending.
+- Evidence: 52 guarded SQLite auth/onboarding passes/509 assertions, disposable onboarding 3/3, CMS workspace 2/2 and portal navigation 1/1 browser passes, seven read-only port-8000 public auth captures and disposable private/mobile captures. [Exact BRAND-01 evidence and owner queue](tasks/premium_delight_experience.md#brand-01--customer-entry-and-workspace-review-candidate-2026-10-27). Historical account names and local `.env` were not rewritten; the full DEL-10.3 editor fixture stall is separately open.
+- Action: Owner reviews Imbitado desktop/mobile/appearance, tagline and paired-circle mark; complete commercial name/trademark clearance and set environment-specific APP_NAME/MAIL_FROM_NAME before launch. Retain auth/tenant/release gates and avoid unsupported feature, price and payment claims.
+- Target milestone: BRAND-01 owner acceptance before customer-facing deployment; no production activation or normal MySQL evidence.
+
+## RF-040 — PORTAL-UX-01 acceptance and Guest Hub projection boundary
+
+- Category: Owner UX acceptance pending; future private-data/query migration risk.
+- Impact: Simplified portal/editor navigation needs retained-preview owner review. A future combined Guests & RSVPs page could misstate active/withdrawn counts, expose private invitation state or load unbounded members if the existing Guests and Attendance queries are simply joined.
+- Priority: P1 before affected launch or Guest Hub navigation cutover.
+- Status: PORTAL-UX-01 automated checks pass; QA-PORTAL-01 owner pending. GUEST-HUB-01 is planning only, with no route/payload/schema change.
+- Evidence: 143 guarded SQLite tests/1,769 assertions, 19 disposable browser passes, 15 Node contracts and quality/build pass. The current group list pages 25 groups with eager members; Attendance pages 10 aggregate groups or 25 individual guests with separate status filtering. [Current plan and owner steps](tasks/premium_delight_experience.md#portal-ux-01--imbitado-navigation-and-editor-review-2026-10-27). The DEL-10.3 full-editor fixture stall is a separate unresolved issue.
+- Action: Owner reviews desktop/mobile/zoom and Save/Publish/navigation on port 8000. Before Guest Hub implementation, approve filter/history/bookmark semantics; specify one bounded owner-only DTO, lazy paged members, active-only summary rules and tenant/token tests.
+- Target milestone: PORTAL-UX-01 owner acceptance; separately authorized GUEST-HUB-01 design/implementation and DEL-10 release gates.
+
+## RF-041 — D-071 owner acceptance, combined guest query and separate browser limits
+
+- Category: Owner UX acceptance pending; private-data/performance verification and independent browser defects.
+- Impact: Guests & RSVPs now combines invitation actions and RSVP rows. A wrong filter could misstate active/withdrawn history, while a 25-group page can still load up to 2,500 named members (the pre-existing group maximum). One personal-RSVP browser case separately reports 1024px public-invitation horizontal overflow; the DEL-10.3 full-editor disposable-server stall remains unresolved.
+- Priority: P1 before affected customer launch; the public-invitation overflow needs separate reproduction/triage without redesigning accepted visuals speculatively.
+- Status: D-072 approves the editor and Guest Hub UX presentation; QA-CMSUX-03/QA-GH-01 still require their remaining functional/manual checks. Guarded SQLite and selected complete browser suites pass; no MySQL/performance/physical-device release proof or full-editor green claim.
+- Evidence: 788 guarded PHP cases/5,217 assertions (743 passed, 45 opt-in InnoDB skipped), 18 complete disposable Edge passes across eight files and 15 Node contracts; one separate personal-RSVP browser case fails at its 1024px overflow assertion. [Execution record](tasks/premium_delight_experience.md#cms-ux-02--guest-hub-01-execution-2026-10-27). RF-040's planning-only status is historical and superseded by D-071 for Guest Hub implementation.
+- Action: Finish the affected functional/manual checks on retained port 8000. Before launch, measure realistic group-page query count/bytes/latency and resolve the public overflow separately; keep tenant, token, withdrawn-history, MySQL/InnoDB, security and device gates open.
+- Target milestone: CMS-UX-02/GUEST-HUB-01 owner acceptance, then bounded performance/public-browser triage and DEL-10 release gates.
+
+## RF-042 — CMS-UX-03 laptop-density acceptance and real-preview limit
+
+- Category: Owner visual acceptance pending; presentation constraint.
+- Impact: A 13-inch laptop can expose a CSS viewport smaller than its physical pixel count. The editor now gives the real invitation more usable space at 100% zoom, but cannot exactly reproduce the apparent invitation scale of 75% browser zoom without changing how the guest-facing renderer is displayed.
+- Priority: P1 for CMS-UX-03 owner acceptance; no invitation renderer change is authorized.
+- Status: First density candidate owner-rejected; a visibly denser revision is implemented for owner review. No confirmed horizontal overflow in revised synthetic captures; physical-device and retained-preview checks remain open.
+- Evidence: At 1280×720, the revised pane begins at 132px versus rejected 170px, and preview grows to 930×575px versus 880×528px. Laptop/mobile/200% revised captures, fresh disposable workspace 2/2, polish 7/7, guarded PHP 49/485 assertions and quality/build checks pass. The earlier 61 guarded PHP/716 assertions, 2 selected editor and 15 Node passes are historical, not rerun for this revision. [Exact captures and limits](tasks/premium_delight_experience.md#cms-ux-03--laptop-density-review-2026-10-28). The separate DEL-10.3 full-editor fixture stall is not resolved.
+- Action: Owner compares the compact editor on the retained port-8000 synthetic wedding at true 100% zoom, including a real 13-inch laptop. Record any remaining crowding by viewport/OS scaling; preserve the real invitation renderer and investigate any new issue separately.
+- Target milestone: CMS-UX-03 final owner visual acceptance; independent DEL-10 release gates remain open.

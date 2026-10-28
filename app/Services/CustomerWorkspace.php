@@ -40,7 +40,7 @@ class CustomerWorkspace
             $account = $accounts->first();
             if (! $account) {
                 abort_if($target !== null, 403);
-                $account = Account::create(['name' => Str::limit($user->name, 220, '')."'s Wedding Workspace"]);
+                $account = Account::create(['name' => Str::limit($user->name, 220, '')."'s Imbitado workspace"]);
                 $account->users()->attach($user->id, ['role' => 'owner']);
             }
             abort_if($target && $target->id !== $account->id, 403);

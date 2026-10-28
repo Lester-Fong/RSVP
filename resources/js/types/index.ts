@@ -100,12 +100,16 @@ export interface GuestSummary {
     has_response: boolean;
     invitation_state?: 'active' | 'withdrawn';
     rsvp_status?: 'pending' | 'attending' | 'declined';
+    responded_at?: string | null;
 }
 
 export interface InvitationGroupSummary {
     id: number;
     label: string;
     guests_count: number;
+    attending: number;
+    declined: number;
+    pending: number;
     guests: GuestSummary[];
     link_status: InvitationLinkStatus;
     link_version: number;
@@ -123,6 +127,8 @@ export interface AttendanceGuest {
     id: number;
     name: string;
     group: string;
+    groupId: number;
+    invitationState: 'active' | 'withdrawn';
     status: 'pending' | 'attending' | 'declined';
     respondedAt: string | null;
 }
@@ -145,6 +151,7 @@ export interface AttendanceFilters {
     search: string;
     status: 'all' | AttendanceGuest['status'];
     view: 'guests' | 'groups';
+    invitation_state?: 'active' | 'withdrawn' | 'all';
 }
 
 export interface InvitationRsvpState {

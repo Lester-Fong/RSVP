@@ -42,24 +42,33 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
         await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
-        const nav = page.getByRole('navigation', { name: 'Wedding workspace', exact: true });
+        const nav = page.locator('[data-sidebar="sidebar"]');
+        async function navigate(label) {
+            const link = nav.getByRole('link', { name: label, exact: true });
+            if (!(await link.isVisible())) await page.getByRole('button', { name: 'Toggle wedding navigation' }).click();
+            await link.click();
+        }
+        assert.equal(await page.getByRole('navigation', { name: 'Imbitado wedding navigation', exact: true }).count(), 0);
         assert.deepEqual(
             await nav
                 .getByRole('link')
                 .allTextContents()
                 .then((labels) => labels.map((label) => label.trim())),
-            ['Overview', 'Invitation', 'Guests', 'Attendance'],
+            ['ImbitadoYour wedding website', 'Overview', 'Design invitation', 'Guests & RSVPs'],
         );
-        assert.equal(await nav.getByRole('link', { name: 'Overview', exact: true }).getAttribute('aria-current'), 'page');
+        assert.equal(await nav.getByRole('link', { name: 'Overview', exact: true }).getAttribute('data-active'), 'true');
+        assert.equal(await nav.getByRole('link', { name: 'Home', exact: true }).count(), 0);
         assert.equal(await nav.getByRole('link', { name: 'Overview', exact: true }).getAttribute('href'), overview);
         assert.equal(await page.getByRole('link', { name: 'Customize invitation', exact: true }).count(), 0);
         assert.equal(await page.getByRole('link', { name: 'Preview invitation', exact: true }).count(), 0);
         await page.getByRole('button', { name: 'More', exact: true }).click();
         await page.getByRole('menuitem', { name: 'Edit wedding details', exact: true }).click();
         await page.getByRole('heading', { name: 'Edit wedding details', exact: true }).waitFor();
-        await nav.getByRole('link', { name: 'Invitation', exact: true }).click();
-        await page.getByRole('heading', { name: 'Make it yours.', exact: true }).waitFor();
-        assert.equal(await nav.getByRole('link', { name: 'Invitation', exact: true }).getAttribute('aria-current'), 'page');
+        assert.equal(await nav.getByRole('link', { name: 'Overview', exact: true }).getAttribute('data-active'), 'true');
+        await navigate('Design invitation');
+        await page.getByRole('heading', { name: 'Make it yours', exact: true }).waitFor();
+        assert.equal(await page.locator('[data-sidebar="sidebar"]').count(), 0);
+        await page.getByRole('link', { name: 'Back to wedding', exact: true }).waitFor();
         for (const width of [1440, 390]) {
             for (const theme of ['light', 'dark']) {
                 await page.setViewportSize({ width, height: 1000 });
@@ -68,21 +77,19 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
                 await page.screenshot({ path: join(tmpdir(), `rsvp-ux-invitation-${width}-${theme}.png`), animations: 'disabled' });
             }
         }
-        assert.ok((await page.getByRole('link', { name: /View saved draft/ }).getAttribute('href')).endsWith('/preview'));
+        await page.getByRole('button', { name: 'Save Draft', exact: true }).click();
+        await page.getByText('All changes saved', { exact: false }).waitFor();
+        assert.ok((await page.getByRole('link', { name: /View saved draft/ }).getAttribute('href')).endsWith('/saved-preview'));
         const previewOpened = context.waitForEvent('page');
         await page.getByRole('link', { name: /View saved draft/ }).click();
         const preview = await previewOpened;
-        await preview.getByText('Private invitation preview', { exact: true }).waitFor();
-        assert.equal(
-            await preview
-                .getByRole('navigation', { name: 'Wedding workspace', exact: true })
-                .getByRole('link', { name: 'Invitation', exact: true })
-                .getAttribute('aria-current'),
-            'page',
-        );
+        await preview.getByText('Private saved draft · not your published website', { exact: true }).waitFor();
+        assert.equal(await preview.locator('[data-sidebar="sidebar"]').count(), 0);
         await preview.close();
         await page.bringToFront();
-        await nav.getByRole('link', { name: 'Guests', exact: true }).click();
+        await page.getByRole('link', { name: 'Back to wedding', exact: true }).click();
+        await page.waitForURL(overview);
+        await navigate('Guests & RSVPs');
         await page.waitForURL('**/guests');
         const guestsUrl = page.url();
         await page.getByRole('button', { name: 'New invitation group', exact: true }).click();
@@ -169,7 +176,7 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
         assert.equal(filterRequests.length, beforeHistory);
         await page.reload();
         assert.equal(await search.inputValue(), 'Refinement Family');
-        await page.getByRole('button', { name: 'Clear search', exact: true }).click();
+        await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
         await page.waitForURL((url) => !url.searchParams.get('search'));
         await search.fill('Cancel this pending query');
         await page.goBack();
@@ -177,7 +184,7 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
         await page.waitForTimeout(450);
         assert.equal(await search.inputValue(), 'Refinement Family');
         assert.ok(!new URL(page.url()).searchParams.get('search').includes('Cancel'));
-        await page.getByRole('button', { name: 'Clear search', exact: true }).click();
+        await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
         await page.waitForURL((url) => !url.searchParams.get('search'));
         await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 1000)));
         const beforeEditing = filterRequests.length;
@@ -206,8 +213,8 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
         await search.fill('retry me');
         await page.getByRole('alert').filter({ hasText: 'These results could not be loaded' }).waitFor();
         await page.getByRole('button', { name: 'Try again', exact: true }).click();
-        await page.getByRole('heading', { name: 'No matching invitations', exact: true }).waitFor();
-        await page.getByRole('button', { name: 'Clear search', exact: true }).click();
+        await page.getByRole('heading', { name: 'No guests match these filters', exact: true }).waitFor();
+        await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
         await page.waitForURL((url) => !url.searchParams.get('search'));
         const staleRequest = page.waitForRequest((request) => new URL(request.url()).searchParams.get('search') === 'stale');
         await search.fill('stale');
@@ -218,7 +225,7 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
         assert.equal(await search.inputValue(), 'Hidden eighth');
         await page.getByRole('button', { name: 'Edit guest Hidden eighth guest', exact: true }).waitFor();
         await page.unroute('**/guests?*');
-        await page.getByRole('button', { name: 'Clear search', exact: true }).click();
+        await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
         await page.waitForURL((url) => !url.searchParams.get('search'));
         const cookie = (await context.cookies()).find((cookie) => cookie.name === 'XSRF-TOKEN');
         const createUrl = guestsUrl.replace(/\/guests$/, '/invitation-groups');
@@ -237,13 +244,15 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
         await page.waitForURL((url) => url.searchParams.get('search') === 'Hidden eighth' && url.searchParams.get('page') === '1');
         await page.getByRole('button', { name: 'Edit guest Hidden eighth guest', exact: true }).waitFor();
         await totals(26, 33);
-        await nav.getByRole('link', { name: 'Attendance', exact: true }).click();
+        await navigate('Guests & RSVPs');
+        await page.waitForURL((url) => !url.searchParams.has('search') && !url.searchParams.has('page'));
+        await page.getByLabel('Search groups or guest names').waitFor();
         await page.getByTestId('attendance-invited').waitFor();
         assert.equal(await page.getByTestId('attendance-invited').innerText(), '33');
         assert.equal(await page.getByTestId('attendance-pending').innerText(), '33');
         const attendanceRequests = [];
         page.on('request', (request) => {
-            if (request.headers()['x-inertia'] && new URL(request.url()).pathname.endsWith('/attendance')) attendanceRequests.push(request.url());
+            if (request.headers()['x-inertia'] && new URL(request.url()).pathname.endsWith('/guests')) attendanceRequests.push(request.url());
         });
         await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 1000)));
         await page.getByLabel('RSVP status', { exact: true }).selectOption('declined');
@@ -256,12 +265,12 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
         assert.equal(await page.getByRole('button', { name: 'Apply filters', exact: true }).count(), 0);
         await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
         await page.waitForURL((url) => url.searchParams.get('status') === 'all');
-        await page.getByLabel('Search guest or invitation group').fill('Hidden eighth');
+        await page.getByLabel('Search groups or guest names').fill('Hidden eighth');
         await page.waitForURL((url) => url.searchParams.get('search') === 'Hidden eighth');
         await page.goBack();
         await page.waitForURL((url) => !url.searchParams.get('search'));
-        assert.equal(await page.getByLabel('Search guest or invitation group').inputValue(), '');
-        await page.getByRole('navigation', { name: 'Attendance pages', exact: true }).getByRole('button', { name: 'Next', exact: true }).click();
+        assert.equal(await page.getByLabel('Search groups or guest names').inputValue(), '');
+        await page.getByRole('navigation', { name: 'Guest list pages', exact: true }).getByRole('button', { name: 'Next', exact: true }).click();
         await page.getByText('Page 2 of 2', { exact: false }).waitFor();
         await page.getByLabel('RSVP status', { exact: true }).selectOption('pending');
         await page.waitForURL((url) => url.searchParams.get('status') === 'pending' && url.searchParams.get('page') === '1');
@@ -271,7 +280,7 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
                 await page.evaluate((value) => document.documentElement.classList.toggle('dark', value === 'dark'), theme);
                 assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
                 await page.screenshot({ path: join(tmpdir(), `rsvp-ux-attendance-${width}-${theme}.png`), animations: 'disabled' });
-                await nav.getByRole('link', { name: 'Overview', exact: true }).click();
+                await navigate('Overview');
                 await page.getByRole('button', { name: 'More', exact: true }).focus();
                 await page.keyboard.press('Enter');
                 await page.getByRole('menuitem', { name: 'Edit wedding details', exact: true }).waitFor();
@@ -282,11 +291,11 @@ test('portal navigation, guest tags, collapsed members and automatic filters pre
                 assert.ok(await page.getByRole('button', { name: 'More', exact: true }).evaluate((element) => document.activeElement === element));
                 assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
                 await page.screenshot({ path: join(tmpdir(), `rsvp-ux-overview-${width}-${theme}.png`), animations: 'disabled' });
-                await nav.getByRole('link', { name: 'Attendance', exact: true }).click();
-                await page.getByRole('heading', { name: 'Attendance', exact: true }).waitFor();
+                await navigate('Guests & RSVPs');
+                await page.getByRole('heading', { name: 'Guests & RSVPs', exact: true }).waitFor();
             }
         }
-        await nav.getByRole('link', { name: 'Guests', exact: true }).click();
+        await navigate('Guests & RSVPs');
         await page.getByRole('button', { name: 'New invitation group', exact: true }).click();
         await page.getByLabel('Group label', { exact: true }).fill('Unsaved capacity check');
         for (let index = 0; index < 100; index++) {

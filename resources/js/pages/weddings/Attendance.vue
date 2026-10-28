@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AttendanceGroupRow from '@/components/wedding/AttendanceGroupRow.vue';
 import AttendanceGuestList from '@/components/wedding/AttendanceGuestList.vue';
-import WeddingNavigation from '@/components/wedding/WeddingNavigation.vue';
 import { usePortalFilters } from '@/composables/usePortalFilters';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AttendanceFilters, AttendanceGroup, AttendanceGuest, AttendancePage, AttendanceSummary, BreadcrumbItem } from '@/types';
@@ -51,7 +50,6 @@ const updated = computed(() => new Intl.DateTimeFormat('en-PH', { dateStyle: 'me
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head title="Attendance" />
         <div class="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-8 p-4 sm:p-6">
-            <WeddingNavigation :account-id="account.id" :wedding-id="wedding.id" active="attendance" />
             <header class="flex flex-wrap items-start justify-between gap-4">
                 <div class="min-w-0">
                     <p class="font-mono text-xs uppercase tracking-widest text-muted-foreground [overflow-wrap:anywhere]">

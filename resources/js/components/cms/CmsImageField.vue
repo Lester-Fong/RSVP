@@ -22,7 +22,7 @@ function pick() {
 }
 </script>
 <template>
-    <fieldset class="space-y-3 border-t py-4" :data-cms-field="field">
+    <fieldset class="cms-image-field space-y-3 border-t py-4" :data-cms-field="field">
         <legend class="text-sm font-medium">{{ label }}</legend>
         <img
             v-if="model && images.find((i) => i.id === model?.asset_id)"

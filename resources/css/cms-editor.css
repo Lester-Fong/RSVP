@@ -20,6 +20,108 @@
     accent-color: hsl(var(--foreground));
     @apply h-4 w-4 rounded border-input text-foreground focus:ring-foreground;
 }
+.cms-workspace {
+    background: color-mix(in srgb, #f7f0e7 72%, hsl(var(--background)));
+    color: hsl(var(--foreground));
+}
+.dark .cms-workspace {
+    background: color-mix(in srgb, #342c28 72%, hsl(var(--background)));
+}
+.cms-workspace-header {
+    border-color: color-mix(in srgb, #a77a5e 30%, hsl(var(--border)));
+}
+.cms-workspace .cms-eyebrow {
+    color: color-mix(in srgb, #8d6349 72%, hsl(var(--foreground)));
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+.dark .cms-workspace .cms-eyebrow {
+    color: #d5b39a;
+}
+.cms-editor-identity {
+    border-left: 2px solid #a77a5e;
+    padding-left: 9px;
+}
+.cms-editor-actions :is(.cms-primary, .cms-secondary) {
+    min-height: 32px;
+    padding: 4px 8px;
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+.cms-editor-actions > div {
+    flex-wrap: nowrap;
+    gap: 4px;
+}
+.cms-workspace .cms-primary {
+    background: #865d45;
+    color: #fffaf5;
+}
+.cms-workspace .cms-primary:hover:not(:disabled) {
+    background: #704a36;
+}
+.cms-workspace .cms-secondary {
+    border-color: color-mix(in srgb, #a77a5e 32%, hsl(var(--border)));
+    background: hsl(var(--background) / 0.8);
+}
+.cms-workspace .cms-secondary:hover:not(:disabled) {
+    background: color-mix(in srgb, #f3e7da 65%, hsl(var(--background)));
+}
+.cms-workspace .cms-draft-state {
+    color: color-mix(in srgb, #765b4a 70%, hsl(var(--foreground)));
+}
+.cms-workspace .cms-draft-state[data-dirty='true'] {
+    color: hsl(var(--foreground));
+}
+.cms-editor-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1px;
+    border-color: color-mix(in srgb, #a77a5e 26%, hsl(var(--border)));
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 6px;
+    scrollbar-width: thin;
+}
+.cms-nav-item {
+    flex: none;
+    min-height: 31px;
+    border-radius: 5px;
+    padding: 4px 7px;
+    color: hsl(var(--muted-foreground));
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+.cms-nav-item:hover,
+.cms-nav-item-active {
+    background: color-mix(in srgb, #d6b399 30%, hsl(var(--background)));
+    color: hsl(var(--foreground));
+}
+.cms-nav-item-active {
+    box-shadow: inset 0 -2px 0 #9a6b50;
+    font-weight: 600;
+}
+.cms-workspace .cms-editor-pane {
+    border: 1px solid color-mix(in srgb, #a77a5e 25%, hsl(var(--border)));
+    border-radius: 9px;
+    background: hsl(var(--background) / 0.88);
+    padding: 9px;
+}
+.cms-workspace .cms-editor-pane h2 {
+    font-family: 'Wedding Editorial', Georgia, serif;
+    font-size: 1.2rem;
+    line-height: 1.15;
+}
+.cms-workspace .cms-preview-pane {
+    border: 1px solid color-mix(in srgb, #a77a5e 15%, hsl(var(--border)));
+    border-radius: 9px;
+    background: hsl(var(--background) / 0.6);
+    padding: 2px;
+}
+.cms-workspace > .cms-feedback {
+    padding: 8px 12px;
+}
 .cms-picker progress {
     accent-color: hsl(var(--foreground));
 }
@@ -123,6 +225,77 @@
     outline-offset: -2px;
 }
 @media (min-width: 1024px) {
+    .cms-workspace-header {
+        flex-wrap: nowrap;
+    }
+    .cms-editor-identity {
+        flex: 1 1 230px;
+    }
+    .cms-editor-actions {
+        flex: 0 1 auto;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: thin;
+        padding: 1px;
+    }
+    .cms-editor-actions > :is(a, button, div) {
+        flex: none;
+    }
+    .cms-editor-pane .cms-input {
+        min-height: 34px;
+        padding: 4px 8px;
+        font-size: 13px;
+        line-height: 1.3;
+    }
+    .cms-editor-pane .cms-label {
+        font-size: 12px;
+    }
+    .cms-editor-pane :is(.cms-primary, .cms-secondary) {
+        min-height: 34px;
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+    .cms-editor-pane :is(.text-sm, .cms-collection-summary) {
+        font-size: 12.5px;
+        line-height: 1.4;
+    }
+    .cms-editor-pane .text-xs {
+        font-size: 11.5px;
+        line-height: 1.45;
+    }
+    .cms-editor-pane .cms-input {
+        margin-top: 3px;
+        scroll-margin-block: 12px;
+    }
+    .cms-editor-fields > section > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 8px;
+    }
+    .cms-editor-fields :is(.space-y-5, .space-y-4) > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 9px;
+    }
+    .cms-editor-fields .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 7px;
+    }
+    .cms-editor-pane .cms-image-field {
+        padding-block: 7px;
+    }
+    .cms-editor-pane .cms-image-field img {
+        height: 84px;
+    }
+    .cms-editor-pane :is(.cms-guide-block, .cms-guide-faq-editor) {
+        padding: 8px;
+    }
+    .cms-editor-pane .cms-collection-row {
+        padding-block: 4px;
+    }
+    .cms-editor-pane .cms-collection-summary {
+        min-height: 34px;
+        padding-block: 7px;
+    }
+    .cms-editor-pane :is(.cms-collection-action, .cms-chip-grip, .cms-chip-remove) {
+        min-width: 34px;
+        min-height: 34px;
+    }
     .cms-workspace {
         height: 100dvh;
         display: flex;
@@ -150,8 +323,8 @@
         overflow-y: auto;
         min-height: 0;
         scrollbar-gutter: stable;
-        scroll-padding-block: 16px 24px;
-        padding-right: 6px;
+        scroll-padding-block: 12px 20px;
+        padding-right: 4px;
     }
     .cms-preview-pane {
         display: flex;
@@ -183,8 +356,20 @@
 }
 
 @media (max-width: 1023px) {
+    .cms-workspace .cms-editor-pane {
+        padding: 12px;
+    }
+    .cms-editor-actions :is(.cms-primary, .cms-secondary) {
+        min-height: 44px;
+        font-size: 14px;
+    }
     .cms-editor .cms-chip-name {
         font-size: 16px;
+    }
+    .cms-nav-item {
+        min-height: 44px;
+        padding: 8px 10px;
+        font-size: 14px;
     }
 }
 

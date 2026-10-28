@@ -7,11 +7,18 @@ import { Label } from '@/components/ui/label';
 import GuestNameTags from '@/components/wedding/GuestNameTags.vue';
 import InvitationLifecycleDialog from '@/components/wedding/InvitationLifecycleDialog.vue';
 import RsvpAccessDialog from '@/components/wedding/RsvpAccessDialog.vue';
-import WeddingNavigation from '@/components/wedding/WeddingNavigation.vue';
 import { usePortalFilters } from '@/composables/usePortalFilters';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { ownerRsvpTransport } from '@/lib/personal-rsvp-http';
-import type { AccountSummary, BreadcrumbItem, GuestSummary, InvitationGroupSummary } from '@/types';
+import type {
+    AccountSummary,
+    AttendanceGuest,
+    AttendancePage,
+    AttendanceSummary,
+    BreadcrumbItem,
+    GuestSummary,
+    InvitationGroupSummary,
+} from '@/types';
 import type { OwnerRsvpGroup, OwnerRsvpTransport } from '@/types/personal-rsvp';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { MoreHorizontal, Plus, Users } from 'lucide-vue-next';
@@ -20,15 +27,17 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 const props = defineProps<{
     account: AccountSummary;
     wedding: { id: number; partner_one_name: string; partner_two_name: string };
-    groups: {
-        data: InvitationGroupSummary[];
-        total: number;
-        current_page: number;
-        last_page: number;
-        prev_page_url: string | null;
-        next_page_url: string | null;
+    groups: AttendancePage<InvitationGroupSummary> | null;
+    individuals: AttendancePage<AttendanceGuest> | null;
+    filters: {
+        search: string;
+        status: 'all' | 'attending' | 'declined' | 'pending';
+        view: 'groups' | 'guests';
+        invitation_state: 'active' | 'withdrawn' | 'all';
     };
-    filters: { search: string; invitation_state: 'active' | 'withdrawn' | 'all' };
+    summary: AttendanceSummary;
+    matchedGuests: number;
+    refreshedAt: string;
     totals: { groups: number; people: number; active_people: number; withdrawn_people: number };
     withdrawalEnabled: boolean;
     maxGuestsPerGroup: number;
@@ -39,10 +48,11 @@ const indexUrl = route('accounts.weddings.guests.index', parameters);
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
     { title: 'Wedding overview', href: route('accounts.weddings.show', parameters) },
-    { title: 'Guest management', href: indexUrl },
+    { title: 'Guests & RSVPs', href: indexUrl },
 ];
 const {
     search,
+    status,
     invitationState,
     filtering: searching,
     error: searchError,
@@ -50,6 +60,17 @@ const {
     clear: clearSearch,
     cancel: cancelFiltering,
 } = usePortalFilters({ url: indexUrl, filters: () => props.filters });
+const rows = computed(() => props.individuals ?? props.groups);
+const cards: { key: keyof AttendanceSummary; label: string }[] = [
+    { key: 'invited', label: 'Total invited' },
+    { key: 'attending', label: 'Attending' },
+    { key: 'declined', label: 'Declined' },
+    { key: 'pending', label: 'Pending' },
+];
+const updated = computed(() => new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(props.refreshedAt)));
+function respondedAt(value: string): string {
+    return new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+}
 const expandedGroups = ref(new Set<number>());
 const guestTags = ref<InstanceType<typeof GuestNameTags> | null>(null);
 function isExpanded(group: InvitationGroupSummary): boolean {
@@ -69,9 +90,9 @@ const accessGroup = ref<OwnerRsvpGroup | null>(null);
 const accessTransport = ref<OwnerRsvpTransport | null>(null);
 const accessTrigger = ref<HTMLElement | null>(null);
 let accessController: AbortController | null = null;
-async function openAccess(group: InvitationGroupSummary) {
+async function openAccess(group: { id: number }, trigger?: HTMLElement) {
     if (accessLoading.value) return;
-    accessTrigger.value = document.getElementById('group-actions-' + group.id);
+    accessTrigger.value = trigger ?? document.getElementById('group-actions-' + group.id);
     accessLoading.value = true;
     accessError.value = '';
     accessController = new AbortController();
@@ -158,7 +179,7 @@ watch(search, () => {
     notice.value = '';
 });
 watch(
-    () => props.filters.search,
+    () => [props.filters.search, props.filters.status, props.filters.invitation_state],
     () => expandedGroups.value.clear(),
 );
 
@@ -236,9 +257,8 @@ function confirmGuestRemoval() {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Guest management" />
+        <Head title="Guests & RSVPs" />
         <div class="guest-management mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-8 p-4 sm:p-6">
-            <WeddingNavigation :account-id="account.id" :wedding-id="wedding.id" active="guests" />
             <header class="flex flex-wrap items-start justify-between gap-4">
                 <div class="min-w-0">
                     <p class="break-words font-mono text-xs uppercase tracking-widest text-muted-foreground [overflow-wrap:anywhere]">
@@ -250,42 +270,61 @@ function confirmGuestRemoval() {
                         id="guest-management-heading"
                         class="mt-2 rounded-sm text-2xl font-medium tracking-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
                     >
-                        Guest management
+                        Guests &amp; RSVPs
                     </h1>
-                    <p class="mt-2 text-sm text-muted-foreground">Organize named guests into shared invitations. No invitations are sent here.</p>
+                    <p class="mt-2 text-sm text-muted-foreground">Manage invitations and see how your guests have responded, all in one place.</p>
                 </div>
-                <Button @click="showDialog('create', null, null, $event.currentTarget as HTMLElement)"
-                    ><Plus class="mr-2 h-4 w-4" aria-hidden="true" />New invitation group</Button
-                >
+                <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" :disabled="searching" @click="findGroups(filters.view, rows?.current_page ?? 1)">{{
+                        searching ? 'Refreshing…' : 'Refresh'
+                    }}</Button>
+                    <Button @click="showDialog('create', null, null, $event.currentTarget as HTMLElement)"
+                        ><Plus class="mr-2 h-4 w-4" aria-hidden="true" />New invitation group</Button
+                    >
+                </div>
             </header>
 
-            <dl class="flex flex-wrap gap-x-12 gap-y-4 border-y py-5" aria-label="Wedding guest totals">
-                <div>
-                    <dt class="font-mono text-xs uppercase tracking-widest text-muted-foreground">Invitation groups</dt>
-                    <dd data-testid="group-total" class="mt-2 text-2xl tabular-nums">{{ totals.groups }}</dd>
-                </div>
-                <div>
-                    <dt class="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                        {{ withdrawalEnabled ? 'Active invited people' : 'Invited people' }}
-                    </dt>
-                    <dd data-testid="people-total" class="mt-2 text-2xl tabular-nums">
-                        {{ withdrawalEnabled ? totals.active_people : totals.people }}
-                    </dd>
-                </div>
-                <div v-if="withdrawalEnabled">
-                    <dt class="font-mono text-xs uppercase tracking-widest text-muted-foreground">Withdrawn people</dt>
-                    <dd data-testid="withdrawn-total" class="mt-2 text-2xl tabular-nums">{{ totals.withdrawn_people }}</dd>
-                </div>
-            </dl>
+            <section aria-labelledby="guest-hub-totals-heading">
+                <h2 id="guest-hub-totals-heading" class="sr-only">Private wedding-wide RSVP totals</h2>
+                <dl class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <div v-for="card in cards" :key="card.key" class="min-w-0 rounded-xl border border-[#ddcfc0] bg-background/80 px-4 py-4">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ card.label }}</dt>
+                        <dd :data-testid="'attendance-' + card.key" class="mt-2 text-3xl font-medium tabular-nums">
+                            <span :data-testid="card.key === 'invited' ? 'people-total' : undefined">{{ summary[card.key] }}</span>
+                        </dd>
+                    </div>
+                </dl>
+                <p class="mt-3 text-xs text-muted-foreground">
+                    Wedding-wide totals include {{ withdrawalEnabled ? 'active invitations only' : 'all invited guests' }} and do not change with
+                    filters. <span data-testid="group-total">{{ totals.groups }}</span> invitation {{ totals.groups === 1 ? 'group' : 'groups'
+                    }}<span v-if="withdrawalEnabled">
+                        · <span data-testid="withdrawn-total">{{ totals.withdrawn_people }}</span> withdrawn guests retained in history</span
+                    >. Updated <time :datetime="refreshedAt">{{ updated }}</time
+                    >.
+                </p>
+            </section>
             <p v-if="notice" role="status" class="text-sm">{{ notice }}</p>
             <p v-if="accessLoading" role="status" class="text-sm">Loading RSVP access…</p>
             <p v-if="accessError" role="alert" class="text-sm">{{ accessError }}</p>
 
-            <section aria-label="Invitation groups" class="min-w-0">
-                <form role="search" class="mb-6 flex flex-wrap items-end gap-2" @submit.prevent>
+            <section aria-label="Guests and RSVPs" class="min-w-0">
+                <form role="search" class="mb-4 flex flex-wrap items-end gap-3" @submit.prevent>
                     <div class="w-full sm:max-w-sm">
                         <Label for="guest-search">Search groups or guest names</Label>
                         <Input id="guest-search" v-model="search" type="search" maxlength="255" class="mt-2" />
+                    </div>
+                    <div class="w-full sm:w-auto">
+                        <Label for="guest-rsvp-status">RSVP status</Label>
+                        <select
+                            id="guest-rsvp-status"
+                            v-model="status"
+                            class="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                        >
+                            <option value="all">All</option>
+                            <option value="attending">Attending</option>
+                            <option value="declined">Declined</option>
+                            <option value="pending">Pending</option>
+                        </select>
                     </div>
                     <div v-if="withdrawalEnabled" class="w-full sm:w-auto">
                         <Label for="invitation-state">Invitation status</Label>
@@ -299,28 +338,58 @@ function confirmGuestRemoval() {
                             <option value="all">All retained guests</option>
                         </select>
                     </div>
-                    <Button v-if="search || filters.search" type="button" variant="ghost" @click="clearSearch">Clear search</Button>
+                    <Button
+                        v-if="search || filters.search || status !== 'all' || invitationState !== 'active'"
+                        type="button"
+                        variant="ghost"
+                        @click="clearSearch"
+                        >Clear filters</Button
+                    >
                 </form>
-                <p v-if="searching" role="status" class="mb-4 text-sm text-muted-foreground">Searching…</p>
+                <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+                    <div role="group" aria-label="Guest view" class="flex gap-2">
+                        <Button
+                            :variant="filters.view === 'groups' ? 'default' : 'outline'"
+                            :aria-pressed="filters.view === 'groups'"
+                            :disabled="searching"
+                            @click="findGroups('groups')"
+                            >Invitation groups</Button
+                        >
+                        <Button
+                            :variant="filters.view === 'guests' ? 'default' : 'outline'"
+                            :aria-pressed="filters.view === 'guests'"
+                            :disabled="searching"
+                            @click="findGroups('guests')"
+                            >Individual guests</Button
+                        >
+                    </div>
+                    <p role="status" class="text-sm text-muted-foreground">
+                        {{ matchedGuests }} matching guests<span v-if="searching"> · Loading…</span>
+                    </p>
+                </div>
                 <div v-if="searchError" role="alert" class="mb-4 flex flex-wrap items-center gap-3 text-sm">
                     <p>{{ searchError }}</p>
                     <Button variant="outline" :disabled="searching" @click="findGroups()">Try again</Button>
                 </div>
-                <p v-if="filters.search" class="mb-4 text-sm text-muted-foreground">
-                    {{ groups.total }} matching groups. Totals above include your entire wedding. All member names are shown while searching.
+                <p
+                    v-if="filters.search || filters.status !== 'all' || filters.invitation_state !== 'active'"
+                    class="mb-4 text-sm text-muted-foreground"
+                >
+                    {{ rows?.total ?? 0 }} matching {{ filters.view === 'groups' ? 'groups' : 'guests' }}. Group counts reflect the selected
+                    invitation state; the four totals above remain wedding-wide.
                 </p>
-                <div v-if="!groups.data.length" class="flex flex-col items-start gap-3 py-10">
+                <div v-if="!rows?.data.length" class="flex flex-col items-start gap-3 py-10">
                     <Users class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-                    <h2 class="font-medium">{{ filters.search ? 'No matching invitations' : 'Start your guest list' }}</h2>
+                    <h2 class="font-medium">{{ summary.invited === 0 ? 'Start your guest list' : 'No guests match these filters' }}</h2>
                     <p class="max-w-md text-sm text-muted-foreground">
                         {{
-                            filters.search
-                                ? 'Try another group label or guest name.'
-                                : 'Use New invitation group to add a family, couple or individual. Every invited seat needs a name.'
+                            summary.invited === 0
+                                ? 'Use New invitation group to add a family, couple or individual. Every invited seat needs a name.'
+                                : 'Try another name, RSVP status or invitation state.'
                         }}
                     </p>
                 </div>
-                <table v-else class="w-full table-fixed text-left text-sm" :aria-busy="searching">
+                <table v-else-if="groups" class="w-full table-fixed text-left text-sm" :aria-busy="searching">
                     <caption class="sr-only">
                         Invitation groups and their named guests. Select a guest name to edit or remove that person.
                     </caption>
@@ -335,7 +404,9 @@ function confirmGuestRemoval() {
                         <tr v-for="group in groups.data" :key="group.id" class="align-top hover:bg-muted/30">
                             <td class="min-w-0 py-5 pr-3">
                                 <p class="font-medium [overflow-wrap:anywhere]">{{ group.label }}</p>
-                                <p class="mt-1 font-mono text-xs text-muted-foreground">Personal RSVP access</p>
+                                <p class="mt-1 text-xs text-muted-foreground">
+                                    {{ group.attending }} attending · {{ group.declined }} declined · {{ group.pending }} pending
+                                </p>
                                 <ul :id="'members-' + group.id" class="mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="Named guests">
                                     <li
                                         v-for="guest in displayedGuests(group)"
@@ -350,9 +421,12 @@ function confirmGuestRemoval() {
                                         >
                                             {{ guest.name }}
                                         </button>
-                                        <span v-if="withdrawalEnabled" class="text-xs capitalize text-muted-foreground"
-                                            >{{ guest.invitation_state }} · {{ guest.rsvp_status }}</span
+                                        <span class="text-xs capitalize text-muted-foreground"
+                                            >{{ withdrawalEnabled ? guest.invitation_state + ' · ' : '' }}{{ guest.rsvp_status }}</span
                                         >
+                                        <time v-if="guest.responded_at" :datetime="guest.responded_at" class="text-xs text-muted-foreground">{{
+                                            respondedAt(guest.responded_at)
+                                        }}</time>
                                         <Button
                                             v-if="withdrawalEnabled"
                                             type="button"
@@ -408,19 +482,61 @@ function confirmGuestRemoval() {
                         </tr>
                     </tbody>
                 </table>
-                <nav v-if="groups.last_page > 1" aria-label="Guest list pages" class="mt-6 flex flex-wrap items-center justify-between gap-3">
-                    <p class="text-sm text-muted-foreground">Page {{ groups.current_page }} of {{ groups.last_page }}</p>
+                <table v-else-if="individuals" class="w-full table-fixed text-left text-sm" :aria-busy="searching">
+                    <caption class="sr-only">
+                        Individual guests, invitation groups and saved RSVP responses
+                    </caption>
+                    <thead class="border-b text-xs uppercase tracking-wide text-muted-foreground">
+                        <tr>
+                            <th scope="col" class="pb-3 pr-3 font-normal">Guest</th>
+                            <th scope="col" class="hidden pb-3 pr-3 font-normal sm:table-cell">Invitation group</th>
+                            <th scope="col" class="w-24 pb-3 pr-2 font-normal">RSVP</th>
+                            <th scope="col" class="hidden w-44 pb-3 font-normal lg:table-cell">Responded</th>
+                            <th scope="col" class="w-24 pb-3"><span class="sr-only">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr v-for="guest in individuals.data" :key="guest.id" class="align-top">
+                            <td class="min-w-0 py-4 pr-3">
+                                <p class="font-medium [overflow-wrap:anywhere]">{{ guest.name }}</p>
+                                <p class="mt-1 text-xs text-muted-foreground sm:hidden">{{ guest.group }}</p>
+                                <p v-if="withdrawalEnabled" class="mt-1 text-xs capitalize text-muted-foreground">{{ guest.invitationState }}</p>
+                                <p class="mt-1 text-xs text-muted-foreground lg:hidden">
+                                    {{ guest.respondedAt ? respondedAt(guest.respondedAt) : 'No response yet' }}
+                                </p>
+                            </td>
+                            <td class="hidden py-4 pr-3 text-muted-foreground sm:table-cell">{{ guest.group }}</td>
+                            <td class="py-4 pr-2 capitalize">{{ guest.status }}</td>
+                            <td class="hidden py-4 text-muted-foreground lg:table-cell">
+                                <time v-if="guest.respondedAt" :datetime="guest.respondedAt">{{ respondedAt(guest.respondedAt) }}</time>
+                                <span v-else>No response yet</span>
+                            </td>
+                            <td class="py-3 text-right">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    :disabled="accessLoading"
+                                    :aria-label="'RSVP access for ' + guest.name"
+                                    @click="openAccess({ id: guest.groupId }, $event.currentTarget as HTMLElement)"
+                                    >RSVP access</Button
+                                >
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <nav v-if="rows && rows.last_page > 1" aria-label="Guest list pages" class="mt-6 flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-sm text-muted-foreground">Page {{ rows.current_page }} of {{ rows.last_page }}</p>
                     <div class="flex gap-2">
                         <Button
                             variant="outline"
-                            :disabled="searching || !groups.prev_page_url"
-                            @click="findGroups(undefined, groups.current_page - 1)"
+                            :disabled="searching || !rows.prev_page_url"
+                            @click="findGroups(filters.view, rows.current_page - 1)"
                             >Previous</Button
                         >
                         <Button
                             variant="outline"
-                            :disabled="searching || !groups.next_page_url"
-                            @click="findGroups(undefined, groups.current_page + 1)"
+                            :disabled="searching || !rows.next_page_url"
+                            @click="findGroups(filters.view, rows.current_page + 1)"
                             >Next</Button
                         >
                     </div>
@@ -523,7 +639,7 @@ function confirmGuestRemoval() {
             :group-id="lifecycleTarget.groupId"
             :guest-id="lifecycleTarget.guestId"
             :action="lifecycleTarget.action"
-            @changed="router.reload({ only: ['groups', 'filters', 'totals'] })"
+            @changed="router.reload({ only: ['groups', 'individuals', 'filters', 'totals', 'summary', 'matchedGuests', 'refreshedAt'] })"
         />
     </AppLayout>
 </template>

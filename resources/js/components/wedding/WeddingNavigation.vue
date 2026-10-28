@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-defineProps<{ accountId: number; weddingId: number; active: 'overview' | 'invitation' | 'guests' | 'attendance' }>();
+defineProps<{ accountId: number; weddingId: number; active: 'overview' | 'invitation' | 'guests' }>();
 const items = [
     { key: 'overview', label: 'Overview', route: 'accounts.weddings.show' },
     { key: 'invitation', label: 'Invitation', route: 'accounts.weddings.invitation.edit' },
-    { key: 'guests', label: 'Guests', route: 'accounts.weddings.guests.index' },
-    { key: 'attendance', label: 'Attendance', route: 'accounts.weddings.attendance.index' },
+    { key: 'guests', label: 'Guests & RSVPs', route: 'accounts.weddings.guests.index' },
 ] as const;
 </script>
 
 <template>
-    <nav aria-label="Wedding workspace" class="flex min-w-0 flex-wrap gap-x-5 border-b sm:gap-x-7">
+    <nav aria-label="Imbitado wedding navigation" class="flex min-w-0 flex-wrap gap-x-5 border-b sm:gap-x-7">
         <!-- A document boundary lets the editor's native unsaved warning protect browser Back as well as links. -->
         <component
             :is="item.key === 'invitation' ? 'a' : Link"

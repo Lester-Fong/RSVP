@@ -49,7 +49,7 @@ const selected = ref(content.content.sections[0]?.id ?? ''),
 const picker = ref(false),
     choice = ref<PhotoChoice | null>(null),
     errors = ref<Record<string, string[]>>({}),
-    status = ref('Checking preview content…');
+    status = ref('Checking your preview…');
 
 const presentation = computed(() =>
     editorPresentation(content, props.wedding, slots, images.value, props.capabilities[content.template_key] ?? [], props.timeZone),
@@ -118,6 +118,9 @@ function pick(value: PhotoChoice) {
     choice.value = value;
     picker.value = true;
 }
+function revealSectionTab(event: FocusEvent) {
+    (event.currentTarget as HTMLElement).scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
 function choose(image: CmsImageReference) {
     const action = choice.value;
     choice.value = null;
@@ -167,25 +170,25 @@ async function validate(version: number) {
     if (guideIssues.length) {
         if (version !== generation) return;
         errors.value = Object.fromEntries(guideIssues.map((issue) => [issue.path, [issue.message]]));
-        status.value = 'Some Guest Guide fields need attention Â· local edits are preserved';
+        status.value = 'Please review the Guest Guide. Your edits are still here.';
         return;
     }
     try {
         await editorRequest(props.endpoints.validate, props.csrfToken, { document: content, slots }, controller.signal);
         if (version !== generation) return;
         errors.value = {};
-        status.value = 'Preview content checked';
+        status.value = 'Preview is up to date';
     } catch (error) {
         if (version !== generation || (error instanceof DOMException && error.name === 'AbortError')) return;
         const failure = error as Error & { errors?: Record<string, string[]> };
         errors.value = failure.errors ?? {};
         status.value = Object.keys(errors.value).length
-            ? 'Some sections need attention · local edits are preserved'
-            : failure.message || 'Content could not be checked. Local edits remain here.';
+            ? 'Please review the highlighted sections. Your edits are still here.'
+            : failure.message || 'We could not check the preview. Your edits are still here.';
     }
 }
 function queue() {
-    status.value = 'Checking preview content…';
+    status.value = 'Checking your preview…';
     controller?.abort();
     const version = ++generation;
     clearTimeout(timer);
@@ -259,17 +262,17 @@ onBeforeUnmount(() => {
 </script>
 <template>
     <CmsEditorLayout>
-        <Head title="Wedding website" />
-        <div class="cms-editor cms-workspace w-full min-w-0 p-4">
-            <header class="flex flex-wrap items-start justify-between gap-3 border-b pb-2">
-                <div class="min-w-0">
-                    <p class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Private workspace · website editor</p>
-                    <h1 class="mt-1 text-xl font-medium tracking-tight">Make it yours</h1>
-                    <p class="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
-                        Drafts and photographs are private. Save, review, then publish when ready.
+        <Head title="Design invitation" />
+        <div class="cms-editor cms-workspace w-full min-w-0 p-3 lg:p-2">
+            <header class="cms-workspace-header flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b pb-1">
+                <div class="cms-editor-identity min-w-0">
+                    <p class="cms-eyebrow">Imbitado · Design invitation</p>
+                    <h1 class="brand-serif mt-0.5 text-3xl font-medium leading-tight lg:text-[22px]">Make it yours</h1>
+                    <p class="mt-0.5 max-w-xl text-sm leading-relaxed text-muted-foreground lg:text-xs">
+                        Shape the invitation you'll share with everyone you love.
                     </p>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="cms-editor-actions flex min-w-0 flex-wrap items-center gap-1 lg:flex-nowrap">
                     <a :href="overviewUrl" class="cms-secondary">Back to wedding</a>
                     <a v-if="draftVersion" :href="endpoints.preview" target="_blank" rel="noopener" class="cms-secondary">View saved draft</a>
                     <button type="button" class="cms-primary" :disabled="saving || (!dirty && draftVersion > 0)" @click="save">
@@ -287,11 +290,11 @@ onBeforeUnmount(() => {
                     />
                 </div>
             </header>
-            <p role="status" class="cms-draft-state py-1.5 text-xs" :data-dirty="dirty">
+            <p role="status" class="cms-draft-state py-0.5 text-xs" :data-dirty="dirty">
                 <span aria-hidden="true">{{ dirty ? '◌' : '✓' }}</span>
-                {{ dirty ? 'Unsaved changes' : draftVersion ? 'All changes saved' : 'No saved draft yet' }} · Wedding timezone: {{ timeZone }}
+                {{ dirty ? 'Unsaved changes' : draftVersion ? 'All changes saved' : 'No saved draft yet' }}
             </p>
-            <p v-if="saveFeedback && !issues.length" role="status" class="cms-feedback mb-4 text-sm" :data-kind="feedbackKind">
+            <p v-if="saveFeedback && !issues.length" role="status" class="cms-feedback mb-2 text-sm" :data-kind="feedbackKind">
                 <strong
                     >{{
                         feedbackKind === 'success'
@@ -322,22 +325,20 @@ onBeforeUnmount(() => {
                     </div></DialogContent
                 ></Dialog
             >
-            <div class="mb-3 flex flex-wrap gap-2 lg:hidden">
+            <div class="mb-2 flex flex-wrap gap-2 lg:hidden">
                 <button class="cms-secondary" :aria-pressed="view === 'edit'" @click="view = 'edit'">Edit sections</button
                 ><button class="cms-secondary" :aria-pressed="view === 'preview'" @click="view = 'preview'">View website preview</button>
             </div>
-            <nav
-                aria-label="Editor sections"
-                class="cms-editor-nav mb-2 flex flex-wrap gap-x-1 border-b pb-1"
-                :class="view === 'preview' ? 'hidden lg:flex' : ''"
-            >
+            <nav aria-label="Editor sections" class="cms-editor-nav mb-1 border-b" :class="view === 'preview' ? 'hidden lg:flex' : ''">
                 <button
                     v-for="section in content.content.sections"
                     :key="section.id"
-                    class="min-h-11 rounded-md px-3 py-2 text-sm"
-                    :class="selected === section.id ? 'bg-muted font-semibold' : 'text-muted-foreground hover:bg-muted'"
+                    type="button"
+                    class="cms-nav-item"
+                    :class="selected === section.id ? 'cms-nav-item-active' : ''"
                     :aria-current="selected === section.id ? 'step' : undefined"
                     @click="selected = section.id"
+                    @focus="revealSectionTab"
                 >
                     {{ labels[section.type] }}
                 </button>
@@ -347,19 +348,20 @@ onBeforeUnmount(() => {
                         !content.content.sections.some((section) => section.type === 'guest_guide')
                     "
                     type="button"
-                    class="cms-secondary"
+                    class="cms-nav-item"
                     @click="addGuestGuide"
+                    @focus="revealSectionTab"
                 >
                     Add Guest Guide
                 </button>
             </nav>
-            <div class="cms-split grid min-w-0 gap-4 lg:grid-cols-[clamp(340px,27vw,400px)_minmax(0,1fr)]">
+            <div class="cms-split grid min-w-0 gap-2 lg:grid-cols-[clamp(320px,25vw,380px)_minmax(0,1fr)]">
                 <section class="cms-editor-pane min-w-0" :class="view === 'preview' ? 'hidden lg:flex' : ''" aria-label="Website editing controls">
                     <div class="cms-editor-fields" tabindex="0" role="region" aria-label="Section fields">
                         <p v-if="!content.content.sections.length" class="mb-4 text-sm text-muted-foreground">
                             This draft has no content sections. Its saved data has been preserved.
                         </p>
-                        <p v-if="!issues.length" role="status" class="mb-3 text-xs text-muted-foreground">{{ status }}</p>
+                        <p v-if="!issues.length" role="status" class="mb-2 text-xs text-muted-foreground">{{ status }}</p>
                         <section
                             v-if="issues.length"
                             ref="errorSummary"
@@ -388,7 +390,7 @@ onBeforeUnmount(() => {
                             :key="section.id"
                             :aria-label="labels[section.type] + ' editing'"
                             :data-editor-section="section.id"
-                            class="space-y-4"
+                            class="space-y-3"
                         >
                             <div class="flex flex-wrap items-center justify-between gap-3">
                                 <h2 class="text-lg font-medium">{{ labels[section.type] }}</h2>
@@ -715,14 +717,6 @@ onBeforeUnmount(() => {
                     </div>
                 </section>
                 <section class="cms-preview-pane min-w-0" :class="view === 'edit' ? 'hidden lg:flex' : ''" aria-label="Live invitation preview">
-                    <div class="mb-2 flex flex-wrap justify-between gap-1 text-xs text-muted-foreground">
-                        <span>Enchanted Editorial · live preview</span
-                        ><span>{{
-                            publishingEnabled
-                                ? 'Unsaved edits appear here · Save, then Publish from this editor'
-                                : 'Unsaved edits appear here · publishing unavailable'
-                        }}</span>
-                    </div>
                     <CmsPreviewFrame
                         :reveal-key="view"
                         :presentation="presentation"

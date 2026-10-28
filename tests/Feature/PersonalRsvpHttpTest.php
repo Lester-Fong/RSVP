@@ -59,7 +59,10 @@ class PersonalRsvpHttpTest extends TestCase
             ->where('groups.data.0.guests_count', 3));
         $this->get($this->guestPage($wedding).'?invitation_state=withdrawn')->assertInertia(fn (Assert $page) => $page
             ->where('groups.data.0.guests.0.invitation_state', 'withdrawn')->where('groups.data.0.guests.0.rsvp_status', 'attending'));
-        $this->get('/accounts/'.$wedding->account_id.'/weddings/'.$wedding->id.'/attendance')->assertInertia(fn (Assert $page) => $page
+        $this->get($this->guestPage($wedding).'?view=guests&invitation_state=withdrawn')->assertInertia(fn (Assert $page) => $page
+            ->where('summary.invited', 3)->where('individuals.total', 1)
+            ->where('individuals.data.0.invitationState', 'withdrawn')->where('individuals.data.0.status', 'attending'));
+        $this->get($this->guestPage($wedding))->assertInertia(fn (Assert $page) => $page
             ->where('withdrawalEnabled', true)->where('summary.invited', 3)->where('summary.attending', 0));
 
         $this->postJson($this->base($wedding, $group).'/guests/'.$target->id.'/credential/generate', [
@@ -79,7 +82,7 @@ class PersonalRsvpHttpTest extends TestCase
         $this->get($this->guestPage($wedding))->assertInertia(fn (Assert $page) => $page->where('groups.data', []));
         $this->get($this->guestPage($wedding).'?invitation_state=all')->assertInertia(fn (Assert $page) => $page
             ->where('totals.groups', 1)->where('groups.data.0.guests_count', 4)->has('groups.data.0.guests', 4));
-        $this->get('/accounts/'.$wedding->account_id.'/weddings/'.$wedding->id.'/attendance')->assertInertia(fn (Assert $page) => $page
+        $this->get($this->guestPage($wedding))->assertInertia(fn (Assert $page) => $page
             ->where('summary.invited', 0)->where('summary.attending', 0));
     }
 

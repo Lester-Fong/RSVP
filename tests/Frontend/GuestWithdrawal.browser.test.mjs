@@ -43,8 +43,6 @@ test('owner withdraws and reinstates an invitation while active attendance and R
         await reinstateDialog.waitFor({ state: 'hidden' });
         await page.waitForFunction(() => document.querySelector('[data-testid="people-total"]')?.textContent?.trim() === '4');
         await page.waitForFunction(() => document.querySelector('[data-testid="withdrawn-total"]')?.textContent?.trim() === '0');
-        await page.getByRole('link', { name: 'Attendance', exact: true }).click();
-        await page.waitForURL('**/attendance');
         await page.waitForFunction(() => document.querySelector('[data-testid="attendance-invited"]')?.textContent?.trim() === '4');
         assert.deepEqual(errors, []);
     } finally {

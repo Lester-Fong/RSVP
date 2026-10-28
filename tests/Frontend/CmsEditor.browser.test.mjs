@@ -42,7 +42,7 @@ beforeEach(async () => {
     await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
     await page.goto(info.previewUrl);
     await page.getByRole('heading', { name: 'Make it yours' }).waitFor();
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
 });
 afterEach(async () => {
     if (!enabled) return;
@@ -113,7 +113,7 @@ run('DEL04.1 Countdown starts after details, saves and reloads only editable cop
     assert.equal(saved.document.content.sections[2].enabled, true);
     await page.reload();
     await page.getByRole('heading', { name: 'Make it yours' }).waitFor();
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     await section('Countdown');
     await page.getByLabel('Countdown heading', { exact: true }).waitFor();
     assert.equal(await page.getByLabel('Countdown heading', { exact: true }).inputValue(), 'A day until forever');
@@ -385,7 +385,7 @@ run('DEL02e multiple uploads retain successes, retry only failures and select ex
     await page.getByRole('dialog').getByRole('button', { name: 'Add selected photographs (2)', exact: true }).click();
     assert.equal(await page.getByLabel(/^Caption /).count(), 3);
     await page.getByRole('button', { name: 'Move photo up', exact: true }).nth(2).click();
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     for (const width of [1440, 390]) {
         await page.setViewportSize({ width, height: 1000 });
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
@@ -414,7 +414,7 @@ run('DEL02e ten-photo limit rejects eleven files before upload and prevents exce
     assert.equal(posts, 10);
     assert.equal(await page.getByLabel(/^Caption /).count(), 10);
     assert.equal(await page.getByRole('button', { name: 'Add gallery photograph', exact: true }).isDisabled(), true);
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
 });
 
 run('DEL02e responsive multi-photo dialog retains selections with keyboard and light/dark contrast', async () => {
@@ -526,7 +526,7 @@ run('actual authenticated multipart upload, private resolution and live hero ass
     await anon.close();
     const csrf = await context.request.post(info.previewUrl + '/validate', { data: {} });
     assert.equal(csrf.status(), 419);
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     await page.screenshot({ path: join(artifacts, 'desktop-hero.png'), fullPage: true });
 });
 
@@ -588,7 +588,7 @@ run('story edits, milestones and optional visibility update actual renderer with
     await section('Welcome');
     await section('Our Story');
     assert.equal(await page.getByLabel('Story heading', { exact: true }).inputValue(), 'The day our paths met');
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
 });
 
 run('gallery real uploads, ordering, captions and safe section-only removal', async () => {
@@ -607,7 +607,7 @@ run('gallery real uploads, ordering, captions and safe section-only removal', as
     await page.getByRole('button', { name: 'Remove gallery photograph', exact: true }).first().click();
     await page.getByRole('dialog').getByRole('button', { name: 'Remove gallery photograph', exact: true }).click();
     assert.equal((await context.request.get(info.origin + b.image.preview_url)).status(), 200);
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
 });
 
 run('repeatable entourage editing and explicit removal confirmation', async () => {
@@ -725,7 +725,7 @@ run('validation feedback is readable, editable state survives errors, and reload
     await page.getByLabel('Story heading', { exact: true }).fill('Our own beginning');
     await page.getByRole('button', { name: 'Add paragraph', exact: true }).click();
     await page.getByLabel('Story paragraph 1').fill('Still here after validation.');
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     await page.reload();
     await page.getByRole('heading', { name: 'Make it yours' }).waitFor();
     await section('Our Story');
@@ -779,7 +779,7 @@ run('all focal/crop presets stay bounded and duplicate photo reuse does not crea
     assert.equal(await page.getByRole('dialog').getByRole('button', { name: 'Use photograph 1', exact: true }).isDisabled(), true);
     await page.keyboard.press('Escape');
     assert.equal(await preview().locator('.ee-gallery-slide').count(), 1);
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     const after = (await (await context.request.get(info.previewUrl + '/images', { headers: { Accept: 'application/json' } })).json()).total;
     assert.equal(after, before);
 });
@@ -858,7 +858,7 @@ run('DEL02c one linked validation summary opens the correct collapsed role field
     await page.getByLabel('Role group title', { exact: true }).fill('Our family');
     await page.getByLabel('Add a name', { exact: true }).fill('Alex');
     await page.getByLabel('Add a name', { exact: true }).press('Enter');
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     await page.getByLabel('Add a name', { exact: true }).fill('Uncommitted name');
     await section('Gallery');
     await section('Entourage');
@@ -897,7 +897,7 @@ run('DEL02c name chip drag and keyboard ordering keep stable identities, duplica
     await page.getByRole('dialog').getByRole('button', { name: 'Remove person 2', exact: true }).click();
     assert.equal(await grips.count(), 2);
     assert.equal(await page.getByLabel('Person 2', { exact: true }).inputValue(), 'Alex');
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     for (const width of [1440, 1024, 390]) {
         await page.setViewportSize({ width, height: 1000 });
         for (const dark of [false, true]) {
@@ -935,7 +935,7 @@ run('DEL02c section navigation locates content without jumping on keystrokes and
             .locator('#closing')
             .evaluate((e) => e.getBoundingClientRect().top >= 0 && e.getBoundingClientRect().top < innerHeight),
     );
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     for (const width of [1440, 390]) {
         await page.setViewportSize({ width, height: 1000 });
         if (width === 390) await page.getByRole('button', { name: 'View website preview', exact: true }).click();
@@ -1373,7 +1373,7 @@ run('DEL03a1 friendly validation summary opens invalid groups and focuses their 
     await title.fill('Our family');
     await page.getByLabel('Add a name', { exact: true }).last().fill('Sam');
     await page.getByLabel('Add a name', { exact: true }).last().press('Enter');
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     assert.equal(await page.locator('.cms-error-summary, .cms-feedback').count(), 0);
 });
 

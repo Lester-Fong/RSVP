@@ -2,7 +2,6 @@
 import { Head } from '@inertiajs/vue3';
 
 import WeddingForm from '@/components/WeddingForm.vue';
-import WeddingNavigation from '@/components/wedding/WeddingNavigation.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AccountSummary, BreadcrumbItem, WeddingDetails } from '@/types';
 
@@ -22,7 +21,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="mx-auto w-full max-w-3xl p-4 sm:p-6">
-            <WeddingNavigation :account-id="account.id" :wedding-id="wedding.id" active="overview" class="mb-6" />
             <div class="mb-6">
                 <h1 class="text-2xl font-semibold tracking-tight">Edit wedding details</h1>
                 <p class="mt-1 text-sm text-muted-foreground">

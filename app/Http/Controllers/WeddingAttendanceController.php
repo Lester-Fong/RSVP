@@ -9,32 +9,24 @@ use App\Models\Wedding;
 use App\Services\InvitationEligibility;
 use App\Services\WeddingAttendance;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use Symfony\Component\HttpFoundation\Response;
 
 class WeddingAttendanceController extends Controller
 {
-    public function index(ViewAttendanceRequest $request, Account $account, Wedding $wedding, WeddingAttendance $attendance): Response
+    public function index(ViewAttendanceRequest $request, Account $account, Wedding $wedding): RedirectResponse
     {
         $filters = $request->filters();
-        $data = DB::transaction(function () use ($wedding, $attendance, $filters): array {
-            $guests = $filters['view'] === 'guests' ? $attendance->guests($wedding, $filters) : null;
-            $groups = $filters['view'] === 'groups' ? $attendance->groups($wedding, $filters) : null;
+        $filters['view'] = $request->validated('view') ?? 'guests';
+        $eligibility = app(InvitationEligibility::class);
+        if (! $eligibility->enabled) {
+            $filters['invitation_state'] = 'active';
+        }
 
-            return ['summary' => $attendance->summary($wedding), 'guests' => $guests, 'groups' => $groups,
-                'matchedGuests' => $guests?->total() ?? $attendance->matchingGuests($wedding, $filters)->count()];
-        });
-
-        $response = Inertia::render('weddings/Attendance', [
-            'account' => ['id' => $account->id, 'name' => $account->name],
-            'wedding' => ['id' => $wedding->id, 'partner_one_name' => $wedding->partner_one_name, 'partner_two_name' => $wedding->partner_two_name],
-            ...$data, 'filters' => $filters, 'refreshedAt' => now()->toIso8601String(),
-            'withdrawalEnabled' => app(InvitationEligibility::class)->enabled,
-        ])->toResponse($request);
-        $response->headers->set('Cache-Control', 'private, no-store');
-
-        return $response;
+        return to_route('accounts.weddings.guests.index', [
+            'account' => $account, 'wedding' => $wedding, ...$filters,
+            'page' => $request->validated('page') ?? 1,
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function group(ViewAttendanceRequest $request, Account $account, Wedding $wedding, InvitationGroup $invitationGroup, WeddingAttendance $attendance): JsonResponse

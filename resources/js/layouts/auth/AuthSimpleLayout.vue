@@ -9,23 +9,34 @@ defineProps<{
 </script>
 
 <template>
-    <div class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
-        <div class="w-full max-w-sm">
-            <div class="flex flex-col gap-8">
-                <div class="flex flex-col items-center gap-4">
-                    <Link :href="route('home')" class="flex flex-col items-center gap-2 font-medium">
-                        <div class="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                            <AppLogoIcon class="size-9 fill-current text-[var(--foreground)] dark:text-white" />
-                        </div>
-                        <span class="sr-only">{{ title }}</span>
-                    </Link>
-                    <div class="space-y-2 text-center">
-                        <h1 class="text-xl font-medium">{{ title }}</h1>
-                        <p class="text-center text-sm text-muted-foreground">{{ description }}</p>
-                    </div>
+    <div class="brand-auth">
+        <div class="brand-auth-shell">
+            <aside class="brand-auth-story" aria-label="About Imbitado">
+                <Link
+                    :href="route('home')"
+                    class="inline-flex w-fit items-center gap-3 text-sm font-semibold tracking-wide"
+                    aria-label="Imbitado home"
+                >
+                    <AppLogoIcon class-name="size-9 text-[#765441]" aria-hidden="true" />
+                    <span class="brand-serif text-2xl">Imbitado</span>
+                </Link>
+                <div class="my-10 space-y-6">
+                    <p class="brand-eyebrow">A beautiful beginning</p>
+                    <h2 class="brand-serif">A place for your story to unfold.</h2>
+                    <p>Create your wedding website, shape your invitation, and welcome your guests in one thoughtful space.</p>
                 </div>
-                <slot />
-            </div>
+                <p class="brand-story-footer text-xs tracking-wide">Your love story, beautifully shared.</p>
+            </aside>
+
+            <main class="brand-auth-main">
+                <div class="brand-auth-form">
+                    <p class="brand-eyebrow mb-4">Your wedding, beautifully begun</p>
+                    <h1 class="brand-serif">{{ title }}</h1>
+                    <p class="mb-8 mt-3 max-w-md text-sm leading-6 text-[#685d56]">{{ description }}</p>
+                    <slot />
+                </div>
+                <p class="text-center text-xs leading-5 text-[#75685e]">Your wedding website stays private until you choose to publish.</p>
+            </main>
         </div>
     </div>
 </template>

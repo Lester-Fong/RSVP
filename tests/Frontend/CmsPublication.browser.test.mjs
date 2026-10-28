@@ -56,7 +56,7 @@ async function enterInvitation(tab) {
 async function openEditor() {
     await page.goto(info.previewUrl);
     await page.getByRole('heading', { name: 'Make it yours' }).waitFor();
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
 }
 async function save() {
     await page.getByRole('button', { name: 'Save Draft', exact: true }).click();

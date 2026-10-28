@@ -5,9 +5,9 @@ import { Head, Link } from '@inertiajs/vue3';
 
 <template>
     <div class="min-h-svh bg-background text-foreground">
-        <Head title="Welcome to your wedding workspace" />
+        <Head title="Create your wedding" />
         <header class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-6">
-            <span class="text-sm font-medium">Your wedding workspace</span>
+            <span class="brand-serif text-2xl font-semibold">Imbitado</span>
             <Link :href="route('logout')" method="post" as="button" class="rounded px-3 py-2 text-sm underline underline-offset-4">Log out</Link>
         </header>
         <main class="mx-auto flex max-w-3xl flex-col gap-8 px-6 pb-12 pt-6 sm:pt-12">

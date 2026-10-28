@@ -54,7 +54,7 @@ async function fixture(alternateOrigin, work) {
         await page.waitForURL('**/onboarding/congratulations');
         await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
-        await page.getByRole('link', { name: 'Guests', exact: true }).click();
+        await page.getByRole('link', { name: 'Guests & RSVPs', exact: true }).click();
         await page.waitForURL('**/guests');
         await button('New invitation group').click();
         await page.getByLabel('Group label', { exact: true }).fill('Santos Family');
@@ -337,9 +337,11 @@ test(
             assert.equal(await input.count(), 0);
             await button('Recover link').click();
             await settled();
-            await page.evaluate(() => document.querySelector('a[href$="/attendance"]').click());
-            await page.waitForURL('**/attendance');
-            await page.getByRole('link', { name: 'Guests', exact: true }).click();
+            await page.locator('a[href$="/dashboard"]').first().evaluate((link) => link.click());
+            await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
+            const afterInertiaNavigation = await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage }, history: history.state }));
+            assert.doesNotMatch(afterInertiaNavigation, /\/rsvp\/[a-f0-9]{64}/i);
+            await page.goto(page.url() + '/guests');
             await page.waitForURL('**/guests');
             await access();
             await manage('Juan');

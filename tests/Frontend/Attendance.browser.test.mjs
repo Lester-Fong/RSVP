@@ -53,16 +53,15 @@ test('attendance monitors live responses with filters, bounded group details and
         await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
-        await page.getByRole('link', { name: 'Invitation', exact: true }).click();
+        await page.getByRole('link', { name: 'Design invitation', exact: true }).click();
         await page.getByRole('button', { name: 'Save Draft', exact: true }).click();
         await page.getByText(/Draft saved privately\. Your published website has not changed\./).waitFor();
         await page.goto(overview);
         await page.getByRole('button', { name: 'Publish invitation', exact: true }).click();
         await finish('Publish now');
-        await page.getByRole('link', { name: 'Attendance', exact: true }).click();
-        await page.getByRole('heading', { name: 'No invited guests yet', exact: true }).waitFor();
+        await page.getByRole('link', { name: 'Guests & RSVPs', exact: true }).click();
+        await page.getByRole('heading', { name: 'Start your guest list', exact: true }).waitFor();
         assert.equal(await page.getByTestId('attendance-invited').innerText(), '0');
-        await page.getByRole('link', { name: 'Guests', exact: true }).click();
         await page.getByRole('button', { name: 'New invitation group', exact: true }).click();
         await page.getByLabel('Group label', { exact: true }).fill('Santos Family');
         for (let index = 0; index < members.length; index++) {
@@ -106,16 +105,18 @@ test('attendance monitors live responses with filters, bounded group details and
         assert.equal(submissionRequests, 1);
         assert.equal(setupRequests, 1);
         await page.goto(overview);
-        await page.getByRole('link', { name: 'Attendance', exact: true }).click();
-        await page.getByRole('heading', { name: 'Attendance', exact: true }).waitFor();
+        await page.getByRole('link', { name: 'Guests & RSVPs', exact: true }).click();
+        await page.getByRole('heading', { name: 'Guests & RSVPs', exact: true }).waitFor();
         const attendanceUrl = new URL(page.url());
+        await page.getByRole('button', { name: 'Individual guests', exact: true }).click();
+        await page.waitForURL((url) => url.searchParams.get('view') === 'guests');
         async function totals(invited, attending, declined, pending) {
             for (const [key, value] of Object.entries({ invited, attending, declined, pending })) {
                 assert.equal(await page.getByTestId('attendance-' + key).innerText(), String(value));
             }
         }
         async function apply(search = '', status = 'all') {
-            await page.getByLabel('Search guest or invitation group').fill(search);
+            await page.getByLabel('Search groups or guest names').fill(search);
             await page.getByLabel('RSVP status', { exact: true }).selectOption(status);
             await page.waitForFunction(
                 ({ search, status }) => {
@@ -123,7 +124,7 @@ test('attendance monitors live responses with filters, bounded group details and
                     return (
                         (query.get('search') ?? '') === search &&
                         (query.get('status') ?? 'all') === status &&
-                        document.querySelector('section[aria-labelledby="attendance-results-heading"]').getAttribute('aria-busy') === 'false'
+                        !document.querySelector('table[aria-busy="true"]')
                     );
                 },
                 { search, status },
@@ -131,7 +132,7 @@ test('attendance monitors live responses with filters, bounded group details and
         }
         await totals(30, 1, 1, 28);
         assert.equal(await page.locator('tbody tr').count(), 25);
-        await page.getByRole('navigation', { name: 'Attendance pages' }).getByRole('button', { name: 'Next', exact: true }).click();
+        await page.getByRole('navigation', { name: 'Guest list pages' }).getByRole('button', { name: 'Next', exact: true }).click();
         await page.getByText('Page 2 of 2', { exact: false }).waitFor();
         assert.equal(await page.locator('tbody tr').count(), 5);
         await totals(30, 1, 1, 28);
@@ -146,27 +147,12 @@ test('attendance monitors live responses with filters, bounded group details and
         await page.getByRole('heading', { name: 'No guests match these filters', exact: true }).waitFor();
         await apply();
         await page.getByRole('button', { name: 'Invitation groups', exact: true }).click();
-        const details = page.locator('details').filter({ hasText: 'Santos Family' });
-        await details.locator('summary').waitFor();
-        let failed = false;
-        await page.route('**/attendance/invitation-groups/*?*', async (route) => {
-            if (!failed) {
-                failed = true;
-                await route.fulfill({ status: 503, contentType: 'application/json', body: '{}' });
-            } else await route.continue();
-        });
-        await details.locator('summary').focus();
+        const groupRow = page.locator('tbody tr').filter({ hasText: 'Santos Family' });
+        await groupRow.getByText('1 attending · 1 declined · 28 pending').waitFor();
+        const showMembers = groupRow.getByRole('button', { name: 'Show 25 more', exact: true });
+        await showMembers.focus();
         await page.keyboard.press('Enter');
-        await details.getByRole('alert').waitFor();
-        await details.getByRole('button', { name: 'Try again', exact: true }).click();
-        await details.locator('tbody tr').first().waitFor();
-        assert.equal(await details.locator('tbody tr').count(), 25);
-        const pages = details.getByRole('navigation', { name: 'Guest pages for Santos Family' });
-        await pages.getByRole('button', { name: 'Next', exact: true }).click();
-        await details.getByText('26–30 of 30 matching guests', { exact: true }).waitFor();
-        assert.equal(await details.locator('tbody tr').count(), 5);
-        await pages.getByRole('button', { name: 'Previous', exact: true }).click();
-        await details.getByText('1–25 of 30 matching guests', { exact: true }).waitFor();
+        assert.equal(await groupRow.getByRole('listitem').count(), 30);
         for (const width of [1440, 1024, 390]) {
             for (const theme of ['light', 'dark']) {
                 await page.bringToFront();
@@ -176,8 +162,8 @@ test('attendance monitors live responses with filters, bounded group details and
                 }, theme);
                 assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `overflow at ${width} ${theme}`);
                 await page.keyboard.press('Tab');
-                await details.locator('summary').focus();
-                assert.ok(await details.locator('summary').evaluate((element) => getComputedStyle(element).outlineStyle !== 'none'));
+                await groupRow.getByRole('button', { name: 'Show less', exact: true }).focus();
+                assert.ok(await groupRow.getByRole('button', { name: 'Show less', exact: true }).evaluate((element) => getComputedStyle(element).outlineStyle !== 'none'));
                 await page.screenshot({ path: join(tmpdir(), `rsvp-5b-groups-${width}-${theme}.png`), animations: 'disabled' });
                 await page.evaluate(() => scrollTo(0, 0));
                 await page.screenshot({ path: join(tmpdir(), `rsvp-5b-header-${width}-${theme}.png`), animations: 'disabled' });
@@ -185,13 +171,13 @@ test('attendance monitors live responses with filters, bounded group details and
         }
         await page.getByRole('button', { name: 'Individual guests', exact: true }).click();
         await page.waitForFunction(
-            () => !document.querySelector('#attendance-search').disabled && new URL(location.href).searchParams.get('view') === 'guests',
+            () => !document.querySelector('#guest-search').disabled && new URL(location.href).searchParams.get('view') === 'guests',
         );
         await page.locator('tbody tr').first().waitFor();
         await page.keyboard.press('Tab');
-        await page.getByLabel('Search guest or invitation group').focus();
+        await page.getByLabel('Search groups or guest names').focus();
         assert.ok(
-            await page.getByLabel('Search guest or invitation group').evaluate((element) => {
+            await page.getByLabel('Search groups or guest names').evaluate((element) => {
                 const style = getComputedStyle(element);
                 return style.outlineStyle !== 'none' || style.boxShadow !== 'none';
             }),

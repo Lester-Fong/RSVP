@@ -71,7 +71,7 @@ test('dashboard containment and real multipart photo saves', { skip: !enabled },
             await page.goto(overview);
         }
 
-        await page.getByRole('link', { name: 'Invitation', exact: true }).click();
+        await page.getByRole('link', { name: 'Design invitation', exact: true }).click();
         await page.waitForURL('**/invitation/edit');
         const editor = page.url();
         const png = await page.evaluate(() => {

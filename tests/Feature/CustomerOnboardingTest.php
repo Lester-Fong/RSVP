@@ -50,6 +50,7 @@ class CustomerOnboardingTest extends TestCase
             ->assertRedirect('/onboarding/congratulations');
         $wedding = Wedding::sole();
         $this->assertDatabaseCount('accounts', 1);
+        $this->assertStringEndsWith("'s Imbitado workspace", Account::sole()->name);
         $this->assertDatabaseCount('account_members', 1);
         $this->assertDatabaseHas('weddings', ['id' => $wedding->id, 'wedding_date' => '2028-04-16', 'ceremony_venue' => 'Chapel', 'reception_venue' => 'Garden', 'status' => 'planning']);
         $this->assertNotSame('chosen', $wedding->public_slug);

@@ -73,9 +73,11 @@ for (const [width, motion] of [
             await page.goForward();
             await page.waitForURL(overview);
             assert.equal(await page.getByRole('link', { name: /Create.*wedding/ }).count(), 0);
-            assert.equal(await page.getByRole('link', { name: 'Invitation', exact: true }).count(), 1);
-            assert.equal(await page.getByRole('link', { name: 'Guests', exact: true }).count(), 1);
-            assert.equal(await page.getByRole('link', { name: 'Attendance', exact: true }).count(), 1);
+            const sidebar = page.locator('[data-sidebar="sidebar"]');
+            assert.equal(await page.getByRole('navigation', { name: 'Imbitado wedding navigation' }).count(), 0);
+            if (width < 768) await page.getByRole('button', { name: 'Toggle wedding navigation' }).click();
+            assert.equal(await sidebar.getByRole('link', { name: 'Design invitation', exact: true }).count(), 1);
+            assert.equal(await sidebar.getByRole('link', { name: 'Guests & RSVPs', exact: true }).count(), 1);
             await page.screenshot({ path: join(artifacts, 'dashboard.png') });
             await page.reload();
             await page.getByRole('heading', { name: 'Marina QA & Elias QA', exact: true }).waitFor();

@@ -16,17 +16,48 @@
 - [x] Safe verification: 125 PHP/1,161 assertions; 78 distinct browser and 15 Node passes, zero failures/skips; types, full non-mutating ESLint, format, build and diff checks pass. The 45 opt-in InnoDB cases are not newly executed/verified. [Exact evidence](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26).
 - [x] Final owner visual acceptance under D-066 / QA-CMSUX-02: approved screenshot and full-width editor; desktop 100% layout, independent scrolling, Save/Publish, unsaved browser/return Back, mobile and zoom checks passed. [Existing evidence](tasks/cms_customer_workflow_integration.md#cms-ux-01--full-width-compact-editor-2026-10-26).
 
+## CMS-UX-03 — D-072/073 laptop-density editor (2026-10-28)
+
+- [x] Record the owner's rejection of the first candidate. The former 170px workspace start/528px preview height at 1280×720 are historical failed visual evidence, not acceptance.
+- [x] Revise only the editor chrome: 1280×720 workspace now begins at 132px; preview is 930×575px versus the rejected 880×528px. Desktop title, action, tab, label and field sizes are measurably smaller; mobile inputs/touch targets and 200% responsiveness remain. [Revised captures](tasks/premium_delight_experience.md#cms-ux-03--laptop-density-review-2026-10-28).
+- [x] Fresh revised-candidate checks: disposable CMS workspace 2/2, CMS polish 7/7, guarded in-memory SQLite CMS selection 49/49 (485 assertions), typecheck, ESLint, Prettier, build and diff check. The complete 39-case editor browser file remains separately unverified.
+- [ ] Owner visually judges the revised 100%-zoom editor on the actual 13-inch laptop; QA-CMSUX-04 remains manual pending. No commit/push.
+
+**Historical D-072 first candidate, rejected by owner:**
+
+- [x] Keep the D-071 full-width split and real invitation renderer; compact only the editor header, action sizing, one-row scrollable nine-tab navigation, desktop forms and pane spacing. Preserve mobile touch targets, 200% zoom, image controls, explicit Save/Publish and unsaved warnings.
+- [x] Capture actual 100% browser viewports at 1280×720, 1366×768, 1440×900, 1920×1080 and 390×844, plus tablet, 1024×576 CSS scaled-laptop fallback and genuine 200% zoom. At 1280×720 the panes begin at 170px versus 203px before, with 528px versus 491px preview height; no document horizontal overflow. [Measurements and screenshots](tasks/premium_delight_experience.md#cms-ux-03--laptop-density-review-2026-10-28).
+- [x] Guarded SQLite CMS selection 61/61 (716 assertions), CMS workspace browser 2/2, CMS polish 7/7, selected editor layout/scroll 2/2 and Node contracts 15/15; typecheck, ESLint, Prettier, build and diff checks pass. The full DEL-10.3 editor browser file remains separately unverified.
+- [x] Owner reviewed this first density candidate and rejected its visual result. D-073 above supersedes this candidate; QA-CMSUX-04 remains pending for the revision. The genuine invitation preview keeps its published typography rather than emulating 75% browser zoom.
+
+## PORTAL-UX-01 — D-070 Imbitado portal and editor
+
+- [x] Remove duplicated wedding tabs only on sidebar-backed management pages; retain the dashboard route, context-free Home link and standalone Classic editor/preview navigation. Sidebar links are Overview, Design invitation, Guests and Attendance until a separately authorized Guest Hub exists.
+- [x] Keep the full-width editor and actual preview while grouping the same nine sections under five readable headings. Retain explicit Save Draft/Publish, unsaved guards, stale-save protection, private images and responsive edit/preview switching. No invitation document/template or backend contract changed.
+- [x] Guarded SQLite PHP: 143 tests/1,769 assertions. Fresh disposable Edge: onboarding 3/3, portal 1/1, CMS workspace 2/2 (including genuine 200% zoom), polish 7/7, customer publication journey 1/1, publication 5/5. Fifteen Node contracts, typecheck, full ESLint, Prettier and build pass. [Evidence and screenshots](tasks/premium_delight_experience.md#portal-ux-01--imbitado-navigation-and-editor-review-2026-10-27).
+- [ ] Owner reviews portal/editor desktop and mobile on the retained port-8000 preview; QA-PORTAL-01 remains manual pending. D-071 later authorizes the refined editor and Guest Hub; the DEL-10.3 full CMS Editor disposable-server stall and all independent release gates remain open.
+
+## CMS-UX-02 + GUEST-HUB-01 — D-071 owner review
+
+- [x] Refine only the full-width CMS header/actions and replace five grouped headings with the same nine tabs; remove the two preview helper labels. Keep explicit Save Draft, private preview, Publish/Republish, real renderer, independent scrolling, mobile switching and unsaved safeguards.
+- [x] Combine owner-only Guests and Attendance on Guests & RSVPs: four private active-only totals, shared validated filters, groups by default, individuals alternate, optional withdrawn history, existing scoped actions and read-only RSVP answers. Old Attendance bookmarks redirect with filters; group-detail JSON and write routes remain.
+- [x] Guarded full SQLite: 788 cases/5,217 assertions, 743 passed, zero failures/errors, 45 unchanged opt-in InnoDB skips. Eighteen complete disposable Edge passes across eight affected files; 15 Node contracts pass. Typecheck, lint, formatting and build evidence is in the [execution record](tasks/premium_delight_experience.md#cms-ux-02--guest-hub-01-execution-2026-10-27). A separate personal-RSVP browser case still fails its 1024px public-invitation overflow assertion; the existing full-editor fixture stall remains unresolved.
+- [x] D-072 approves the CMS-UX-02 presentation and Guests & RSVPs consolidation as customer-facing UX choices.
+- [ ] Complete their remaining functional/manual release checks on retained port 8000; QA-CMSUX-03 and QA-GH-01 do not imply MySQL/InnoDB, security, performance/device or complete DEL-10 acceptance. No commit/push or normal MySQL write.
+
 ## UX-02 — D-067 customer refinements; GUEST-HUB-01 proposal
 
 - [x] Remove group contacts from owner forms/list payloads, remove public thank-you counts, default new/replacement CMS selections to Natural crop, and center unpaired Entourage groups and wrapped attire colors. Historical group contacts and saved crops, RSVP state, publication data and private Attendance remain intact.
 - [x] Focused guarded SQLite: 85 passed/1,126 assertions. Disposable Edge: 23 passes across selected guest, attendance, personal RSVP, editor, published Guide and Editorial checks; the broader Editorial file also had two unrelated missing-photo fixture failures and four optional-photo skips. Typecheck, scoped ESLint/Prettier and build pass. [Exact limits](tasks/premium_delight_experience.md#ux-02-and-guest-hub-01-owner-feedback-2026-10-27).
-- [ ] Owner checks UX-02 on the retained port-8000 preview; QA-UX02-01 remains manual pending. GUEST-HUB-01 is assessment only; agree on page/filter/history/bookmark behavior before authorizing implementation. The DEL-10.3 disposable CMS editor stall remains separately open.
+- [ ] Owner checks UX-02 on the retained port-8000 preview; QA-UX02-01 remains manual pending. Its historical Guest Hub assessment is superseded by D-071 implementation, which still awaits its own owner review. The DEL-10.3 disposable CMS editor stall remains separately open.
 
 ## BRAND-01 — D-066 required pre-launch customer UX
 
-- [x] Track the approved future scope: wedding-service landing page; cohesive Login/Register and recovery/verification screens; remove starter-kit branding, GitHub and developer-documentation links from customer dashboard/application shell; integrate the accepted onboarding/dashboard/editor journey. No application implementation in this closeout.
-- [ ] Owner reviews final name/logo and visual direction before BRAND-01 design implementation; do not invent these or advertise unfinished features, pricing or automatic payments.
-- [ ] Implement and verify accessible, responsive customer-facing branding and authentication without changing authorization or production feature restrictions; obtain owner visual acceptance before customer-facing deployment. QA-BRAND-01 remains Planned.
+- [x] D-068 authorizes a login-first `/`, cohesive Login/Register and shared recovery/verification shell, and a wedding-focused private sidebar/header. “Wedding Workspace” and paired-circle mark are provisional review labels; no final company/product identity, pricing or new capability is asserted.
+- [x] Implement the public/auth and private-shell design without changing auth/onboarding logic or the approved sidebar-free CMS editor. Guarded SQLite auth/navigation: 52 passed/508 assertions. Fresh disposable Edge onboarding 3/3 and CMS workspace 2/2 pass; read-only port-8000 public/auth and disposable private/mobile navigation screenshots show no overflow. Typecheck, ESLint, format and build pass. [Current evidence](tasks/premium_delight_experience.md#brand-01--customer-entry-and-workspace-review-candidate-2026-10-27).
+- [x] D-069 selects **Imbitado** for customer-facing identity and metadata; new default account labels use it without rewriting historical records. Guarded SQLite: 52 passed/509 assertions; disposable Edge onboarding 3/3, CMS workspace 2/2 and portal navigation 1/1 pass; seven read-only port-8000 public auth captures and disposable private desktop/mobile captures show no overflow. Commercial naming/trademark clearance remains pending. The suggested tagline and existing paired-circle mark are review candidates, not final slogan/logo approvals. No domain is hardcoded or local `.env` changed.
+- [x] D-072 approves the current Imbitado branding direction. Commercial naming/trademark clearance and separate tagline/paired-circle finalization remain open.
+- [ ] Complete remaining brand/customer-journey functional and release checks; QA-BRAND-01 remains manual acceptance pending before customer-facing deployment. Preserve DEL-10.3 editor-host, MySQL/InnoDB, security, DEL-05, UX-02 and release gates.
 
 ## DEL-10.3 — next bounded customer-journey QA
 

@@ -1,6 +1,36 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-27 (D-067 records UX-02 approval and GUEST-HUB-01 proposal boundaries; independent release gates preserved). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-28 (D-073 owner rejection of the first CMS-UX-03 density candidate and approval of a stronger editor-only revision; independent release gates remain open). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-073 — CMS-UX-03 density revision after owner rejection (2026-10-28)
+
+The owner rejected the first CMS-UX-03 100%-zoom visual candidate as too similar to the original editor. Keep the approved Imbitado/CMS-UX-02 interface and the genuine invitation renderer, but make the desktop editor chrome visibly denser: shorter header/status/tab area, smaller actions and forms, less pane padding and more usable preview width/height. Preserve nine keyboard-reachable sections, explicit Save/Publish and unsaved guards, mobile touch/input sizes, 200% zoom and all saved/publication behavior. No CSS/browser zoom, invitation scaling, feature/schema change or commit is approved. The revised candidate requires fresh owner visual acceptance.
+
+### D-072 — Imbitado portal approval and laptop-density editor (2026-10-28)
+
+The owner approves the current Imbitado branding direction, the simplified CMS-UX-02 editor presentation and the Guests & RSVPs consolidation. This accepts those customer-facing UX choices; it does not supply missing customer-journey, MySQL/InnoDB, security, performance or deployment evidence. Commercial name/trademark clearance remains required; the suggested tagline and provisional paired-circle symbol are not separately finalized by this statement.
+
+For CMS-UX-03, keep the full-width split editor, real responsive invitation renderer, nine-section row and all explicit Save/Publish/navigation actions. Reduce laptop UI density through editor-scoped layout, spacing and control sizes at 100% zoom; keep touch/mobile targets and 200% zoom usable. No browser/CSS zoom, scaled invitation, saved-content change or new feature is approved. Final density acceptance awaits owner review.
+
+### D-071 — CMS-UX-02 and GUEST-HUB-01 customer portal (2026-10-27)
+
+Status: **implementation approved; owner acceptance pending.** The editor keeps its full-width split and explicit save/publish actions, strengthens Imbitado identity, uses smaller header actions and one ungrouped nine-section row, and removes the two preview helper labels. No saved document or invitation renderer changes.
+
+The private customer destination is **Guests & RSVPs**, with four wedding-wide active-only summary cards, shared literal search/RSVP/invitation-state filters, Invitation groups by default and Individual guests as the alternate view. Show withdrawn/all history only when withdrawal is enabled. Preserve group/guest and personal-access actions, response/deletion/representative authority, tenant boundaries, token confidentiality and existing records. Old `/attendance` bookmarks redirect to the unified page, retaining validated filters and defaulting to the old individual view when no view is supplied; the protected group-detail JSON route remains. No owner editing of RSVP answers, schema change, production activation or MySQL write is approved. D-067/D-070 remain historical planning decisions superseded for the Guest Hub cutover only.
+
+### D-070 — PORTAL-UX-01 customer navigation and editor; GUEST-HUB-01 planning direction (2026-10-27)
+
+Status: **PORTAL-UX-01 implementation approved; owner visual acceptance pending.** Authenticated wedding pages with the Imbitado sidebar use Overview, Design invitation, Guests and Attendance there, without duplicate horizontal tabs. Keep the dashboard route and a Home link on authenticated screens without wedding context; standalone Classic editor/private preview retain their own navigation. Refine only the full-width CMS editor frame with ivory/copper styling, a clear save/publish hierarchy and five grouped labels for the same nine editable sections. Preserve explicit Save Draft/Publish, warnings, responsive preview, saved documents and all invitation visuals.
+
+The owner approves **Guests & RSVPs** as the GUEST-HUB-01 *planning direction*: four private summary cards, groups first, individual guests alternate, shared search/status filters, expandable members and contextual actions with representative guidance. No hub route, payload, authorization, RSVP answer, schema or Attendance bookmark change is authorized in this milestone. Review filter/history/bookmark behavior and the bounded query strategy before implementation. BRAND-01, UX-02 and DEL-10 release gates remain separate.
+
+### D-069 — Imbitado product identity (2026-10-27)
+
+Status: **name selected for BRAND-01 implementation; commercial naming/trademark clearance and final visual acceptance pending.** Replace the provisional customer-facing “Wedding Workspace” identity with **Imbitado** on entry/auth, onboarding, private shell, browser titles and appropriate application metadata. Preserve the approved ivory-and-copper editorial direction and current functionality. “Your love story, beautifully shared.” is suggested tagline copy for owner review, not a separately accepted slogan. Keep the paired-circle symbol provisional; no substantially different logo, purchased-domain assumption, production activation or launch approval follows from this decision.
+
+### D-068 — BRAND-01 customer entry and workspace redesign (2026-10-27)
+
+Status: **implementation authorized; owner visual acceptance pending.** The owner approves a branded login-first `/`, redesigned Login/Register and shared auth shell, and a wedding-focused authenticated sidebar/header without starter-kit branding or developer links. Preserve registration, verification/recovery, mandatory onboarding, the one-wedding rule, CMS/guest/Attendance/publishing access, and the editor-only full-width layout. The warm ivory/copper editorial system is a review candidate. “Wedding Workspace” is a descriptive temporary UI label and the paired-circle motif is provisional; neither establishes a final company/product name or logo. Final identity and visual direction require owner review before deployment. No guest hub, invitation redesign, schema, production activation, commit or push is authorized by this decision.
 
 ### D-067 — UX-02 customer refinements; GUEST-HUB-01 assessment (2026-10-27)
 

@@ -15,11 +15,13 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-    <AppShell variant="sidebar">
-        <AppSidebar />
-        <AppContent variant="sidebar">
-            <AppSidebarHeader :breadcrumbs="breadcrumbs" />
-            <slot />
-        </AppContent>
-    </AppShell>
+    <div class="brand-app">
+        <AppShell variant="sidebar">
+            <AppSidebar />
+            <AppContent variant="sidebar" class="brand-workspace-content">
+                <AppSidebarHeader :breadcrumbs="breadcrumbs" />
+                <slot />
+            </AppContent>
+        </AppShell>
+    </div>
 </template>

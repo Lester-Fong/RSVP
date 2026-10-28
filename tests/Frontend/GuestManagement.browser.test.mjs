@@ -49,7 +49,7 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
         await page.waitForURL('**/onboarding/congratulations');
         await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
-        await page.getByRole('link', { name: 'Guests', exact: true }).click();
+        await page.getByRole('link', { name: 'Guests & RSVPs', exact: true }).click();
         await page.waitForURL('**/guests');
         await totals(0, 0);
         await page.getByRole('heading', { name: 'Start your guest list', exact: true }).waitFor();
@@ -124,14 +124,12 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
             }
         }
         await page.getByLabel('Search groups or guest names').fill('Anna Santos');
-        await page
-            .getByText('1 matching groups. Totals above include your entire wedding. All member names are shown while searching.', { exact: true })
-            .waitFor();
+        await page.getByText(/1 matching groups\. Group counts reflect the selected invitation state/).waitFor();
         await totals(1, 3);
         await page.getByLabel('Search groups or guest names').fill('Missing guest');
-        await page.getByRole('heading', { name: 'No matching invitations', exact: true }).waitFor();
+        await page.getByRole('heading', { name: 'No guests match these filters', exact: true }).waitFor();
         await totals(1, 3);
-        await page.getByRole('button', { name: 'Clear search', exact: true }).click();
+        await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
         await page.getByRole('button', { name: 'Edit guest Third person', exact: true }).waitFor();
         await page.getByRole('button', { name: 'Edit guest Third person', exact: true }).click();
         await page.getByRole('button', { name: 'Remove guest', exact: true }).click();
@@ -141,7 +139,7 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
         await page.getByRole('button', { name: 'Remove guest', exact: true }).click();
         await submit('Remove guest permanently');
         await totals(1, 2);
-        assert.ok(await page.getByRole('heading', { name: 'Guest management', exact: true }).evaluate((el) => document.activeElement === el));
+        assert.ok(await page.getByRole('heading', { name: 'Guests & RSVPs', exact: true }).evaluate((el) => document.activeElement === el));
         await page.getByRole('button', { name: 'Edit guest Anna Santos', exact: true }).click();
         await page.getByRole('button', { name: 'Remove guest', exact: true }).click();
         await submit('Remove guest permanently');
@@ -155,7 +153,7 @@ test('guest group CRUD, counts, search, confirmations and responsive keyboard in
         await menu(longLabel, 'Delete group');
         await submit('Delete group permanently');
         await totals(0, 0);
-        assert.ok(await page.getByRole('heading', { name: 'Guest management', exact: true }).evaluate((el) => document.activeElement === el));
+        assert.ok(await page.getByRole('heading', { name: 'Guests & RSVPs', exact: true }).evaluate((el) => document.activeElement === el));
         assert.deepEqual(errors, []);
     } finally {
         await browser.close();

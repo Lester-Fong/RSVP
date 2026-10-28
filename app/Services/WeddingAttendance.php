@@ -32,7 +32,7 @@ class WeddingAttendance
             'declined' => (int) $counts->declined, 'pending' => (int) $counts->pending];
     }
 
-    /** @param array{search: string, status: string, view: string} $filters */
+    /** @param array{search: string, status: string, view: string, invitation_state?: string} $filters */
     public function guests(Wedding $wedding, array $filters, ?InvitationGroup $group = null): LengthAwarePaginator
     {
         $query = $this->matchingGuests($wedding, $filters);
@@ -40,15 +40,22 @@ class WeddingAttendance
             $query->where('invitation_group_id', $group->id);
         }
 
-        return $query->select('guests.id', 'guests.name', 'guests.invitation_group_id')
+        $columns = ['guests.id', 'guests.name', 'guests.invitation_group_id'];
+        if ($this->eligibility->enabled) {
+            $columns[] = 'guests.withdrawn_at';
+        }
+
+        return $query->select($columns)
             ->with(['invitationGroup:id,label', 'rsvpResponse:id,guest_id,status,responded_at'])
             ->orderBy('guests.id')->paginate(25)->appends($filters)
             ->through(fn (Guest $guest): array => ['id' => $guest->id, 'name' => $guest->name,
-                'group' => $guest->invitationGroup->label, 'status' => $guest->rsvpResponse?->status ?? 'pending',
+                'group' => $guest->invitationGroup->label, 'groupId' => $guest->invitation_group_id,
+                'invitationState' => $this->eligibility->enabled && $guest->withdrawn_at !== null ? 'withdrawn' : 'active',
+                'status' => $guest->rsvpResponse?->status ?? 'pending',
                 'respondedAt' => $guest->rsvpResponse?->responded_at->toIso8601String()]);
     }
 
-    /** @param array{search: string, status: string, view: string} $filters */
+    /** @param array{search: string, status: string, view: string, invitation_state?: string} $filters */
     public function groups(Wedding $wedding, array $filters): LengthAwarePaginator
     {
         return $wedding->invitationGroups()->select('invitation_groups.id', 'label')
@@ -64,25 +71,18 @@ class WeddingAttendance
                 'pending' => (int) $group->pending, 'matching' => (int) $group->matching]);
     }
 
-    /** @param array{search: string, status: string, view: string} $filters */
+    /** @param array{search: string, status: string, view: string, invitation_state?: string} $filters */
     public function matchingGuests(Wedding $wedding, array $filters): Builder
     {
         $query = Guest::query()->whereHas('invitationGroup', fn (Builder $group) => $group->where('wedding_id', $wedding->id));
-        if ($this->eligibility->enabled) {
-            $this->eligibility->assertSchema();
-            $query->whereNull('guests.withdrawn_at');
-        }
 
         return $this->filter($query, $filters);
     }
 
-    /** @param array{search: string, status: string, view: string} $filters */
+    /** @param array{search: string, status: string, view: string, invitation_state?: string} $filters */
     private function filter(Builder $query, array $filters): Builder
     {
-        if ($this->eligibility->enabled) {
-            $this->eligibility->assertSchema();
-            $query->whereNull('guests.withdrawn_at');
-        }
+        $this->eligibility->constrain($query, $filters['invitation_state'] ?? 'active');
         if ($filters['search'] !== '') {
             $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $filters['search']).'%';
             $query->where(fn (Builder $query) => $query->whereRaw("guests.name LIKE ? ESCAPE '!'", [$pattern])

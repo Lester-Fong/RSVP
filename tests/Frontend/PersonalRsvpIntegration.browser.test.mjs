@@ -80,7 +80,7 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
-        await page.getByRole('link', { name: 'Invitation', exact: true }).click();
+        await page.getByRole('link', { name: 'Design invitation', exact: true }).click();
         await button('Save Draft').click();
         await page.getByText(/Draft saved privately\. Your published website has not changed\./).waitFor();
         await page.goto(overview);
@@ -88,7 +88,7 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
         await button('Publish now').click();
         await page.getByRole('heading', { name: 'Published', exact: true }).waitFor();
         await page.getByRole('dialog').waitFor({ state: 'hidden' });
-        await page.getByRole('link', { name: 'Guests', exact: true }).click();
+        await page.getByRole('link', { name: 'Guests & RSVPs', exact: true }).click();
         await page.waitForURL('**/guests');
         await button('New invitation group').click();
         await page.getByLabel('Group label', { exact: true }).fill('Santos Family');
@@ -311,8 +311,8 @@ test('connected personal owner and guest HTTP flows enforce scope, CSRF, version
             ).status(),
             200,
         );
-        await page.getByRole('link', { name: 'Attendance', exact: true }).click();
-        await page.getByRole('heading', { name: 'Attendance', exact: true }).waitFor();
+        await page.reload();
+        await page.getByRole('heading', { name: 'Guests & RSVPs', exact: true }).waitFor();
         assert.match(await page.locator('body').innerText(), /Declined/);
         for (const [key, count] of Object.entries({ invited: 4, attending: 2, declined: 2, pending: 0 })) {
             assert.equal(await page.getByTestId('attendance-' + key).innerText(), String(count));

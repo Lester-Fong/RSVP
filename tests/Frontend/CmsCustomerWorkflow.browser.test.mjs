@@ -69,12 +69,12 @@ async function registerWedding() {
     assert.notEqual(overview, host.previewUrl.replace('/cms-preview', ''));
     await page.goto(host.origin + '/dashboard');
     await page.getByRole('heading', { name: 'Marina Customer & Elias Customer', exact: true }).waitFor();
-    await page.getByRole('link', { name: 'Invitation', exact: true }).click();
+    await page.locator('[data-sidebar="sidebar"]').getByRole('link', { name: 'Design invitation', exact: true }).click();
     await page.waitForURL('**/cms-preview');
     cms = page.url();
     await page.reload();
     await page.getByRole('heading', { name: 'Make it yours', exact: true }).waitFor();
-    await page.getByText('Preview content checked', { exact: true }).waitFor();
+    await page.getByText('Preview is up to date', { exact: true }).waitFor();
     const props = await page.locator('#app').evaluate((element) => JSON.parse(element.dataset.page).props);
     publicUrl = props.publication.publicUrl;
     assert.equal(props.wedding.partner_one_name, 'Marina Customer');

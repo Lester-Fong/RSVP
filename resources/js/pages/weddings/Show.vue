@@ -4,7 +4,6 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import PublicationPanel from '@/components/wedding/PublicationPanel.vue';
-import WeddingNavigation from '@/components/wedding/WeddingNavigation.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AccountSummary, BreadcrumbItem, WeddingDetails, WeddingPublicationSummary } from '@/types';
 import { ChevronDown } from 'lucide-vue-next';
@@ -35,10 +34,9 @@ const formatDate = (date: string | null) => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-8 p-4 sm:p-6">
-            <WeddingNavigation :account-id="account.id" :wedding-id="wedding.id" active="overview" />
             <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div class="min-w-0">
-                    <p class="font-mono text-xs uppercase tracking-widest text-muted-foreground [overflow-wrap:anywhere]">Wedding workspace</p>
+                    <p class="font-mono text-xs uppercase tracking-widest text-muted-foreground [overflow-wrap:anywhere]">Imbitado workspace</p>
                     <h1 class="mt-1 break-words text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
                         {{ wedding.partner_one_name }} &amp; {{ wedding.partner_two_name }}
                     </h1>

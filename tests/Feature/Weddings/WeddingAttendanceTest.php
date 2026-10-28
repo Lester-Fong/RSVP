@@ -32,9 +32,9 @@ class WeddingAttendanceTest extends TestCase
         if ($states) {
             $this->group($wedding, 'Family', $states);
         }
-        $this->actingAs($owner)->get($this->url($wedding))->assertHeader('Cache-Control', 'no-store, private')
-            ->assertInertia(fn (Assert $page) => $page->component('weddings/Attendance')->where('summary', $expected)
-                ->has('guests.data', count($states))->where('groups', null));
+        $this->actingAs($owner)->get($this->url($wedding).'?view=guests')->assertHeader('Cache-Control', 'no-store, private')
+            ->assertInertia(fn (Assert $page) => $page->component('weddings/Guests')->where('summary', $expected)
+                ->has('individuals.data', count($states))->where('groups', null));
         $this->assertSame($expected['invited'], $expected['attending'] + $expected['declined'] + $expected['pending']);
     }
 
@@ -54,12 +54,26 @@ class WeddingAttendanceTest extends TestCase
         [$owner, $wedding] = $this->fixture();
         $group = $this->group($wedding, 'Santos Family', ['attending', 'attending', 'declined', null]);
         $this->actingAs($owner)->get($this->url($wedding).'?view=groups&status=attending')
-            ->assertInertia(fn (Assert $page) => $page->where('guests', null)->where('matchedGuests', 2)->has('groups.data', 1)
-                ->where('groups.data.0', ['id' => $group->id, 'label' => 'Santos Family', 'invited' => 4,
-                    'attending' => 2, 'declined' => 1, 'pending' => 1, 'matching' => 2])->missing('groups.data.0.guests'));
+            ->assertInertia(fn (Assert $page) => $page->where('individuals', null)->where('matchedGuests', 2)->has('groups.data', 1)
+                ->where('groups.data.0.id', $group->id)->where('groups.data.0.label', 'Santos Family')
+                ->where('groups.data.0.attending', 2)->where('groups.data.0.declined', 1)->where('groups.data.0.pending', 1));
         $this->getJson($this->groupUrl($wedding, $group).'?status=pending')->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.status', 'pending')->assertJsonPath('data.0.respondedAt', null);
+    }
+
+    public function test_legacy_empty_group_remains_manageable_in_default_view_and_label_search(): void
+    {
+        [$owner, $wedding] = $this->fixture();
+        $empty = InvitationGroup::factory()->for($wedding)->create(['label' => 'Legacy empty family']);
+
+        $this->actingAs($owner)->get($this->url($wedding))->assertInertia(fn (Assert $page) => $page
+            ->where('filters.view', 'groups')->where('groups.total', 1)
+            ->where('groups.data.0.id', $empty->id)->where('groups.data.0.guests_count', 0));
+        $this->get($this->url($wedding).'?search=Legacy%20empty')->assertInertia(fn (Assert $page) => $page
+            ->where('groups.total', 1)->where('groups.data.0.id', $empty->id));
+        $this->get($this->url($wedding).'?status=attending')->assertInertia(fn (Assert $page) => $page
+            ->where('groups.total', 0));
     }
 
     public function test_pagination_and_filters_never_change_wedding_wide_totals(): void
@@ -68,11 +82,11 @@ class WeddingAttendanceTest extends TestCase
         for ($index = 0; $index < 12; $index++) {
             $this->group($wedding, 'Family '.$index, ['attending', 'declined', null]);
         }
-        $this->actingAs($owner)->get($this->url($wedding).'?page=2')->assertInertia(fn (Assert $page) => $page
-            ->has('guests.data', 11)->where('guests.total', 36)
+        $this->actingAs($owner)->get($this->url($wedding).'?view=guests&page=2')->assertInertia(fn (Assert $page) => $page
+            ->has('individuals.data', 11)->where('individuals.total', 36)
             ->where('summary', ['invited' => 36, 'attending' => 12, 'declined' => 12, 'pending' => 12]));
-        $this->get($this->url($wedding).'?view=groups&status=pending&page=2')->assertInertia(fn (Assert $page) => $page
-            ->has('groups.data', 2)->where('groups.total', 12)->where('matchedGuests', 12)->where('summary.invited', 36));
+        $this->get($this->url($wedding).'?view=groups&status=pending&page=1')->assertInertia(fn (Assert $page) => $page
+            ->has('groups.data', 12)->where('groups.total', 12)->where('matchedGuests', 12)->where('summary.invited', 36));
         $group = $this->group($wedding, 'Large family', array_fill(0, 30, null));
         $this->getJson($this->groupUrl($wedding, $group))->assertJsonCount(25, 'data')->assertJsonPath('total', 30);
         $this->getJson($this->groupUrl($wedding, $group).'?page=2')->assertJsonCount(5, 'data');
@@ -87,10 +101,10 @@ class WeddingAttendanceTest extends TestCase
         $guest->rsvpResponse()->update(['status' => 'declined']);
         Guest::factory()->for($group)->create(['name' => 'New pending person']);
         $group->forceFill(['invitation_link_version' => 2, 'invitation_token_hash' => null, 'invitation_token' => null])->save();
-        $this->actingAs($owner)->get($this->url($wedding))->assertInertia(fn (Assert $page) => $page
+        $this->actingAs($owner)->get($this->url($wedding).'?view=guests')->assertInertia(fn (Assert $page) => $page
             ->where('summary', ['invited' => 4, 'attending' => 0, 'declined' => 2, 'pending' => 2])
-            ->where('guests.data.0.name', 'Renamed person')->where('guests.data.0.status', 'declined')
-            ->where('guests.data.0.respondedAt', '2026-10-19T08:00:00+00:00')->where('guests.data.3.status', 'pending'));
+            ->where('individuals.data.0.name', 'Renamed person')->where('individuals.data.0.status', 'declined')
+            ->where('individuals.data.0.respondedAt', '2026-10-19T08:00:00+00:00')->where('individuals.data.3.status', 'pending'));
     }
 
     #[DataProvider('filters')]
@@ -103,8 +117,8 @@ class WeddingAttendanceTest extends TestCase
         }
         $other = $this->group($wedding, 'Other family', [null]);
         $other->guests()->first()->update(['name' => 'Literal %_! person']);
-        $this->actingAs($owner)->get($this->url($wedding).'?'.http_build_query($filters))->assertInertia(fn (Assert $page) => $page
-            ->where('guests.total', $count)->where('matchedGuests', $count)->where('summary.invited', 4)->where('summary.pending', 2));
+        $this->actingAs($owner)->get($this->url($wedding).'?'.http_build_query([...$filters, 'view' => 'guests']))->assertInertia(fn (Assert $page) => $page
+            ->where('individuals.total', $count)->where('matchedGuests', $count)->where('summary.invited', 4)->where('summary.pending', 2));
         $this->get($this->url($wedding).'?'.http_build_query([...$filters, 'view' => 'groups']))
             ->assertInertia(fn (Assert $page) => $page->where('matchedGuests', $count));
     }
@@ -141,6 +155,18 @@ class WeddingAttendanceTest extends TestCase
         $this->getJson($this->groupUrl($wedding, $group))->assertForbidden();
     }
 
+    public function test_old_attendance_bookmark_redirects_to_the_unified_page_with_its_filters(): void
+    {
+        [$owner, $wedding] = $this->fixture();
+        [$other] = $this->fixture();
+        $oldUrl = route('accounts.weddings.attendance.index', ['account' => $wedding->account_id, 'wedding' => $wedding->id]);
+        $this->get($oldUrl)->assertRedirect(route('login'));
+        $this->actingAs($other)->get($oldUrl)->assertForbidden();
+        $this->actingAs($owner)->get($oldUrl.'?search=Family&status=pending&view=guests&page=2')
+            ->assertRedirect($this->url($wedding).'?search=Family&status=pending&view=guests&invitation_state=active&page=2');
+        $this->get($oldUrl)->assertRedirect($this->url($wedding).'?search=&status=all&view=guests&invitation_state=active&page=1');
+    }
+
     public function test_responses_exclude_contacts_tokens_foreign_people_and_cannot_write(): void
     {
         [$owner, $wedding] = $this->fixture();
@@ -155,7 +181,7 @@ class WeddingAttendanceTest extends TestCase
                 ->assertDontSee('SECRET-PHONE')->assertDontSee('SECRET-TOKEN')->assertDontSee('FOREIGN-SENTINEL')->assertDontSee($group->invitation_token_hash);
         }
         $response = $this->getJson($this->groupUrl($wedding, $group))->assertOk();
-        $this->assertSame(['id', 'name', 'group', 'status', 'respondedAt'], array_keys($response->json('data.0')));
+        $this->assertSame(['id', 'name', 'group', 'groupId', 'invitationState', 'status', 'respondedAt'], array_keys($response->json('data.0')));
         $response->assertDontSee('secret-contact')->assertDontSee('SECRET-TOKEN')->assertDontSee('SECRET-PHONE');
         $before = DB::table('rsvp_responses')->get()->toJson();
         $this->post($this->url($wedding), ['status' => 'declined'])->assertStatus(405);
@@ -224,7 +250,7 @@ class WeddingAttendanceTest extends TestCase
 
     private function url(Wedding $wedding, array $parameters = []): string
     {
-        return route('accounts.weddings.attendance.index', [...['account' => $wedding->account_id, 'wedding' => $wedding->id], ...$parameters]);
+        return route('accounts.weddings.guests.index', [...['account' => $wedding->account_id, 'wedding' => $wedding->id], ...$parameters]);
     }
 
     private function groupUrl(Wedding $wedding, InvitationGroup $group): string

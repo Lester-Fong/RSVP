@@ -73,7 +73,7 @@ test('legacy Modern Classic publication controls, anonymous snapshot rendering a
             },
         });
         assert.equal(legacyDraft.status(), 302);
-        await page.getByRole('link', { name: 'Invitation', exact: true }).click();
+        await page.getByRole('link', { name: 'Design invitation', exact: true }).click();
         await page.waitForURL('**/invitation/edit');
         const editor = page.url();
         await selectPhoto('#887766');

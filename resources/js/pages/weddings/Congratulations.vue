@@ -25,7 +25,7 @@ onMounted(() => {
         <section :class="{ 'welcome-celebration': celebrate }" class="flex w-full max-w-xl flex-col items-center gap-6 text-center">
             <span class="flex size-20 items-center justify-center rounded-full border bg-card" aria-hidden="true"><Heart class="size-8" /></span>
             <div class="flex flex-col gap-3">
-                <p class="text-sm text-muted-foreground">Your wedding workspace is ready</p>
+                <p class="text-sm text-muted-foreground">Your Imbitado workspace is ready</p>
                 <h1 class="break-words text-3xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-4xl">
                     Congratulations, {{ partnerOne }} &amp; {{ partnerTwo }}!
                 </h1>
