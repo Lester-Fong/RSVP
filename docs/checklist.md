@@ -33,8 +33,15 @@
 ## DEPLOY-00 — Git closeout and Hostinger shared-host readiness (2026-10-28)
 
 - [x] Audit published integration HEAD, current working tree and draft PR; record owner CMS-UX-03 acceptance separately from launch readiness. [Deployment audit and runbook](tasks/deploy00_hostinger_readiness.md).
-- [ ] Verify Hostinger account-specific PHP/extension, MariaDB, secure nonpublic release layout and backup/restore capability before private staging. Enchanted CMS/v2 currently deny nonlocal environments; a separate approved activation change is required.
+- [ ] Verify Hostinger account-specific PHP/extension, MariaDB, secure nonpublic release layout and backup/restore capability before private staging. D-075 provides a strict staging-only code path, disabled by default; no real host activation has occurred.
 - [ ] Complete QA-CMS-15 fresh customer journey, QA-DEL-03/12 visual acceptance, full CMS browser stability, destination-engine races, authorization/privacy, device/performance and recovery gates before external pilot. No hosting purchase, DNS, migration, merge or deployment is authorized by DEPLOY-00.
+
+## DEPLOY-01A — Staging activation and destination-engine readiness (2026-10-28)
+
+- [x] D-075: one strict, default-off CMS staging authorization shared by private editor and v2 publishing/public dispatch. Local/testing unchanged; staging alone/invalid flags denied; production denied with all flags true. No schema, invitation visual or withdrawal change.
+- [x] Guarded SQLite: focused 83 PHP/708 assertions; full 807 PHP/5,295 assertions, zero failures and 45 skipped disposable-InnoDB cases. Disposable staging browser 2/2 and existing local CMS workspace 2/2; 15 Node contracts, app/fixture types, non-mutating lint/format, Pint and build pass. QA-OPS-15 covers isolated policy only. [Exact scope](tasks/deploy00_hostinger_readiness.md#deploy-01a--staging-activation-evidence-and-deploy-01b-boundary).
+- [ ] Prepare a disposable MariaDB/InnoDB target with dedicated credentials and identity assertion. Docker CLI is installed but its daemon is not running; no safe target is currently configured. Fresh migrations and independent-process creation/draft/publication/RSVP races remain unverified. Never target normal `wedding_rsvp`.
+- [ ] DEPLOY-01B owner authorizes a specific Hostinger account/plan, cost, hostname/DNS, secure document-root layout, staging DB/key, backups and release SHA after reviewing the pre-purchase checklist. No remote provisioning, migration or deployment in DEPLOY-01A.
 
 ## PORTAL-UX-01 — D-070 Imbitado portal and editor
 

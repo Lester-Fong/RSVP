@@ -10,7 +10,7 @@ if (! $previewRoot || ! $previewDatabase
     || config('database.default') !== 'sqlite'
     || config('database.connections.sqlite.url')
     || config('rsvp.mode') !== 'personal'
-    || ! app()->environment('local')
+    || ! app()->environment(['local', 'staging'])
     || config('cms_editor.preview_enabled') !== true
     || realpath(storage_path()) !== realpath($previewRoot.'/storage')) {
     throw new RuntimeException('The editor harness requires its own disposable temporary SQLite database and storage. Checks: '.json_encode([
@@ -18,7 +18,7 @@ if (! $previewRoot || ! $previewDatabase
         'parent' => dirname($previewDatabase ?: '') === $previewRoot,
         'temp' => realpath(sys_get_temp_dir()) === dirname($previewRoot ?: ''),
         'sqlite' => config('database.default') === 'sqlite', 'urlAbsent' => ! config('database.connections.sqlite.url'),
-        'local' => app()->environment('local'), 'enabled' => config('cms_editor.preview_enabled') === true,
+        'isolatedEnvironment' => app()->environment(['local', 'staging']), 'enabled' => config('cms_editor.preview_enabled') === true,
         'storage' => realpath(storage_path()) === realpath(($previewRoot ?: '').'/storage'),
     ]));
 }

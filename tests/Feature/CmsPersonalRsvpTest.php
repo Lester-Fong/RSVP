@@ -14,6 +14,7 @@ use App\Services\PersonalRsvp;
 use App\Services\PersonalRsvpTransaction;
 use App\Services\RsvpDelegationManager;
 use App\Services\WeddingPublication;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -50,6 +51,30 @@ class CmsPersonalRsvpTest extends TestCase
             ->assertDontSee('href="#rsvp">Open your personal RSVP', false)->assertDontSee($token)->getContent();
         $this->assertStringNotContainsString('<form', $public);
         $this->getJson($path)->assertOk()->assertJsonCount(2, 'rsvp.guests')->assertDontSee('contact_email')->assertDontSee('token_hash');
+    }
+
+    public function test_staging_gate_protects_personal_read_and_write_without_changing_invitation_authority(): void
+    {
+        extract($this->fixture());
+        $initial = app(PersonalRsvp::class)->read($token);
+        $this->withoutMiddleware(ValidateCsrfToken::class);
+        $this->app['env'] = 'staging';
+        try {
+            $this->get($path)->assertNotFound();
+            $this->getJson($path)->assertNotFound();
+            $this->postJson($path.'/responses', $this->response($initial, 0, 'attending'))->assertNotFound();
+            $this->assertDatabaseCount('rsvp_responses', 0);
+            config(['cms_editor.staging_authorized' => true]);
+            $this->get($path)->assertOk()->assertSee($holder->name)->assertDontSee($independent->name);
+            $this->getJson($path)->assertOk();
+            $this->postJson($path.'/responses', $this->response($initial, 0, 'attending'))->assertOk();
+            $this->assertDatabaseCount('rsvp_responses', 1);
+            $this->app['env'] = 'production';
+            $this->get($path)->assertNotFound();
+            $this->getJson($path)->assertNotFound();
+        } finally {
+            $this->app['env'] = 'testing';
+        }
     }
 
     public function test_partial_saved_choices_versions_stale_and_foreign_response_attempts_use_the_existing_service(): void

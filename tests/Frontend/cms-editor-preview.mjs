@@ -20,9 +20,16 @@ function stopOwnedProcess(child) {
 }
 
 /** Opt-in loopback fixture: actual Laravel sessions/CSRF/uploads and disposable SQLite, never .env editing. */
-export async function createCmsEditorPreview({ publishing = false, personal = false, withdrawal = false } = {}) {
+export async function createCmsEditorPreview({
+    publishing = false,
+    personal = false,
+    withdrawal = false,
+    serverEnvironment = 'local',
+    stagingAuthorized = false,
+} = {}) {
     if (personal && !publishing) throw Error('Personal Enchanted QA requires an explicitly publication-enabled disposable target.');
     if (withdrawal && (!personal || !publishing)) throw Error('Invitation withdrawal QA requires the isolated personal-RSVP publication fixture.');
+    if (!['local', 'staging'].includes(serverEnvironment)) throw Error('Disposable CMS browser host supports only local or staging runtime.');
     const repository = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
     const root = await mkdtemp(join(tmpdir(), 'rsvp-cms-editor-'));
     const database = join(root, 'database.sqlite'),
@@ -96,7 +103,16 @@ export async function createCmsEditorPreview({ publishing = false, personal = fa
     const child = spawn(
         'php',
         ['-S', '127.0.0.1:' + port, '-t', join(repository, 'public'), join(repository, 'tests/Fixtures/cms-editor-router.php')],
-        { cwd: repository, env, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+        {
+            cwd: repository,
+            env: {
+                ...env,
+                APP_ENV: serverEnvironment,
+                CMS_V2_STAGING_AUTHORIZED: serverEnvironment === 'staging' && stagingAuthorized ? 'true' : 'false',
+            },
+            stdio: ['ignore', 'pipe', 'pipe'],
+            windowsHide: true,
+        },
     );
     const log = [];
     child.stdout.on('data', (v) => log.push(v.toString()));

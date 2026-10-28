@@ -1,8 +1,9 @@
 <?php
 
 return [
-    // Incomplete editor is never available in production, even if this flag is set.
+    // The editor is available only in local/testing or explicitly authorized staging.
     'preview_enabled' => env('CMS_EDITOR_PREVIEW_ENABLED', false) === true,
-    // DEL-03b acceptance gate: production remains denied even if explicitly set.
+    // Production remains denied even if both feature flags and staging authorization are set.
     'publishing_enabled' => env('CMS_V2_PUBLISHING_ENABLED', false) === true,
+    'staging_authorized' => env('CMS_V2_STAGING_AUTHORIZED', false) === true,
 ];

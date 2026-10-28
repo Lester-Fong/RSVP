@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class CmsEditorPreviewTest extends TestCase
@@ -45,6 +46,56 @@ class CmsEditorPreviewTest extends TestCase
         $this->app->instance('env', 'production');
         try {
             $this->getJson($url)->assertNotFound();
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    #[DataProvider('environmentAccessCases')]
+    public function test_editor_access_requires_an_allowed_environment_and_strict_staging_authorization(
+        string $environment, mixed $preview, mixed $stagingAuthorization, bool $allowed): void
+    {
+        [$owner, $wedding, $url] = $this->fixture();
+        $this->withoutVite();
+        config(['cms_editor.preview_enabled' => $preview, 'cms_editor.staging_authorized' => $stagingAuthorization]);
+        $this->app->instance('env', $environment);
+        try {
+            $this->assertSame($allowed, CmsEditorPreview::shouldOpen($wedding));
+            $response = $this->actingAs($owner)->getJson($url);
+            $allowed ? $response->assertOk() : $response->assertNotFound();
+            $this->assertDatabaseCount('website_drafts', 0);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    public static function environmentAccessCases(): array
+    {
+        return [
+            'local unchanged' => ['local', true, false, true],
+            'testing unchanged' => ['testing', true, false, true],
+            'staging default off' => ['staging', true, false, false],
+            'staging missing authorization' => ['staging', true, null, false],
+            'staging string authorization' => ['staging', true, 'true', false],
+            'staging numeric authorization' => ['staging', true, 1, false],
+            'staging malformed authorization' => ['staging', true, 'invalid', false],
+            'staging missing preview flag' => ['staging', false, true, false],
+            'staging explicitly authorized' => ['staging', true, true, true],
+            'production still denied' => ['production', true, true, false],
+        ];
+    }
+
+    public function test_staging_editor_media_requires_authorization_and_stays_owner_scoped(): void
+    {
+        Storage::fake('wedding_media');
+        [$owner, $wedding, $url] = $this->fixture();
+        $image = app(UploadWeddingImage::class)->upload($owner, $wedding, UploadedFile::fake()->image('staging.png', 64, 64));
+        $this->app->instance('env', 'staging');
+        try {
+            $this->actingAs($owner)->get($url.'/images/'.$image['id'])->assertNotFound();
+            config(['cms_editor.staging_authorized' => true]);
+            $this->get($url.'/images/'.$image['id'])->assertOk()->assertHeader('Cache-Control', 'no-store, private');
+            $this->actingAs(User::factory()->create())->get($url.'/images/'.$image['id'])->assertForbidden();
         } finally {
             $this->app->instance('env', 'testing');
         }

@@ -28,7 +28,7 @@ final class CmsEditorPreview
     /** Template dispatch only; callers still authorize the wedding and enforce the editor boundary. */
     public static function shouldOpen(Wedding $wedding): bool
     {
-        if (config('cms_editor.preview_enabled') !== true || ! app()->environment(['local', 'testing'])) {
+        if (! self::enabled()) {
             return false;
         }
 
@@ -43,11 +43,18 @@ final class CmsEditorPreview
 
     public static function enforce(): void
     {
-        abort_unless(config('cms_editor.preview_enabled') === true && app()->environment(['local', 'testing']), 404);
+        abort_unless(self::enabled(), 404);
         abort_unless(Schema::hasTable('website_revision_media') && Schema::hasColumns('wedding_media_assets',
             ['id', 'wedding_id', 'disk', 'path', 'kind', 'mime_type', 'byte_size', 'width', 'height'])
             && Schema::hasColumns('website_drafts', ['template_key', 'template_version', 'lock_version', 'content'])
             && Schema::hasColumn('weddings', 'timezone'), 503);
+    }
+
+    public static function enabled(): bool
+    {
+        return config('cms_editor.preview_enabled') === true
+            && (app()->environment(['local', 'testing'])
+                || (app()->environment('staging') && config('cms_editor.staging_authorized') === true));
     }
 
     /** @return array<string, int> */

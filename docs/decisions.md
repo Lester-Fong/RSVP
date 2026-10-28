@@ -1,10 +1,15 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-28 (D-074 owner acceptance of revised CMS-UX-03 and shared-host staging evaluation; independent release gates remain open). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-28 (D-075 explicit, fail-closed private-staging activation policy; deployment and release gates remain open). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-075 — DEPLOY-01A staging-only Enchanted authorization (2026-10-28)
+
+The owner authorizes a bounded application change to allow Enchanted CMS/publication on an explicitly authorized private `APP_ENV=staging` deployment. Staging stays disabled by default: the independent `CMS_V2_STAGING_AUTHORIZED=true` configuration must be present, alongside the existing strict preview flag for editing and both strict preview/publishing flags for publishing and public v2 delivery. Local/testing behavior remains unchanged. Production remains denied even if all three flags are true; any production activation requires a separate owner decision, implementation and dedicated tests. This decision does not approve Hostinger purchase, DNS, remote provisioning, migration, deployment or public pilot. [DEPLOY-01A evidence and DEPLOY-01B prerequisites](tasks/deploy00_hostinger_readiness.md#deploy-01a--staging-activation-evidence-and-deploy-01b-boundary).
 
 ### D-074 — CMS-UX-03 accepted; shared-host staging evaluation (2026-10-28)
 
 The owner accepted the revised compact CMS editor after real 13-inch laptop review at 100% browser zoom. Its editor-only presentation and the accepted invitation design are frozen; this acceptance closes QA-CMSUX-04 visual review, not the separate full CMS browser, customer-journey, engine, security or release gates. The owner prefers evaluating affordable Hostinger shared hosting (Premium versus Unlimited) for protected private online staging before deciding whether a VPS is needed. This supersedes D-053's KVM 2 *initial hosting candidate*, without approving purchase, domain, deployment, production activation or public pilot. Preserve the existing Laravel/Vue/Inertia application and fail-closed production feature gates. [DEPLOY-00 audit and proposed runbook](tasks/deploy00_hostinger_readiness.md).
+
 ### D-073 — CMS-UX-03 density revision after owner rejection (2026-10-28)
 
 The owner rejected the first CMS-UX-03 100%-zoom visual candidate as too similar to the original editor. Keep the approved Imbitado/CMS-UX-02 interface and the genuine invitation renderer, but make the desktop editor chrome visibly denser: shorter header/status/tab area, smaller actions and forms, less pane padding and more usable preview width/height. Preserve nine keyboard-reachable sections, explicit Save/Publish and unsaved guards, mobile touch/input sizes, 200% zoom and all saved/publication behavior. No CSS/browser zoom, invitation scaling, feature/schema change or commit is approved. The revised candidate requires fresh owner visual acceptance.

@@ -16,8 +16,7 @@ final class EnchantedWebsite
 
     public static function enabled(): bool
     {
-        return config('cms_editor.publishing_enabled') === true && config('cms_editor.preview_enabled') === true
-            && app()->environment(['local', 'testing']);
+        return config('cms_editor.publishing_enabled') === true && CmsEditorPreview::enabled();
     }
 
     public function document(WebsiteDraft|WebsiteRevision $source): CmsV2Document

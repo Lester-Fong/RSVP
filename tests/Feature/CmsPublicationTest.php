@@ -161,27 +161,71 @@ class CmsPublicationTest extends TestCase
         $this->get($this->publicUrl($wedding))->assertOk();
     }
 
-    #[DataProvider('inactiveFlags')]
-    public function test_activation_is_explicit_local_only_and_default_off(mixed $flag, string $environment): void
+    #[DataProvider('activationCases')]
+    public function test_publishing_requires_both_flags_and_explicit_staging_authorization(
+        mixed $flag, mixed $preview, mixed $stagingAuthorization, string $environment, bool $allowed): void
     {
         [$owner, $wedding] = $this->fixture(false);
-        config(['cms_editor.publishing_enabled' => $flag]);
-        if ($environment === 'production') {
+        config(['cms_editor.publishing_enabled' => $flag, 'cms_editor.preview_enabled' => $preview,
+            'cms_editor.staging_authorized' => $stagingAuthorization]);
+        if ($environment !== 'testing') {
             $this->withoutMiddleware(ValidateCsrfToken::class);
         }
         $this->app->instance('env', $environment);
         try {
-            $this->actingAs($owner)->postJson($this->publishUrl($wedding), $this->payload($wedding))->assertConflict();
-            $this->get($this->publicUrl($wedding))->assertNotFound();
-            $this->assertDatabaseCount('website_revisions', 0);
+            $response = $this->actingAs($owner)->postJson($this->publishUrl($wedding), $this->payload($wedding));
+            if ($allowed) {
+                $response->assertOk();
+                $this->get($this->publicUrl($wedding))->assertOk();
+                $this->assertDatabaseCount('website_revisions', 1);
+            } else {
+                $response->assertConflict();
+                $this->get($this->publicUrl($wedding))->assertNotFound();
+                $this->assertDatabaseCount('website_revisions', 0);
+            }
         } finally {
             $this->app->instance('env', 'testing');
         }
     }
 
-    public static function inactiveFlags(): array
+    public static function activationCases(): array
     {
-        return [[false, 'testing'], ['true', 'testing'], [1, 'testing'], [null, 'testing'], [true, 'production']];
+        return [
+            'local unchanged' => [true, true, false, 'local', true],
+            'testing unchanged' => [true, true, false, 'testing', true],
+            'publishing off' => [false, true, true, 'staging', false],
+            'publishing string' => ['true', true, true, 'staging', false],
+            'publishing numeric' => [1, true, true, 'staging', false],
+            'publishing missing' => [null, true, true, 'staging', false],
+            'preview off' => [true, false, true, 'staging', false],
+            'staging unauthorized' => [true, true, false, 'staging', false],
+            'staging authorization malformed' => [true, true, 'true', 'staging', false],
+            'staging authorized' => [true, true, true, 'staging', true],
+            'production still denied' => [true, true, true, 'production', false],
+        ];
+    }
+
+    public function test_published_v2_page_and_media_obey_staging_gate_without_changing_the_snapshot(): void
+    {
+        [$owner, $wedding, , $images] = $this->fixture();
+        $this->actingAs($owner)->postJson($this->publishUrl($wedding), $this->payload($wedding))->assertOk();
+        $revisionId = $wedding->fresh()->published_revision_id;
+        $this->app->instance('env', 'staging');
+        try {
+            $this->get($this->publicUrl($wedding))->assertNotFound();
+            $this->get($this->mediaUrl($wedding, $images['visible']['asset_id']))->assertNotFound();
+            config(['cms_editor.staging_authorized' => true]);
+            $this->get($this->publicUrl($wedding))->assertOk()->assertDontSee('Secret caption');
+            $this->get($this->mediaUrl($wedding, $images['visible']['asset_id']))->assertOk()->assertHeader('Content-Type', 'image/webp');
+            $this->get($this->mediaUrl($wedding, $images['hidden']['asset_id']))->assertNotFound();
+            $this->app->instance('env', 'production');
+            $this->get($this->publicUrl($wedding))->assertNotFound();
+            $this->get($this->mediaUrl($wedding, $images['visible']['asset_id']))->assertNotFound();
+            $this->assertSame($revisionId, $wedding->fresh()->published_revision_id);
+            $this->assertDatabaseCount('website_revisions', 1);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
     }
 
     #[DataProvider('wallTimes')]
