@@ -1,6 +1,6 @@
 # Risks and follow-ups
 
-Current D-075 / 2026-10-28: The explicit default-off Enchanted staging gate passes isolated SQLite and disposable browser checks; no Hostinger or MariaDB target has been verified. Commercial name clearance, functional/engine/security/device/release gates, the DEL-10.3 full-editor disposable-host stall and separate 1024px public-RSVP browser failure remain open. See RF-013/RF-042 and the [DEPLOY-01A record](tasks/deploy00_hostinger_readiness.md#deploy-01a--staging-activation-evidence-and-deploy-01b-boundary).
+Current D-077 / 2026-10-29: Hosting provider selection is paused; Vultr and Hostinger remain unproven candidates. Owner-reported DEPLOY-01B.0B disposable MariaDB 11.4.12 completed 18 migrations and 45/45 existing opt-in cases/953 assertions, but destination-engine compatibility, missing ONB-01/5D/guest/media crash schedules and all actual-host security/recovery checks remain open. Commercial name, functional/device/release gates, the full-editor host stall and 1024px public-RSVP browser failure remain open. See RF-013/RF-042 and the [non-active HOST-01A example](tasks/host01_vultr_vps_readiness.md).
 
 At D-071 / 2026-10-27, CMS-UX-02 and GUEST-HUB-01 were implemented for owner review; D-072 above records their subsequent UX approval. UX-02 owner acceptance, the DEL-10.3 disposable CMS editor stall and all independent release gates remain open. See RF-041 and the QA register.
 
@@ -88,6 +88,8 @@ DEL-04 / D-045, 2026-10-22: DEL-04 preserves bearer semantics and the existing p
 
 ## RF-008 — Raw invitation credentials in external logs
 
+HOST-01A's non-active Vultr Nginx example disables staging access logs, but Nginx errors, PHP-FPM, Laravel, system journals, backup tools and any future proxy still need synthetic-token inspection if that candidate is selected. QA-OPS-02 remains blocked on actual-host evidence; no deployed log layer was tested. [VPS example](tasks/host01_vultr_vps_readiness.md).
+
 DEL-04 / D-045, 2026-10-22: DEL-04 application HTML/JSON/metadata/privacy and core redaction tests pass. External server/proxy/APM/analytics/body-capture inspection remains unverified (QA-OPS-02); local PHP development-server logs can contain synthetic bearer paths. Do not treat local success as deployed logging remediation. [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
 
 - Category: Confirmed local exposure / unverified deployment security.
@@ -130,6 +132,8 @@ DEL-04 / D-045, 2026-10-22: DEL-04 application HTML/JSON/metadata/privacy and co
 
 ## RF-012 — Recoverable token encryption and key custody
 
+HOST-01A's Vultr example specifies separate staging APP_KEY escrow and a paired encrypted MariaDB/private-media restore to a disposable target. Neither key custody nor restore has been exercised on any host; QA-OPS-04/07 stay open.
+
 DEV-ENV / 2026-10-25: the retained legacy synthetic preview manifest omitted its original generated encryption key. Port-8000 owner login/public rendering are verified, but encrypted credential recovery is not; do not silently revoke/rotate existing links. Newly created automated preview fixtures now persist their private runtime key/cookie for later resume. No current credential or key was rewritten. Production key custody/restore and QA-OPS-04 remain unverified; local runtime-file persistence is not an ACL/backup guarantee. [DEV-ENV limitations](tasks/dev_env_single_origin.md#reuse-and-security).
 
 DEL-04 / D-045, 2026-10-22: DEL-04 preserves credential encryption/recovery and publication does not rotate/recreate credentials. Coordinated key custody, backup/restore and rotation drills remain open (QA-OPS-04/07). [Exact evidence](tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
@@ -144,13 +148,13 @@ DEL-04 / D-045, 2026-10-22: DEL-04 preserves credential encryption/recovery and 
 
 ## RF-013 — Hosting, image runtime and public previews
 
-ALB-00 follow-up / 2026-10-25 (D-053) named Hostinger KVM 2 as a preliminary initial-host evaluation candidate. D-074 supersedes that preference with affordable Hostinger shared hosting for protected private-staging evaluation; KVM 2 remains a possible later option. D-075 implements strict, default-off staging-only Enchanted authorization and preserves production hard denial; isolated SQLite and browser checks pass, but no actual host or destination engine was tested. Current MVP code has no required persistent worker/scheduler. Hostinger account-specific PHP extensions, MariaDB InnoDB behavior, secure nonpublic source layout, capacity/cost, private-media/cache isolation, token logs and backup/restore remain unverified. Docker CLI exists locally but its Linux engine is stopped and no dedicated MariaDB target was configured, so no migrations/race proof ran. No SPA/API split, purchase or deployment is authorized. [DEPLOY-01A evidence and next procedure](tasks/deploy00_hostinger_readiness.md#deploy-01a--staging-activation-evidence-and-deploy-01b-boundary).
+ALB-00 / D-053 named Hostinger KVM 2, D-074 preferred Hostinger shared hosting for evaluation, and D-076 then preferred Vultr Singapore Regular Performance 1-vCPU/2-GB/55-GB for private synthetic staging. D-077 pauses provider selection; these are historical candidate preferences, not purchase commitments. D-075 strict default-off staging authorization and production hard denial remain. DEPLOY-01B.0B owner-reported disposable MariaDB 11.4.12 passed 18 migrations and 45/45 existing engine cases/953 assertions; its target was removed. Destination-engine version, additional ONB-01/5D/guest/media crash schedules, PHP/image runtime, HTTPS/whole-site protection, nonpublic storage ACLs, token/error logs, cache behavior, upload memory, paired backup/restore and total recurring cost remain unverified. No persistent worker/scheduler is presently required; no SPA/API split, purchase or deployment is authorized. [Non-active Vultr example](tasks/host01_vultr_vps_readiness.md).
 
 - Category: Unverified deployment behavior / product decision.
 - Description: Local publication and server metadata work, but localhost is not Internet hosting. Production private storage, PHP upload/image extensions/limits, backup restore, public social previews and indexing preference still need deployment verification.
 - Impact: Real recipients or preview services may not reach the site; incorrect runtime/storage setup can break photos or privacy.
 - Priority: P1.
-- Status: D-075 staging gate passes isolated tests; destination MariaDB and Hostinger runtime/security evidence are pending. A.2 private disk/root/no-serving configuration and anonymous storage denial are tested in isolated temporary storage. Windows Flysystem visibility reporting did not prove private filesystem ACLs; verify actual deployment ownership/permissions separately. Conservative noindex/nofollow/noarchive remains default.
+- Status: D-075 staging gate and 11.4.12 disposable engine selection pass in their separate scopes; provider choice, destination engine and deployed runtime/security/restore evidence are pending. A.2 private disk/root/no-serving configuration and anonymous storage denial are tested in isolated temporary storage. Windows Flysystem visibility reporting did not prove private filesystem ACLs; verify actual deployment ownership/permissions separately. Conservative noindex/nofollow/noarchive remains default.
 - Proposed action: Scope hosting separately, configure receiving PHP for the advertised 5 MiB support, keep media private with authorized delivery, test external previews/restore and confirm indexing policy.
 - Target milestone: Deployment/launch review; no infrastructure approval implied.
 

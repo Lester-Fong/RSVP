@@ -33,15 +33,22 @@
 ## DEPLOY-00 — Git closeout and Hostinger shared-host readiness (2026-10-28)
 
 - [x] Audit published integration HEAD, current working tree and draft PR; record owner CMS-UX-03 acceptance separately from launch readiness. [Deployment audit and runbook](tasks/deploy00_hostinger_readiness.md).
-- [ ] Verify Hostinger account-specific PHP/extension, MariaDB, secure nonpublic release layout and backup/restore capability before private staging. D-075 provides a strict staging-only code path, disabled by default; no real host activation has occurred.
+- [ ] Historical Hostinger shared-host candidate remains unverified: account-specific PHP/extension, MariaDB, secure nonpublic release layout and backup/restore were not proved. D-077 leaves all providers undecided; D-075 still provides only a disabled-by-default staging code path. No real host activation has occurred.
 - [ ] Complete QA-CMS-15 fresh customer journey, QA-DEL-03/12 visual acceptance, full CMS browser stability, destination-engine races, authorization/privacy, device/performance and recovery gates before external pilot. No hosting purchase, DNS, migration, merge or deployment is authorized by DEPLOY-00.
 
 ## DEPLOY-01A — Staging activation and destination-engine readiness (2026-10-28)
 
 - [x] D-075: one strict, default-off CMS staging authorization shared by private editor and v2 publishing/public dispatch. Local/testing unchanged; staging alone/invalid flags denied; production denied with all flags true. No schema, invitation visual or withdrawal change.
 - [x] Guarded SQLite: focused 83 PHP/708 assertions; full 807 PHP/5,295 assertions, zero failures and 45 skipped disposable-InnoDB cases. Disposable staging browser 2/2 and existing local CMS workspace 2/2; 15 Node contracts, app/fixture types, non-mutating lint/format, Pint and build pass. QA-OPS-15 covers isolated policy only. [Exact scope](tasks/deploy00_hostinger_readiness.md#deploy-01a--staging-activation-evidence-and-deploy-01b-boundary).
-- [ ] Prepare a disposable MariaDB/InnoDB target with dedicated credentials and identity assertion. Docker CLI is installed but its daemon is not running; no safe target is currently configured. Fresh migrations and independent-process creation/draft/publication/RSVP races remain unverified. Never target normal `wedding_rsvp`.
-- [ ] DEPLOY-01B owner authorizes a specific Hostinger account/plan, cost, hostname/DNS, secure document-root layout, staging DB/key, backups and release SHA after reviewing the pre-purchase checklist. No remote provisioning, migration or deployment in DEPLOY-01A.
+- [x] DEPLOY-01B.0B owner-reported disposable MariaDB 11.4.12 proof: 18/18 fresh migrations; 45/45 existing opt-in engine cases, 953 assertions, zero failures/skips; target container removed. This does not prove Ubuntu 24.04's MariaDB 10.11, missing ONB-01/5D/guest/media crash schedules, normal development MySQL or an actual host.
+- [ ] Obtain separate owner authorization for an exact host/plan, cost, staging hostname/DNS, release SHA, storage/key and backup/restore before any remote operation. The historical Hostinger purchase gate was never cleared.
+
+## HOST-01A — Vultr VPS local readiness (2026-10-28)
+
+- [x] D-076 recorded Vultr Singapore 1-vCPU/2-GB/55-GB Regular Performance as a private synthetic-staging candidate at that checkpoint. D-077 pauses provider selection; preserve D-075, accepted visuals and the prior Hostinger audit. [Non-active VPS example](tasks/host01_vultr_vps_readiness.md).
+- [x] Prepare a non-active Nginx staging example and repository-side release/security/backup plan. Guarded SQLite staging/publication/personal selection rerun: 83/83 tests, 708 assertions, zero failures/skips; new documentation links and Git whitespace check pass. Nginx, host, frontend/build and Ubuntu MariaDB 10.11 were not tested in this documentation-only batch. No application feature, schema, environment secret or production flag change.
+- [x] D-077 records HOST-01A local preparation complete for a reviewed documentation-only commit and push; publication/CI results must be checked separately. No provider or infrastructure purchase is approved.
+- [ ] Compare full recurring costs and required security/recovery capabilities across suitable providers before selection. A future host-specific execution needs separate approval of charge, hostname/DNS, access/key custody, release SHA and off-site backup destination; then prove matching database, HTTPS/access, secret-path/cache/log boundaries, storage ACLs, upload/memory, paired restore and staging policy on that host. Production and public pilot remain separately gated.
 
 ## PORTAL-UX-01 — D-070 Imbitado portal and editor
 

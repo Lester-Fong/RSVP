@@ -1,6 +1,8 @@
 # DEPLOY-00 — Hostinger shared-hosting readiness and private staging runbook (2026-10-28)
 
-Status: **DEPLOY-01A staging activation code verified locally; Hostinger/MariaDB readiness still CHANGES REQUIRED.** This audit and proposed runbook do not authorize purchase, DNS, remote provisioning, a real migration or deployment. D-074 supersedes D-053's KVM 2 *initial-host candidate* only; D-075 permits the bounded, default-off staging code. The [DEL-10 plan](premium_delight_experience.md#del-10--invitation-mvp-readiness-audit-and-execution-plan), [QA register](../qa/verification_register.md) and [risk register](../risks_and_followups.md) retain independent release gates.
+Status: **historical Hostinger evaluation; no shared-host purchase gate was cleared.** D-076 later evaluated a [Vultr VPS staging example](host01_vultr_vps_readiness.md), and D-077 now pauses all provider selection. D-074's editor acceptance and D-075's default-off staging policy remain. This Hostinger audit does not authorize purchase, DNS, remote provisioning, migration or deployment. The [DEL-10 plan](premium_delight_experience.md#del-10--invitation-mvp-readiness-audit-and-execution-plan), [QA register](../qa/verification_register.md) and [risk register](../risks_and_followups.md) retain independent release gates.
+
+**Later engine evidence (owner-reported DEPLOY-01B.0B):** Disposable MariaDB 11.4.12 completed 18/18 migrations and 45/45 existing opt-in InnoDB tests/953 assertions, zero failures/skips; container removed. The old DEPLOY-01A statements below that Docker was stopped/no engine target existed describe that earlier checkpoint only. Hostinger account compatibility, Ubuntu 24.04 MariaDB 10.11 and still-Planned ONB-01/5D/guest/media crash schedules are not proved by that run.
 
 ## Current source and publication boundary
 

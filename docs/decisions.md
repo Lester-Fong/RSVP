@@ -1,6 +1,14 @@
 Product and Architecture Decision Log
-Last reconciled: 2026-10-28 (D-075 explicit, fail-closed private-staging activation policy; deployment and release gates remain open). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
+Last reconciled: 2026-10-29 (D-077 pauses provider selection; D-075 fail-closed activation and release gates remain). A decision is Approved only when explicitly supported by the product owner's conversation/authorization; recommendations are labeled Proposed. This log is a summary, not permission to silently add features.
 Approved / established direction
+
+### D-077 — HOST-01A closeout; hosting provider undecided (2026-10-29)
+
+The owner pauses provider selection because recurring costs matter. Hostinger Premium, Vultr Singapore and other suitable options remain candidates; D-076's Vultr preference is historical evaluation, not a final provider choice or purchase commitment. The ₱500–₱1,000 monthly preference must cover database, persistent media, backups, email, domain, taxes and renewals. Preserve the non-active Vultr VPS blueprint, the Hostinger assessment and D-075's staging-only feature policy. HOST-01A documentation may be committed and pushed to the integration branch after scope/security review; no purchase, provisioning, DNS, deployment, migration, production activation or master merge is authorized. [HOST-01A candidate example and open gates](tasks/host01_vultr_vps_readiness.md).
+
+### D-076 — HOST-01A Vultr VPS staging candidate (2026-10-28)
+
+The owner changes the preferred initial hosting candidate from Hostinger Premium shared hosting to Vultr Regular Performance Cloud Compute in Singapore (1 shared vCPU, 2 GB RAM, 55 GB SSD), subject to checkout and a ₱500–₱1,000 complete monthly budget. Prepare only local repository guidance for a private HTTPS, Basic-Auth-protected, synthetic-data staging deployment on Ubuntu 24.04/Nginx/PHP-FPM/MariaDB with private local storage, optional Vultr instance backups and independent encrypted off-site backups. This supersedes D-074's *preferred-host evaluation*, not its accepted CMS-UX-03 design, and does not erase D-075's staging/production feature policy. The VPS size is a candidate, not a production capacity approval. Purchase, provisioning, DNS, remote migration, deployment, production activation and public pilot require separate owner authorization. [HOST-01A blueprint and remaining gates](tasks/host01_vultr_vps_readiness.md).
 
 ### D-075 — DEPLOY-01A staging-only Enchanted authorization (2026-10-28)
 

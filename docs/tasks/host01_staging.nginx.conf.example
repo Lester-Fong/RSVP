@@ -1,0 +1,67 @@
+# HOST-01A review template only. Replace every example path and hostname after
+# inspecting the provisioned host. Do not enable before TLS and Basic Auth exist.
+# Put this site in the Nginx http context (for example sites-available).
+# The default/unknown-host site must be closed separately.
+
+server {
+    listen 80;
+    server_name staging.example.invalid;
+    access_log off;
+    return 444;
+}
+
+server {
+    listen 443 ssl;
+    server_name staging.example.invalid;
+    root /srv/imbitado/staging/current/public;
+    index index.php;
+    charset utf-8;
+    server_tokens off;
+
+    ssl_certificate /etc/letsencrypt/live/staging.example.invalid/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/staging.example.invalid/privkey.pem;
+
+    # No raw bearer URL is written to an Nginx access log.
+    access_log off;
+    error_log /var/log/nginx/imbitado-staging.error.log error;
+    fastcgi_cache off;
+    client_max_body_size 8m;
+
+    # Server-level auth is inherited by both static and PHP locations.
+    auth_basic "Private Imbitado staging";
+    auth_basic_user_file /etc/nginx/imbitado-staging.htpasswd;
+
+    add_header Cache-Control "private, no-store" always;
+    add_header X-Robots-Tag "noindex, nofollow, noarchive" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
+    location / {
+        try_files $uri /index.php?$query_string;
+    }
+
+    # Only Laravel's real front controller can reach PHP-FPM, and only through
+    # an internal redirect. Direct /index.php and all other .php paths fail.
+    location = /index.php {
+        internal;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
+        fastcgi_param HTTPS on;
+        fastcgi_param HTTP_AUTHORIZATION "";
+        fastcgi_pass unix:/run/php/php8.3-fpm-imbitado-staging.sock;
+    }
+
+    # These are denied even if a future release mistakenly puts them in public.
+    location ~ /\. {
+        return 404;
+    }
+
+    location ~* ^/(?:vendor|storage|bootstrap|config|database|resources|routes|tests)(?:/|$) {
+        return 404;
+    }
+
+    location ~ \.php(?:/|$) {
+        return 404;
+    }
+}
