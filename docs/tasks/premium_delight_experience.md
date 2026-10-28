@@ -2,7 +2,7 @@
 
 ## DEL-10 — Invitation MVP readiness audit and execution plan (2026-10-26)
 
-**Current D-073 / 2026-10-28:** The owner approves the present Imbitado, CMS-UX-02 and Guests & RSVPs UX direction, but rejected the first [CMS-UX-03](#cms-ux-03--laptop-density-review-2026-10-28) visual candidate. A materially denser editor-only revision now awaits 13-inch-laptop acceptance. Functional/manual, commercial-name and independent DEL-10 release gates remain open.
+**Current D-074 / 2026-10-28:** The owner accepted the revised [CMS-UX-03](#cms-ux-03--laptop-density-review-2026-10-28) density on a real 13-inch laptop at 100% zoom; D-073's first-candidate rejection remains historical. This closes only QA-CMSUX-04 visual acceptance. Functional/manual, commercial-name and independent DEL-10 release gates remain open. [DEPLOY-00 Hostinger staging audit and runbook](deploy00_hostinger_readiness.md) records the shared-host evaluation and hard online Enchanted activation gate without replacing this eight-submilestone plan.
 
 **Current D-069 / 2026-10-27:** The owner selected Imbitado for the uncommitted BRAND-01 candidate, subject to commercial naming/trademark clearance. The tagline and paired-circle mark remain owner-review candidates, and QA-BRAND-01/independent release gates remain open. [Identity evidence and owner steps](#brand-01--customer-entry-and-workspace-review-candidate-2026-10-27).
 

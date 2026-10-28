@@ -21,14 +21,20 @@
 - [x] Record the owner's rejection of the first candidate. The former 170px workspace start/528px preview height at 1280×720 are historical failed visual evidence, not acceptance.
 - [x] Revise only the editor chrome: 1280×720 workspace now begins at 132px; preview is 930×575px versus the rejected 880×528px. Desktop title, action, tab, label and field sizes are measurably smaller; mobile inputs/touch targets and 200% responsiveness remain. [Revised captures](tasks/premium_delight_experience.md#cms-ux-03--laptop-density-review-2026-10-28).
 - [x] Fresh revised-candidate checks: disposable CMS workspace 2/2, CMS polish 7/7, guarded in-memory SQLite CMS selection 49/49 (485 assertions), typecheck, ESLint, Prettier, build and diff check. The complete 39-case editor browser file remains separately unverified.
-- [ ] Owner visually judges the revised 100%-zoom editor on the actual 13-inch laptop; QA-CMSUX-04 remains manual pending. No commit/push.
+- [x] Owner accepted the revised 100%-zoom editor on the actual 13-inch laptop under D-074; QA-CMSUX-04 visual review closed. Independent CMS browser and release gates remain open.
 
 **Historical D-072 first candidate, rejected by owner:**
 
 - [x] Keep the D-071 full-width split and real invitation renderer; compact only the editor header, action sizing, one-row scrollable nine-tab navigation, desktop forms and pane spacing. Preserve mobile touch targets, 200% zoom, image controls, explicit Save/Publish and unsaved warnings.
 - [x] Capture actual 100% browser viewports at 1280×720, 1366×768, 1440×900, 1920×1080 and 390×844, plus tablet, 1024×576 CSS scaled-laptop fallback and genuine 200% zoom. At 1280×720 the panes begin at 170px versus 203px before, with 528px versus 491px preview height; no document horizontal overflow. [Measurements and screenshots](tasks/premium_delight_experience.md#cms-ux-03--laptop-density-review-2026-10-28).
 - [x] Guarded SQLite CMS selection 61/61 (716 assertions), CMS workspace browser 2/2, CMS polish 7/7, selected editor layout/scroll 2/2 and Node contracts 15/15; typecheck, ESLint, Prettier, build and diff checks pass. The full DEL-10.3 editor browser file remains separately unverified.
-- [x] Owner reviewed this first density candidate and rejected its visual result. D-073 above supersedes this candidate; QA-CMSUX-04 remains pending for the revision. The genuine invitation preview keeps its published typography rather than emulating 75% browser zoom.
+- [x] Owner reviewed this first density candidate and rejected its visual result. D-073 superseded this candidate; QA-CMSUX-04 was pending for the revision at that time and later closed under D-074. The genuine invitation preview keeps its published typography rather than emulating 75% browser zoom.
+
+## DEPLOY-00 — Git closeout and Hostinger shared-host readiness (2026-10-28)
+
+- [x] Audit published integration HEAD, current working tree and draft PR; record owner CMS-UX-03 acceptance separately from launch readiness. [Deployment audit and runbook](tasks/deploy00_hostinger_readiness.md).
+- [ ] Verify Hostinger account-specific PHP/extension, MariaDB, secure nonpublic release layout and backup/restore capability before private staging. Enchanted CMS/v2 currently deny nonlocal environments; a separate approved activation change is required.
+- [ ] Complete QA-CMS-15 fresh customer journey, QA-DEL-03/12 visual acceptance, full CMS browser stability, destination-engine races, authorization/privacy, device/performance and recovery gates before external pilot. No hosting purchase, DNS, migration, merge or deployment is authorized by DEPLOY-00.
 
 ## PORTAL-UX-01 — D-070 Imbitado portal and editor
 

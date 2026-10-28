@@ -1,6 +1,6 @@
 # Risks and follow-ups
 
-Current D-073 / 2026-10-28: The owner approves the Imbitado direction, CMS-UX-02 presentation and Guests & RSVPs consolidation, but rejected the first CMS-UX-03 density candidate as visually insufficient. A stronger editor-only revision awaits laptop owner review. Commercial name clearance, remaining functional/engine/security/device/release gates, the DEL-10.3 full-editor disposable-host stall and the separate 1024px public-RSVP browser failure remain open. See RF-041/RF-042 and the QA register.
+Current D-074 / 2026-10-28: The owner accepted the revised CMS-UX-03 density on a real 13-inch laptop; the first rejected candidate remains historical evidence. Commercial name clearance, functional/engine/security/device/release gates, the DEL-10.3 full-editor disposable-host stall and the separate 1024px public-RSVP browser failure remain open. Hostinger shared hosting is an evaluation candidate only; see RF-013/RF-042 and the [DEPLOY-00 audit](tasks/deploy00_hostinger_readiness.md).
 
 At D-071 / 2026-10-27, CMS-UX-02 and GUEST-HUB-01 were implemented for owner review; D-072 above records their subsequent UX approval. UX-02 owner acceptance, the DEL-10.3 disposable CMS editor stall and all independent release gates remain open. See RF-041 and the QA register.
 
@@ -144,7 +144,7 @@ DEL-04 / D-045, 2026-10-22: DEL-04 preserves credential encryption/recovery and 
 
 ## RF-013 — Hosting, image runtime and public previews
 
-ALB-00 follow-up / 2026-10-25 (D-053): Hostinger VPS (KVM 2 candidate), existing Laravel/Vue/Inertia monolith with MySQL/workers, Cloudflare static-asset CDN, private R2 album storage and one branded domain are the owner-preferred evaluation candidate only. Production configuration/capacity/region/cost, CDN tenant/session isolation, private-media revocation, object access, worker/runtime performance and backup restore remain unverified. No SPA/API split or Vercel/Netlify frontend. [Evaluation and cache exclusions](tasks/alb00_wedding_photo_album_plan.md#deployment-candidate--evaluation-only). This preference resolves no existing release gate and authorizes no deployment.
+ALB-00 follow-up / 2026-10-25 (D-053) named Hostinger KVM 2 as a preliminary initial-host evaluation candidate. D-074 supersedes that initial-host preference with affordable Hostinger shared hosting for protected private-staging evaluation; KVM 2 remains a possible later option. The existing Laravel/Vue/Inertia monolith is unchanged. Current MVP code has no required persistent worker/scheduler, but Hostinger account-specific PHP extensions, MariaDB InnoDB behavior, secure nonpublic source layout, capacity/cost, private-media/cache isolation and backup/restore remain unverified. Enchanted CMS/v2 hard-deny online `APP_ENV=staging|production`; a separately approved activation change is required before full staging. No SPA/API split or purchase/deployment is authorized. [DEPLOY-00 audit and gates](tasks/deploy00_hostinger_readiness.md).
 
 - Category: Unverified deployment behavior / product decision.
 - Description: Local publication and server metadata work, but localhost is not Internet hosting. Production private storage, PHP upload/image extensions/limits, backup restore, public social previews and indexing preference still need deployment verification.
@@ -594,10 +594,10 @@ Limits: this verifies these controlled schedules on one MySQL version/isolation 
 
 ## RF-042 — CMS-UX-03 laptop-density acceptance and real-preview limit
 
-- Category: Owner visual acceptance pending; presentation constraint.
+- Category: Owner visual acceptance resolved; presentation constraint remains.
 - Impact: A 13-inch laptop can expose a CSS viewport smaller than its physical pixel count. The editor now gives the real invitation more usable space at 100% zoom, but cannot exactly reproduce the apparent invitation scale of 75% browser zoom without changing how the guest-facing renderer is displayed.
-- Priority: P1 for CMS-UX-03 owner acceptance; no invitation renderer change is authorized.
-- Status: First density candidate owner-rejected; a visibly denser revision is implemented for owner review. No confirmed horizontal overflow in revised synthetic captures; physical-device and retained-preview checks remain open.
+- Priority: P1 for independent device/preview verification; no invitation renderer change is authorized.
+- Status: Revised density owner-accepted under D-074 on the actual 13-inch laptop. First candidate remains owner-rejected historical evidence. Full CMS browser, other devices and release checks remain open.
 - Evidence: At 1280×720, the revised pane begins at 132px versus rejected 170px, and preview grows to 930×575px versus 880×528px. Laptop/mobile/200% revised captures, fresh disposable workspace 2/2, polish 7/7, guarded PHP 49/485 assertions and quality/build checks pass. The earlier 61 guarded PHP/716 assertions, 2 selected editor and 15 Node passes are historical, not rerun for this revision. [Exact captures and limits](tasks/premium_delight_experience.md#cms-ux-03--laptop-density-review-2026-10-28). The separate DEL-10.3 full-editor fixture stall is not resolved.
-- Action: Owner compares the compact editor on the retained port-8000 synthetic wedding at true 100% zoom, including a real 13-inch laptop. Record any remaining crowding by viewport/OS scaling; preserve the real invitation renderer and investigate any new issue separately.
-- Target milestone: CMS-UX-03 final owner visual acceptance; independent DEL-10 release gates remain open.
+- Action: Preserve the accepted editor and real invitation renderer; verify independent DEL-10 browser, device and release gates without reopening visual design.
+- Target milestone: CMS-UX-03 visual acceptance complete; independent DEL-10 release gates remain open.
