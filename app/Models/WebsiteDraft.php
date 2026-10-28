@@ -15,7 +15,7 @@ class WebsiteDraft extends Model
 
     public const SCHEMA_VERSION = 1;
 
-    protected $fillable = ['schema_version', 'lock_version', 'content', 'hero_photo_disk', 'hero_photo_path'];
+    protected $fillable = ['schema_version', 'lock_version', 'content', 'hero_photo_disk', 'hero_photo_path', 'template_key', 'template_version'];
 
     protected $hidden = ['hero_photo_disk', 'hero_photo_path'];
 
@@ -23,6 +23,7 @@ class WebsiteDraft extends Model
     {
         return [
             'schema_version' => 'integer',
+            'template_version' => 'integer',
             'lock_version' => 'integer',
             'content' => 'array',
         ];

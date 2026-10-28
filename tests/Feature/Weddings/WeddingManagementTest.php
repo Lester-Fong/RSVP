@@ -29,10 +29,7 @@ class WeddingManagementTest extends TestCase
         $account = Account::sole();
         $wedding = Wedding::sole();
 
-        $response->assertRedirect(route('accounts.weddings.show', [
-            'account' => $account->id,
-            'wedding' => $wedding->id,
-        ]));
+        $response->assertRedirect(route('onboarding.congratulations'));
         $this->assertDatabaseHas('account_members', [
             'account_id' => $account->id,
             'user_id' => $user->id,
@@ -73,11 +70,11 @@ class WeddingManagementTest extends TestCase
         ];
 
         $this->post(route('weddings.store'), $attributes)->assertSessionHasNoErrors();
-        $this->post(route('weddings.store'), $attributes)->assertSessionHasNoErrors();
+        $this->actingAs(User::factory()->create())->post(route('weddings.store'), $attributes)->assertSessionHasNoErrors();
 
         $this->assertSame(2, Wedding::query()->count());
         $this->assertSame(2, Wedding::query()->distinct()->count('public_slug'));
-        $this->assertDatabaseCount('accounts', 1);
+        $this->assertDatabaseCount('accounts', 2);
     }
 
     public function test_authenticated_owner_can_view_dashboard_and_wedding_details(): void
@@ -88,7 +85,7 @@ class WeddingManagementTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('dashboard'))
-            ->assertOk();
+            ->assertRedirect(route('accounts.weddings.show', [$account, $wedding]));
 
         $this->get(route('accounts.weddings.show', [
             'account' => $account->id,
@@ -340,10 +337,11 @@ class WeddingManagementTest extends TestCase
         $wedding->update($names);
         $before = $wedding->fresh()->getAttributes();
 
-        $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
-            ->where('weddings.0.partner_one_name', $names['partner_one_name'])
-            ->where('weddings.0.partner_two_name', $names['partner_two_name']));
+        $this->actingAs($user)->get(route('dashboard'))->assertRedirect(route('accounts.weddings.show', [$account, $wedding]));
+        $this->get(route('accounts.weddings.show', [$account, $wedding]))->assertInertia(fn (Assert $page) => $page
+            ->component('weddings/Show')
+            ->where('wedding.partner_one_name', $names['partner_one_name'])
+            ->where('wedding.partner_two_name', $names['partner_two_name']));
 
         $this->assertSame($before, $wedding->fresh()->getAttributes());
     }

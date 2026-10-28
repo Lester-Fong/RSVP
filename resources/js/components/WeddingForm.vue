@@ -10,6 +10,7 @@ import type { AccountSummary, WeddingDetails } from '@/types';
 const props = defineProps<{
     account: AccountSummary | null;
     wedding?: WeddingDetails;
+    onboarding?: boolean;
 }>();
 
 const editing = Boolean(props.wedding);
@@ -20,6 +21,7 @@ const form = useForm({
     wedding_time: props.wedding?.wedding_time ?? '',
     ceremony_venue: props.wedding?.ceremony_venue ?? '',
     reception_venue: props.wedding?.reception_venue ?? '',
+    ...(props.wedding?.timezone ? { timezone: props.wedding.timezone } : {}),
 });
 
 const submit = () => {
@@ -64,6 +66,20 @@ const submit = () => {
                 <InputError :message="form.errors.wedding_time" />
             </div>
 
+            <div v-if="wedding?.timezone" class="grid gap-2 sm:col-span-2">
+                <Label for="timezone">Wedding timezone</Label>
+                <Input id="timezone" v-model="form.timezone" list="wedding-timezones" required maxlength="64" />
+                <datalist id="wedding-timezones">
+                    <option value="Asia/Manila" />
+                    <option value="Asia/Singapore" />
+                    <option value="UTC" />
+                    <option value="America/New_York" />
+                </datalist>
+                <p class="text-xs text-muted-foreground">
+                    Use the venue's IANA timezone, such as Asia/Manila. This does not change your saved date or time.
+                </p>
+                <InputError :message="form.errors.timezone" />
+            </div>
             <div class="grid gap-2">
                 <Label for="ceremony_venue">Ceremony venue <span class="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input id="ceremony_venue" v-model="form.ceremony_venue" maxlength="500" />
@@ -80,6 +96,7 @@ const submit = () => {
         <div class="flex flex-wrap items-center gap-3">
             <Button type="submit" :disabled="form.processing">{{ editing ? 'Save changes' : 'Create wedding' }}</Button>
             <Link
+                v-if="!onboarding"
                 :href="account && wedding ? route('accounts.weddings.show', { account: account.id, wedding: wedding.id }) : route('dashboard')"
                 class="text-sm text-muted-foreground underline-offset-4 hover:underline"
             >

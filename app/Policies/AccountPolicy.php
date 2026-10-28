@@ -17,6 +17,8 @@ class AccountPolicy
 
     public function createWedding(User $user, Account $account): bool
     {
-        return $this->view($user, $account);
+        return $this->view($user, $account)
+            && $user->accounts()->wherePivot('role', 'owner')->count() === 1
+            && ! $account->weddings()->exists();
     }
 }

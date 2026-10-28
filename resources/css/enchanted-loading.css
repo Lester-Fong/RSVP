@@ -1,0 +1,113 @@
+.ee-loading-boundary {
+    position: relative;
+    isolation: isolate;
+}
+.ee-loaded-content[data-ready='false'] {
+    visibility: hidden;
+}
+.ee-loading-veil {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: #f9f5ed;
+    opacity: 1;
+    transition: opacity 360ms ease;
+    pointer-events: none;
+}
+.ee-loading-veil[data-ready='true'] {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 360ms ease,
+        visibility 0s 360ms;
+}
+.ee-loading-label {
+    position: absolute;
+    top: min(54vh, 480px);
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: #806b5b;
+    font:
+        13px Georgia,
+        serif;
+    letter-spacing: 0.04em;
+}
+.ee-loading-bird {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 76px;
+    height: 76px;
+    margin: -38px;
+    z-index: 21;
+    pointer-events: none;
+    will-change: transform;
+}
+.ee-loading-bird[data-guided='true'] {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+.ee-loading-boundary[data-ee-phase='landing'] > .ee-loading-bird {
+    transition: transform 720ms cubic-bezier(0.35, 0, 0.2, 1);
+}
+.ee-hummingbird {
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+.ee-hummingbird svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.ee-hummingbird[data-hovering='true'] {
+    animation: ee-bird-hover 4300ms ease-in-out infinite;
+}
+.ee-hummingbird .ee-bird-tail {
+    transform-origin: 100px 117px;
+    animation: ee-bird-tail 2900ms ease-in-out infinite;
+}
+.ee-hummingbird[data-active='false'],
+.ee-hummingbird[data-active='false'] .ee-bird-wing,
+.ee-hummingbird[data-active='false'] .ee-bird-tail {
+    animation-play-state: paused;
+}
+@keyframes ee-bird-hover {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) rotate(-0.3deg);
+    }
+    23% {
+        transform: translate3d(0.7px, -1.8px, 0) rotate(0.4deg);
+    }
+    57% {
+        transform: translate3d(-0.9px, -0.7px, 0) rotate(-0.5deg);
+    }
+    81% {
+        transform: translate3d(0.3px, 1.1px, 0) rotate(0.15deg);
+    }
+}
+@keyframes ee-bird-tail {
+    0%,
+    100% {
+        transform: rotate(-1deg);
+    }
+    48% {
+        transform: rotate(1.2deg);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ee-hummingbird,
+    .ee-hummingbird .ee-bird-wing,
+    .ee-hummingbird .ee-bird-tail {
+        animation: none !important;
+    }
+    .ee-loading-veil,
+    .ee-loading-veil[data-ready='true'],
+    .ee-loading-boundary[data-ee-phase='landing'] > .ee-loading-bird {
+        transition: none;
+    }
+}

@@ -10,4 +10,14 @@ class GuestFactory extends Factory
     {
         return ['name' => fake()->name()];
     }
+
+    public function active(): static
+    {
+        return $this->state(fn (): array => ['withdrawn_at' => null]);
+    }
+
+    public function withdrawn(): static
+    {
+        return $this->state(fn (): array => ['withdrawn_at' => now()]);
+    }
 }

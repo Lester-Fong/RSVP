@@ -2,39 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
+use App\Models\Wedding;
+use App\Services\CustomerWorkspace;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, CustomerWorkspace $workspace): Response|RedirectResponse
     {
-        $account = $request->user()
-            ->accounts()
-            ->wherePivot('role', 'owner')
-            ->orderBy('accounts.id')
-            ->first();
-
-        $weddings = $account?->weddings()
-            ->orderByRaw('wedding_date IS NULL')
-            ->orderBy('wedding_date')
-            ->orderBy('id')
-            ->get()
-            ->map(fn ($wedding) => [
-                'id' => $wedding->id,
-                'partner_one_name' => $wedding->partner_one_name,
-                'partner_two_name' => $wedding->partner_two_name,
-                'wedding_date' => $wedding->wedding_date?->format('Y-m-d'),
-                'status' => $wedding->status,
-            ]) ?? collect();
+        $state = $workspace->state($request->user());
+        if ($state['needsOnboarding']) {
+            return to_route('onboarding');
+        }
+        if ($wedding = $state['wedding']) {
+            return to_route('accounts.weddings.show', [$wedding->account_id, $wedding->id]);
+        }
 
         return Inertia::render('Dashboard', [
-            'account' => $account ? [
+            'workspaces' => $state['accounts']->map(fn (Account $account): array => [
                 'id' => $account->id,
                 'name' => $account->name,
-            ] : null,
-            'weddings' => $weddings,
+                'weddings' => $account->weddings->map(fn (Wedding $wedding): array => [
+                    'id' => $wedding->id,
+                    'partner_one_name' => $wedding->partner_one_name,
+                    'partner_two_name' => $wedding->partner_two_name,
+                ]),
+            ]),
         ]);
     }
 }

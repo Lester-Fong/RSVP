@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { WeddingPublicationSummary } from '@/types';
 import { useForm } from '@inertiajs/vue3';
+import { ChevronDown } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{ accountId: number; weddingId: number; publication: WeddingPublicationSummary }>();
@@ -72,10 +74,9 @@ function restorePublishFocus(event: Event) {
 }
 
 function restoreUnpublishFocus(event: Event) {
-    if (!props.publication.published) {
-        event.preventDefault();
-        heading.value?.focus();
-    }
+    event.preventDefault();
+    if (!props.publication.published) heading.value?.focus();
+    else document.getElementById('website-actions')?.focus();
 }
 </script>
 
@@ -105,11 +106,8 @@ function restoreUnpublishFocus(event: Event) {
             </div>
             <div class="flex flex-wrap gap-2">
                 <Dialog v-model:open="publishOpen">
-                    <DialogTrigger as-child>
-                        <Button
-                            :disabled="!publication.draftSaved || !publication.supportedDraft || (publication.published && !publication.hasChanges)"
-                            @click="form.clearErrors()"
-                        >
+                    <DialogTrigger v-if="!publication.published || publication.hasChanges" as-child>
+                        <Button :disabled="!publication.draftSaved || !publication.supportedDraft" @click="form.clearErrors()">
                             {{ publication.published ? 'Republish changes' : 'Publish invitation' }}
                         </Button>
                     </DialogTrigger>
@@ -138,8 +136,26 @@ function restoreUnpublishFocus(event: Event) {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-                <Dialog v-if="publication.published" v-model:open="unpublishOpen">
-                    <DialogTrigger as-child><Button variant="outline" @click="unpublishForm.clearErrors()">Unpublish</Button></DialogTrigger>
+                <DropdownMenu v-if="publication.published">
+                    <DropdownMenuTrigger as-child
+                        ><Button id="website-actions" variant="outline"
+                            >Website actions <ChevronDown class="ml-2 h-4 w-4" aria-hidden="true" /></Button
+                    ></DropdownMenuTrigger>
+                    <DropdownMenuContent
+                        align="end"
+                        class="motion-reduce:!animate-none motion-reduce:!transition-none"
+                        @close-auto-focus="unpublishOpen && $event.preventDefault()"
+                    >
+                        <DropdownMenuItem
+                            @select="
+                                unpublishForm.clearErrors();
+                                unpublishOpen = true;
+                            "
+                            >Unpublish invitation</DropdownMenuItem
+                        >
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <Dialog v-model:open="unpublishOpen">
                     <DialogContent
                         overlay-class="bg-black/30 backdrop-blur-sm"
                         class="publication-dialog max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-2xl"
@@ -170,6 +186,13 @@ function restoreUnpublishFocus(event: Event) {
             </div>
         </div>
         <p v-if="!publication.draftSaved" class="mt-3 text-sm">Customize your invitation and save the draft before publishing.</p>
+        <p v-if="publication.cmsV2" class="mt-3 rounded-md bg-muted p-3 text-sm">
+            {{
+                publication.supportedDraft
+                    ? 'Enchanted publishes your saved website only. Guests respond through their own private invitation links; the public website stays informational.'
+                    : 'Enchanted publication is unavailable in this environment. Your saved website is preserved.'
+            }}
+        </p>
         <p v-else-if="!publication.supportedDraft" class="mt-3 text-sm">
             This draft uses an unsupported format. Please contact support before publishing.
         </p>

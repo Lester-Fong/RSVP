@@ -6,7 +6,7 @@ import test from 'node:test';
 
 const enabled = process.env.QA_ISOLATED_SQLITE === '1' && process.env.QA_PLAYWRIGHT_MODULE && process.env.QA_BASE_URL;
 
-test('publication controls, anonymous snapshot rendering and unpublishing', { skip: !enabled }, async () => {
+test('legacy Modern Classic publication controls, anonymous snapshot rendering and unpublishing', { skip: !enabled }, async () => {
     const origin = process.env.QA_BASE_URL;
     assert.match(origin, /^http:\/\/127\.0\.0\.1:\d+$/);
     const { chromium } = await import(process.env.QA_PLAYWRIGHT_MODULE);
@@ -46,7 +46,7 @@ test('publication controls, anonymous snapshot rendering and unpublishing', { sk
         await page.getByLabel('Password', { exact: true }).fill(password);
         await page.getByLabel('Confirm password').fill(password);
         await page.getByRole('button', { name: 'Create account', exact: true }).click();
-        await page.waitForURL('**/dashboard');
+        await page.waitForURL('**/onboarding');
         await page.goto(`${origin}/weddings/create`);
         await page.getByLabel('Partner 1 name').fill('Publishing Alex');
         await page.getByLabel('Partner 2 name').fill('Publishing Jamie');
@@ -54,10 +54,26 @@ test('publication controls, anonymous snapshot rendering and unpublishing', { sk
         await page.getByLabel(/Wedding time/).fill('16:30');
         await page.getByLabel(/Ceremony venue/).fill('Our chapel');
         await page.getByRole('button', { name: 'Create wedding', exact: true }).click();
+        await page.waitForURL('**/onboarding/congratulations');
+        await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
         assert.equal(await page.getByRole('button', { name: 'Publish invitation', exact: true }).isDisabled(), true);
-        await page.getByRole('link', { name: 'Customize invitation', exact: true }).click();
+        const csrf = (await context.cookies()).find((cookie) => cookie.name === 'XSRF-TOKEN');
+        const legacyDraft = await context.request.put(overview + '/invitation', {
+            maxRedirects: 0,
+            headers: { 'X-XSRF-TOKEN': decodeURIComponent(csrf.value) },
+            data: {
+                draft_version: 0,
+                content: {
+                    introduction_message: 'Joyfully invite you to celebrate their wedding',
+                    closing_message: 'We look forward to celebrating with you',
+                    sections: { ceremony: true, reception: true, closing: true },
+                },
+            },
+        });
+        assert.equal(legacyDraft.status(), 302);
+        await page.getByRole('link', { name: 'Design invitation', exact: true }).click();
         await page.waitForURL('**/invitation/edit');
         const editor = page.url();
         await selectPhoto('#887766');
@@ -169,16 +185,19 @@ test('publication controls, anonymous snapshot rendering and unpublishing', { sk
         await page.getByRole('button', { name: 'Republish changes', exact: true }).click();
         await page.getByRole('button', { name: 'Republish', exact: true }).click();
         await page.getByText('Your published invitation matches the saved draft.', { exact: true }).waitFor();
+        assert.equal(await page.getByRole('button', { name: 'Republish changes', exact: true }).count(), 0);
         await visitor.reload();
         assert.equal(await visitor.locator('.invitation-intro').innerText(), 'Unpublished draft changes');
         const nextPhoto = await visitor.locator('.invitation-hero-photo').getAttribute('src');
         assert.notEqual(nextPhoto, photoUrl);
         assert.equal((await anonymous.request.get(photoUrl)).status(), 404);
-        await page.getByRole('button', { name: 'Unpublish', exact: true }).click();
+        await page.getByRole('button', { name: 'Website actions', exact: true }).click();
+        await page.getByRole('menuitem', { name: 'Unpublish invitation', exact: true }).click();
         await page.keyboard.press('Escape');
         await page.getByRole('dialog').waitFor({ state: 'hidden' });
-        assert.ok(await page.getByRole('button', { name: 'Unpublish', exact: true }).evaluate((element) => document.activeElement === element));
-        await page.getByRole('button', { name: 'Unpublish', exact: true }).click();
+        assert.ok(await page.getByRole('button', { name: 'Website actions', exact: true }).evaluate((element) => document.activeElement === element));
+        await page.getByRole('button', { name: 'Website actions', exact: true }).click();
+        await page.getByRole('menuitem', { name: 'Unpublish invitation', exact: true }).click();
         await page.getByRole('button', { name: 'Unpublish invitation', exact: true }).click();
         await page.getByRole('heading', { name: 'Draft', exact: true }).waitFor();
         assert.ok(await page.locator('#publication-heading').evaluate((element) => document.activeElement === element));

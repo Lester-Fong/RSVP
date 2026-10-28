@@ -1,4 +1,5 @@
 import '../css/app.css';
+import '../css/brand-workspace.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -19,7 +20,7 @@ declare global {
     }
 }
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = 'Imbitado';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -31,7 +32,7 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#4B5563',
+        color: '#865a49',
     },
 });
 

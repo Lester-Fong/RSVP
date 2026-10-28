@@ -1,0 +1,58 @@
+body {
+    margin: 0;
+}
+.enchanted-preview-bar {
+    --preview-background: #fafafa;
+    --preview-ink: #171717;
+    --preview-muted: #525252;
+    --preview-line: #d4d4d4;
+    font:
+        12px/1.5 system-ui,
+        sans-serif;
+    background: var(--preview-background);
+    color: var(--preview-ink);
+    border-bottom: 1px solid var(--preview-line);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px 28px;
+    flex-wrap: wrap;
+}
+.enchanted-preview-bar strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+}
+.enchanted-preview-bar span {
+    display: block;
+    color: var(--preview-muted);
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+}
+.enchanted-preview-bar nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+}
+.enchanted-preview-bar a {
+    color: inherit;
+    text-underline-offset: 4px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+.enchanted-preview-bar a[aria-current] {
+    font-weight: 650;
+}
+.enchanted-preview-bar a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+@media (prefers-color-scheme: dark) {
+    .enchanted-preview-bar {
+        --preview-background: #171717;
+        --preview-ink: #fafafa;
+        --preview-muted: #d4d4d4;
+        --preview-line: #404040;
+    }
+}

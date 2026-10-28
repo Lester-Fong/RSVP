@@ -15,10 +15,11 @@ withDefaults(
 
 <template>
     <header
-        class="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/70 px-6 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 md:px-4"
+        class="brand-workspace-header flex h-16 shrink-0 items-center gap-3 border-b border-[#e6d9cd] px-5 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 md:px-7"
     >
         <div class="flex items-center gap-2">
-            <SidebarTrigger class="-ml-1" />
+            <SidebarTrigger class="-ml-1 text-[#73513f]" aria-label="Toggle wedding navigation" />
+            <span v-if="breadcrumbs.length === 0" class="brand-serif text-xl font-semibold">Your Imbitado workspace</span>
             <template v-if="breadcrumbs.length > 0">
                 <Breadcrumb>
                     <BreadcrumbList>

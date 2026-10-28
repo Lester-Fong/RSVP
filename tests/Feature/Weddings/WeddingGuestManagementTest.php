@@ -39,7 +39,8 @@ class WeddingGuestManagementTest extends TestCase
         $this->assertSame('+63 917 000 0000', $group->contact_phone);
         $this->actingAs($owner)->get($this->url($wedding, 'guests.index'))->assertInertia(fn (Assert $page) => $page
             ->component('weddings/Guests')->where('totals.groups', 1)->where('totals.people', count($names))
-            ->where('groups.data.0.guests_count', count($names))->where('groups.data.0.label', 'Santos Family'));
+            ->where('groups.data.0.guests_count', count($names))->where('groups.data.0.label', 'Santos Family')
+            ->missing('groups.data.0.contact_email')->missing('groups.data.0.contact_phone'));
     }
 
     public static function namedGroups(): array

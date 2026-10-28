@@ -1,9 +1,14 @@
 <?php
 
+use App\Http\Middleware\EnforceCmsEditorPreview;
+use App\Http\Middleware\EnforceRsvpMode;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Services\CmsEditorPreview;
 use App\Services\InvitationLink;
+use App\Services\PersonalRsvpHttp;
 use App\Services\RedactInvitationTokens;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,13 +25,30 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->web(append: [
+        $middleware->convertEmptyStringsToNull(except: [fn (Request $request): bool => CmsEditorPreview::handles($request)]);
+        $middleware->trimStrings(except: [fn (Request $request): bool => CmsEditorPreview::handles($request)]);
+        $middleware->prependToPriorityList(before: EncryptCookies::class, prepend: EnforceRsvpMode::class);
+        $middleware->web(prepend: [EnforceCmsEditorPreview::class, EnforceRsvpMode::class], append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->report(function (Throwable $exception) {
+            if (CmsEditorPreview::handles(request())) {
+                if (! $exception instanceof ValidationException && ! $exception instanceof HttpExceptionInterface) {
+                    Log::warning('Isolated CMS editor operation failed.', ['type' => $exception::class]);
+                }
+
+                return false;
+            }
+            if (PersonalRsvpHttp::handles(request())) {
+                if (! $exception instanceof ValidationException && ! $exception instanceof HttpExceptionInterface && ! $exception instanceof AuthenticationException) {
+                    Log::error('Personal RSVP operation failed', ['type' => $exception::class]);
+                }
+
+                return false;
+            }
             if (request()->is('invite', 'invite/*', 'invitation-rsvp/*')) {
                 Log::error('Personalized invitation request failed', [
                     'type' => $exception::class,
@@ -38,6 +60,12 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
         $exceptions->render(function (Throwable $exception, Request $request) {
+            if (CmsEditorPreview::handles($request)) {
+                return CmsEditorPreview::error($exception, $request);
+            }
+            if (PersonalRsvpHttp::handles($request)) {
+                return PersonalRsvpHttp::render($exception, $request);
+            }
             if ($request->is('invite', 'invite/*', 'invitation-rsvp/*')) {
                 $status = $exception instanceof ValidationException ? 422
                     : ($exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 500);

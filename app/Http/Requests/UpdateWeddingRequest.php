@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateWeddingRequest extends FormRequest
 {
@@ -21,6 +22,7 @@ class UpdateWeddingRequest extends FormRequest
             'partner_two_name' => ['required', 'string', 'max:255'],
             'wedding_date' => ['nullable', 'date'],
             'wedding_time' => ['nullable', 'date_format:H:i'],
+            'timezone' => ['sometimes', 'required', 'string', 'max:64', Rule::in(\DateTimeZone::listIdentifiers())],
             'ceremony_venue' => ['nullable', 'string', 'max:500'],
             'reception_venue' => ['nullable', 'string', 'max:500'],
         ];

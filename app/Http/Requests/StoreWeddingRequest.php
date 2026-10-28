@@ -8,7 +8,9 @@ class StoreWeddingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $account = $this->route('account');
+
+        return ! $account || $this->user()->can('view', $account);
     }
 
     /**

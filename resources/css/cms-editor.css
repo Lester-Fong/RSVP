@@ -1,0 +1,425 @@
+:where(.cms-editor, .cms-picker, .cms-confirm) {
+    overflow-wrap: anywhere;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) .cms-input {
+    @apply mt-1 block min-h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-base text-foreground lg:text-sm;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) .cms-label {
+    @apply block text-sm font-medium;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) .cms-primary {
+    @apply min-h-11 rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:cursor-not-allowed disabled:opacity-50;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) .cms-secondary {
+    @apply min-h-11 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) :is(button, a, input, textarea, select):focus-visible {
+    @apply outline-none ring-2 ring-foreground ring-offset-2 ring-offset-background;
+}
+:where(.cms-editor, .cms-picker, .cms-confirm) input[type='checkbox'] {
+    accent-color: hsl(var(--foreground));
+    @apply h-4 w-4 rounded border-input text-foreground focus:ring-foreground;
+}
+.cms-workspace {
+    background: color-mix(in srgb, #f7f0e7 72%, hsl(var(--background)));
+    color: hsl(var(--foreground));
+}
+.dark .cms-workspace {
+    background: color-mix(in srgb, #342c28 72%, hsl(var(--background)));
+}
+.cms-workspace-header {
+    border-color: color-mix(in srgb, #a77a5e 30%, hsl(var(--border)));
+}
+.cms-workspace .cms-eyebrow {
+    color: color-mix(in srgb, #8d6349 72%, hsl(var(--foreground)));
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+.dark .cms-workspace .cms-eyebrow {
+    color: #d5b39a;
+}
+.cms-editor-identity {
+    border-left: 2px solid #a77a5e;
+    padding-left: 9px;
+}
+.cms-editor-actions :is(.cms-primary, .cms-secondary) {
+    min-height: 32px;
+    padding: 4px 8px;
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+.cms-editor-actions > div {
+    flex-wrap: nowrap;
+    gap: 4px;
+}
+.cms-workspace .cms-primary {
+    background: #865d45;
+    color: #fffaf5;
+}
+.cms-workspace .cms-primary:hover:not(:disabled) {
+    background: #704a36;
+}
+.cms-workspace .cms-secondary {
+    border-color: color-mix(in srgb, #a77a5e 32%, hsl(var(--border)));
+    background: hsl(var(--background) / 0.8);
+}
+.cms-workspace .cms-secondary:hover:not(:disabled) {
+    background: color-mix(in srgb, #f3e7da 65%, hsl(var(--background)));
+}
+.cms-workspace .cms-draft-state {
+    color: color-mix(in srgb, #765b4a 70%, hsl(var(--foreground)));
+}
+.cms-workspace .cms-draft-state[data-dirty='true'] {
+    color: hsl(var(--foreground));
+}
+.cms-editor-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1px;
+    border-color: color-mix(in srgb, #a77a5e 26%, hsl(var(--border)));
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 6px;
+    scrollbar-width: thin;
+}
+.cms-nav-item {
+    flex: none;
+    min-height: 31px;
+    border-radius: 5px;
+    padding: 4px 7px;
+    color: hsl(var(--muted-foreground));
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+.cms-nav-item:hover,
+.cms-nav-item-active {
+    background: color-mix(in srgb, #d6b399 30%, hsl(var(--background)));
+    color: hsl(var(--foreground));
+}
+.cms-nav-item-active {
+    box-shadow: inset 0 -2px 0 #9a6b50;
+    font-weight: 600;
+}
+.cms-workspace .cms-editor-pane {
+    border: 1px solid color-mix(in srgb, #a77a5e 25%, hsl(var(--border)));
+    border-radius: 9px;
+    background: hsl(var(--background) / 0.88);
+    padding: 9px;
+}
+.cms-workspace .cms-editor-pane h2 {
+    font-family: 'Wedding Editorial', Georgia, serif;
+    font-size: 1.2rem;
+    line-height: 1.15;
+}
+.cms-workspace .cms-preview-pane {
+    border: 1px solid color-mix(in srgb, #a77a5e 15%, hsl(var(--border)));
+    border-radius: 9px;
+    background: hsl(var(--background) / 0.6);
+    padding: 2px;
+}
+.cms-workspace > .cms-feedback {
+    padding: 8px 12px;
+}
+.cms-picker progress {
+    accent-color: hsl(var(--foreground));
+}
+@media (prefers-reduced-motion: reduce) {
+    .cms-picker,
+    .cms-confirm,
+    .cms-editor-overlay {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.cms-editor .cms-name-chip {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+}
+.cms-editor .cms-chip-grip,
+.cms-editor .cms-chip-remove {
+    flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+}
+.cms-editor .cms-chip-grip {
+    cursor: grab;
+}
+.cms-editor .cms-chip-name {
+    min-width: 0;
+    max-width: 100%;
+    padding: 8px 2px;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    color: inherit;
+}
+.cms-editor summary:focus-visible,
+.cms-editor .cms-chip-grip:focus-visible,
+.cms-editor .cms-chip-remove:focus-visible,
+.cms-editor .cms-chip-name:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+}
+
+.cms-editor .cms-collection-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border-bottom: 1px solid hsl(var(--border));
+    padding-block: 8px;
+}
+.cms-editor .cms-guide-block,
+.cms-editor .cms-guide-faq-editor {
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    padding: 12px;
+}
+.cms-editor .cms-guide-faq-editor {
+    border-radius: 6px;
+    background: hsl(var(--muted) / 0.3);
+}
+.cms-editor .cms-guide-block > details > summary,
+.cms-editor .cms-guide-faq-editor > summary {
+    min-height: 44px;
+    cursor: pointer;
+    padding-block: 10px;
+}
+.cms-editor .cms-collection-row > details {
+    min-width: 0;
+}
+.cms-editor .cms-collection-summary {
+    min-height: 44px;
+    cursor: pointer;
+    padding-block: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+.cms-editor .cms-collection-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+}
+.cms-editor .cms-collection-action {
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+}
+.cms-editor .cms-collection-action:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.cms-editor-fields:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: -2px;
+}
+@media (min-width: 1024px) {
+    .cms-workspace-header {
+        flex-wrap: nowrap;
+    }
+    .cms-editor-identity {
+        flex: 1 1 230px;
+    }
+    .cms-editor-actions {
+        flex: 0 1 auto;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: thin;
+        padding: 1px;
+    }
+    .cms-editor-actions > :is(a, button, div) {
+        flex: none;
+    }
+    .cms-editor-pane .cms-input {
+        min-height: 34px;
+        padding: 4px 8px;
+        font-size: 13px;
+        line-height: 1.3;
+    }
+    .cms-editor-pane .cms-label {
+        font-size: 12px;
+    }
+    .cms-editor-pane :is(.cms-primary, .cms-secondary) {
+        min-height: 34px;
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+    .cms-editor-pane :is(.text-sm, .cms-collection-summary) {
+        font-size: 12.5px;
+        line-height: 1.4;
+    }
+    .cms-editor-pane .text-xs {
+        font-size: 11.5px;
+        line-height: 1.45;
+    }
+    .cms-editor-pane .cms-input {
+        margin-top: 3px;
+        scroll-margin-block: 12px;
+    }
+    .cms-editor-fields > section > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 8px;
+    }
+    .cms-editor-fields :is(.space-y-5, .space-y-4) > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 9px;
+    }
+    .cms-editor-fields .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 7px;
+    }
+    .cms-editor-pane .cms-image-field {
+        padding-block: 7px;
+    }
+    .cms-editor-pane .cms-image-field img {
+        height: 84px;
+    }
+    .cms-editor-pane :is(.cms-guide-block, .cms-guide-faq-editor) {
+        padding: 8px;
+    }
+    .cms-editor-pane .cms-collection-row {
+        padding-block: 4px;
+    }
+    .cms-editor-pane .cms-collection-summary {
+        min-height: 34px;
+        padding-block: 7px;
+    }
+    .cms-editor-pane :is(.cms-collection-action, .cms-chip-grip, .cms-chip-remove) {
+        min-width: 34px;
+        min-height: 34px;
+    }
+    .cms-workspace {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+    .cms-workspace > :not(.cms-split) {
+        flex-shrink: 0;
+    }
+    .cms-split {
+        flex: 1;
+        min-height: 0;
+    }
+    .cms-workspace .cms-editor-pane {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+    .cms-editor-nav {
+        flex-shrink: 0;
+    }
+    .cms-editor-fields {
+        overflow-y: auto;
+        min-height: 0;
+        scrollbar-gutter: stable;
+        scroll-padding-block: 12px 20px;
+        padding-right: 4px;
+    }
+    .cms-preview-pane {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    .cms-preview-pane iframe {
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+    }
+}
+
+/* Short or magnified windows use document scrolling so the controls remain reachable. */
+@media (min-width: 1024px) and (max-height: 600px) {
+    .cms-workspace {
+        height: auto;
+        overflow: visible;
+    }
+    .cms-workspace .cms-editor-pane,
+    .cms-editor-fields {
+        overflow: visible;
+    }
+    .cms-preview-pane iframe {
+        flex: none;
+        height: 75dvh;
+        min-height: 320px;
+    }
+}
+
+@media (max-width: 1023px) {
+    .cms-workspace .cms-editor-pane {
+        padding: 12px;
+    }
+    .cms-editor-actions :is(.cms-primary, .cms-secondary) {
+        min-height: 44px;
+        font-size: 14px;
+    }
+    .cms-editor .cms-chip-name {
+        font-size: 16px;
+    }
+    .cms-nav-item {
+        min-height: 44px;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+}
+
+@supports selector(:has(*)) {
+    .cms-editor .cms-collection-row:not(:has(details[open])) {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: start;
+    }
+}
+
+.cms-feedback,
+.cms-error-summary {
+    border: 1px solid hsl(var(--border));
+    padding: 12px 16px;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+}
+.cms-feedback[data-kind='success'] {
+    background: hsl(var(--muted));
+    border-left: 3px solid currentColor;
+}
+.cms-feedback[data-kind='error'],
+.cms-feedback[data-kind='conflict'],
+.cms-error-summary {
+    background: color-mix(in srgb, #c69a55 12%, hsl(var(--background)));
+    border-color: color-mix(in srgb, #c69a55 45%, hsl(var(--border)));
+}
+.cms-feedback[data-kind='conflict'],
+.cms-error-summary[data-kind='conflict'] {
+    background: color-mix(in srgb, #b38969 16%, hsl(var(--background)));
+    border-left: 3px solid currentColor;
+}
+.cms-feedback[data-kind='info'] {
+    background: hsl(var(--muted));
+}
+.cms-draft-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+}
+.cms-draft-state[data-dirty='true'] {
+    font-weight: 600;
+}
+.cms-editor [aria-invalid='true'] {
+    border: 2px solid currentColor;
+    outline-offset: 3px;
+}
+.cms-error-summary:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}

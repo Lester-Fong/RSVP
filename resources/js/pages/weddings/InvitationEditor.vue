@@ -5,6 +5,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ModernClassicInvitation from '@/components/wedding/ModernClassicInvitation.vue';
+import WeddingNavigation from '@/components/wedding/WeddingNavigation.vue';
 import { useAppearance } from '@/composables/useAppearance';
 import type { AccountSummary, InvitationCustomization, InvitationHeroPhoto, WeddingPresentation } from '@/types';
 
@@ -112,9 +113,7 @@ function saveDraft() {
 
         <header class="border-b px-4 py-3 sm:px-8">
             <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3">
-                <Link :href="route('accounts.weddings.show', parameters)" class="editor-link text-sm">
-                    <span aria-hidden="true">← </span>Back to wedding overview
-                </Link>
+                <WeddingNavigation :account-id="account.id" :wedding-id="weddingId" active="invitation" />
                 <div class="flex items-center gap-2 text-sm text-muted-foreground">
                     <label for="editor-theme">Theme</label>
                     <select
@@ -289,8 +288,12 @@ function saveDraft() {
                 <section aria-labelledby="preview-heading" class="min-w-0">
                     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <h2 id="preview-heading" class="font-mono text-xs uppercase tracking-widest text-muted-foreground">Live preview</h2>
-                        <Link :href="route('accounts.weddings.preview', parameters)" target="_blank" rel="noopener" class="editor-link text-xs"
-                            >View saved draft <span class="sr-only">(opens in a new tab)</span><span aria-hidden="true">↗</span></Link
+                        <a
+                            :href="route('accounts.weddings.preview', parameters)"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="editor-link text-xs"
+                            >View saved draft <span class="sr-only">(opens in a new tab)</span><span aria-hidden="true">↗</span></a
                         >
                     </div>
                     <div class="overflow-hidden rounded-xl border">

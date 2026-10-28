@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\InvitationEligibility;
+use App\Services\RsvpMode;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -45,8 +47,17 @@ class InvitationGroup extends Model
     protected static function booted(): void
     {
         static::deleting(function (InvitationGroup $group): void {
+            app(InvitationEligibility::class)->guardParentDeletion($group->guests());
+            if (app(RsvpMode::class)->personal() && $group->guests()->where(fn ($guests) => $guests->has('rsvpResponse')->orHas('invitationLink')->orHas('rsvpDelegation')->orHas('representedDelegations'))->exists()) {
+                throw ValidationException::withMessages(['invitation_link' => 'Saved RSVP responses, personal links or representative assignments keep this group on your guest list. Revoke personal access to stop new responses; invited totals stay unchanged.']);
+            }
             if ($group->invitation_link_version > 0) {
                 throw ValidationException::withMessages(['invitation_link' => 'This group has had an invitation link and cannot be deleted. Revoke its link to stop access instead.']);
+            }
+        });
+        static::updating(function (InvitationGroup $group): void {
+            if (app(RsvpMode::class)->personal() && $group->isDirty('wedding_id')) {
+                throw ValidationException::withMessages(['invitation_group' => 'Invitation groups cannot be moved between weddings.']);
             }
         });
     }

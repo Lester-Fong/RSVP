@@ -23,6 +23,7 @@
         @vite(['resources/css/modern-classic.css', 'resources/js/public-invitation.ts', 'resources/css/public-invitation.css'])
     </head>
     <body>
+        @if ($personal)<div id="personal-invitation">@endif
         @if ($greeting)
             <section class="invitation-greeting" aria-labelledby="invitation-group-greeting">
                 <h2 id="invitation-group-greeting">You're invited, {{ $greeting['label'] }}!</h2>
@@ -89,8 +90,9 @@
                 </ul>
                 <noscript>Enable JavaScript to save or update your responses. Your saved choices are shown above.</noscript>
             </section>
-            <script id="rsvp-data" type="application/json">{!! \Illuminate\Support\Js::encode(['initial' => $rsvp, 'csrfUrl' => route('public.invitations.csrf', absolute: false)]) !!}</script>
+            <script id="{{ $personal ? 'personal-rsvp-data' : 'rsvp-data' }}" type="application/json">{!! \Illuminate\Support\Js::encode(['initial' => $rsvp, 'csrfUrl' => route('public.invitations.csrf', absolute: false)]) !!}</script>
         @endif
         <script id="invitation-data" type="application/json">{!! \Illuminate\Support\Js::encode($props) !!}</script>
+        @if ($personal)</div>@endif
     </body>
 </html>

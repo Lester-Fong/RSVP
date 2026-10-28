@@ -8,11 +8,12 @@ Repository-level agent instructions. This file is the entry point, not the entir
    Need Read
    Current task/status/next action [`docs/handoff.md`](docs/handoff.md)
    Known bugs, unverified checks, security risks, MVP limits and follow-ups [`docs/risks_and_followups.md`](docs/risks_and_followups.md) — review relevant entries before implementation/fixes.
+   Executable QA queue, historical passes, missing coverage and acceptance gates [`docs/qa/verification_register.md`](docs/qa/verification_register.md) — select affected IDs before verification; maintain at milestone closeout.
    What the product must do, and MVP limits [`docs/product_spec.md`](docs/product_spec.md)
    Approved decisions and unresolved proposals [`docs/decisions.md`](docs/decisions.md)
    Technical design, ERD, tenancy, CMS and routes [`docs/architecture.md`](docs/architecture.md)
    Milestones, acceptance criteria, verification [`docs/checklist.md`](docs/checklist.md)
-   Small task-specific playbooks [`docs/skills.md`](docs/skills.md)
+   Task-specific plans and review instructions [`docs/tasks/`](docs/tasks/)
    First pending review assignment [`docs/tasks/milestone1_review.md`](docs/tasks/milestone1_review.md)
    How to install/run/test locally README.md
    Documentation rules and index [`docs/README.md`](docs/README.md)
@@ -36,12 +37,16 @@ Precedence: Direct instructions for the current task > newly approved entries in
 
 5. Testing and verification
 
+- Owner manual testing uses **http://127.0.0.1:8000** exclusively. Start the retained synthetic environment with `dev.cmd` as documented in README and `docs/tasks/dev_env_single_origin.md`; use stable paths such as `/w/synthetic-editor-preview`. Vite may use internal HMR port 5173. Do not start additional browser-facing Laravel previews on random ports or publish those URLs in owner reports. Fail on a busy 8000; never silently fall back to another port or kill an unidentified server.
+- Automated tests may use independent disposable internal services when technically necessary, without disrupting the normal port-8000 application. Never point fixture-writing suites at the retained, owner-edited manual preview. Resume existing manual data; missing data requires an approved restore/initialization, never an automatic migration/seed/reset. Development MySQL initialization remains a separate explicit approval step. Preserve encryption keys/credentials; do not rotate them to repair a legacy preview silently.
+
 - Before changing code: inspect relevant source, tests, migrations, and Git diff/status.
 - After changing code: run the relevant Laravel tests, frontend typecheck/lint/format, and build as applicable. Report exact commands and pass/fail; never claim checks you did not run.
-- Laravel tests currently use an isolated in-memory SQLite database with temporary PHP extension loading in Codex's environment; do not redirect tests to the wedding_rsvp development database. Global pdo_sqlite may remain disabled.
+- Laravel tests must use isolated in-memory SQLite with process-only overrides. `phpunit.xml` forces the testing/SQLite values; `tests/bootstrap.php` validates them, resets both process and PHP superglobal values, and points Laravel to a fresh config-cache path. `Tests\TestCase` asserts the resolved Laravel connection is in-memory SQLite before test traits (including `RefreshDatabase`) run. Never bypass this bootstrap/configuration. Before each Artisan/PHPUnit command also set `APP_ENV=testing`, `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`, clear `DB_URL`/`DATABASE_URL`, set `CACHE_STORE=array`, `SESSION_DRIVER=array`, `SESSION_PATH=/`, and point `APP_CONFIG_CACHE`/`APP_ROUTES_CACHE` at unused temporary paths so the Artisan parent is isolated too. Load extensions through the approved temporary `PHP_INI_SCAN_DIR`. Never run PHPUnit against `wedding_rsvp`; global pdo_sqlite may remain disabled. Opt-in InnoDB suites must keep this default SQLite connection and use the explicit `CMS_MYSQL_TEST_*` disposable target and separate test credentials documented in `docs/tasks/dev_env_single_origin.md`.
 - For database changes, add/adjust migrations and feature tests; check MySQL-specific constraints where applicable. No destructive resets.
 - For security-sensitive access changes, test another user's/account's read and write attempts, not only happy paths.
 - npm audit has reported development-tool advisories, while npm audit --omit=dev previously passed. Investigate with evidence; never run npm audit fix --force or a breaking major upgrade automatically.
+- At every implementation milestone closeout, review `docs/qa/verification_register.md` for new unverified scenarios, actual skips, missing cross-engine coverage, visual acceptance and deployment blockers. Update affected IDs with exact execution evidence and prerequisites; preserve historical passes, label missing tests Planned, never claim a pass without execution, and link detailed risks instead of duplicating them. Permission/data-integrity/public-media checks must precede affected activation, even during owner QA.
 
 6. Mandatory documentation sync (part of each authorized implementation)
    Documentation updates are task-completion work, not a separate future promise. Before reporting a task complete, inspect what actually changed and synchronize only affected documents:

@@ -27,11 +27,13 @@ test('dashboard containment and real multipart photo saves', { skip: !enabled },
         await page.getByLabel('Password', { exact: true }).fill(password);
         await page.getByLabel('Confirm password').fill(password);
         await page.getByRole('button', { name: 'Create account', exact: true }).click();
-        await page.waitForURL('**/dashboard');
+        await page.waitForURL('**/onboarding');
         await page.goto(`${origin}/weddings/create`);
         await page.getByLabel('Partner 1 name').fill(first);
         await page.getByLabel('Partner 2 name').fill(second);
         await page.getByRole('button', { name: 'Create wedding', exact: true }).click();
+        await page.waitForURL('**/onboarding/congratulations');
+        await page.getByRole('link', { name: 'Enter your wedding dashboard', exact: true }).click();
         await page.waitForURL(/\/accounts\/\d+\/weddings\/\d+$/);
         const overview = page.url();
 
@@ -39,7 +41,8 @@ test('dashboard containment and real multipart photo saves', { skip: !enabled },
             [first, second],
             [second, first],
         ]) {
-            await page.getByRole('link', { name: 'Edit wedding', exact: true }).click();
+            await page.getByRole('button', { name: 'More', exact: true }).click();
+            await page.getByRole('menuitem', { name: 'Edit wedding details', exact: true }).click();
             await page.getByLabel('Partner 1 name').fill(one);
             await page.getByLabel('Partner 2 name').fill(two);
             await page.getByRole('button', { name: 'Save changes', exact: true }).click();
@@ -49,39 +52,26 @@ test('dashboard containment and real multipart photo saves', { skip: !enabled },
                 for (const theme of ['light', 'dark']) {
                     await page.setViewportSize({ width, height: 1000 });
                     await page.evaluate((value) => document.documentElement.classList.toggle('dark', value === 'dark'), theme);
-                    const heading = page.locator('h2').first();
-                    assert.equal(await heading.innerText(), `${one} & ${two}`);
-                    assert.equal(await heading.getAttribute('title'), `${one} & ${two}`);
+                    const heading = page.getByRole('heading', { name: one + ' & ' + two, exact: true });
+                    assert.equal(await heading.innerText(), one + ' & ' + two);
                     const bounds = await heading.evaluate((element) => {
-                        const style = getComputedStyle(element);
-                        const card = element.closest('a');
                         const box = element.getBoundingClientRect();
-                        const cardBox = card.getBoundingClientRect();
                         return {
-                            clamp: style.webkitLineClamp,
-                            overflow: style.overflow,
-                            wrap: style.overflowWrap,
-                            height: box.height,
-                            lineHeight: parseFloat(style.lineHeight),
-                            clipped: element.scrollHeight > element.clientHeight,
-                            contained: box.left >= cardBox.left && box.right <= cardBox.right,
-                            noOverflow: document.documentElement.scrollWidth <= innerWidth && card.scrollWidth <= card.clientWidth,
+                            wrap: getComputedStyle(element).overflowWrap,
+                            readable: element.scrollHeight <= element.clientHeight + 1,
+                            contained: box.left >= 0 && box.right <= innerWidth,
+                            noOverflow: document.documentElement.scrollWidth <= innerWidth,
                         };
                     });
-                    assert.equal(bounds.clamp, '2');
-                    assert.equal(bounds.overflow, 'hidden');
                     assert.equal(bounds.wrap, 'anywhere');
-                    assert.ok(bounds.height <= bounds.lineHeight * 2 + 1);
-                    assert.ok(bounds.clipped && bounds.contained && bounds.noOverflow, JSON.stringify(bounds));
-                    await heading.locator('..').locator('..').locator('..').focus();
-                    assert.ok(await heading.evaluate((element) => getComputedStyle(element.closest('a')).outlineWidth !== '0px'));
+                    assert.ok(bounds.readable && bounds.contained && bounds.noOverflow, JSON.stringify(bounds));
                     await page.screenshot({ path: join(tmpdir(), `rsvp-bugfix-${width}-${theme}.png`), animations: 'disabled' });
                 }
             }
             await page.goto(overview);
         }
 
-        await page.getByRole('link', { name: 'Customize invitation', exact: true }).click();
+        await page.getByRole('link', { name: 'Design invitation', exact: true }).click();
         await page.waitForURL('**/invitation/edit');
         const editor = page.url();
         const png = await page.evaluate(() => {

@@ -1,0 +1,376 @@
+@font-face {
+    font-family: 'Wedding Editorial';
+    src: url('../assets/enchanted-editorial/fonts/cormorant-garamond.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 300 700;
+    font-display: swap;
+}
+
+.brand-auth,
+.brand-entry,
+.brand-app {
+    --brand-ink: #332c29;
+    --brand-muted: #685d56;
+    --brand-copper: #865a49;
+    --brand-line: #dfd2c5;
+    --brand-paper: #fbf8f3;
+    color: var(--brand-ink);
+}
+
+.brand-serif {
+    font-family: 'Wedding Editorial', Georgia, serif;
+}
+
+.brand-eyebrow {
+    color: var(--brand-copper);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.21em;
+    line-height: 1.5;
+    text-transform: uppercase;
+}
+
+.brand-auth {
+    min-height: 100svh;
+    background: var(--brand-paper);
+}
+
+.brand-auth-shell {
+    display: grid;
+    min-height: 100svh;
+    grid-template-columns: minmax(0, 1fr) minmax(470px, 0.9fr);
+}
+
+.brand-auth-story {
+    display: flex;
+    min-height: 100svh;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: clamp(2rem, 4vw, 4.5rem);
+    background: radial-gradient(circle at 78% 22%, #f7eee7 0, transparent 35%), linear-gradient(145deg, #efe2d4, #f6ede3 60%, #e8d5c5);
+    position: relative;
+}
+
+.brand-auth-story::after {
+    position: absolute;
+    right: -9rem;
+    bottom: -15rem;
+    width: min(55vw, 42rem);
+    height: min(55vw, 42rem);
+    border: 1px solid #a77c653d;
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 3rem #ffffff24,
+        0 0 0 3.08rem #a77c6530,
+        0 0 0 7rem #ffffff19,
+        0 0 0 7.08rem #a77c6529;
+    content: '';
+    pointer-events: none;
+}
+
+.brand-auth-story > * {
+    position: relative;
+    z-index: 1;
+}
+
+.brand-auth-story h2 {
+    max-width: 11ch;
+    font-size: clamp(3.6rem, 6.3vw, 7.1rem);
+    font-weight: 400;
+    line-height: 0.94;
+    letter-spacing: -0.045em;
+}
+
+.brand-auth-story p {
+    max-width: 29rem;
+    color: #56463d;
+    line-height: 1.7;
+}
+
+.brand-auth-main {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem clamp(2rem, 6vw, 6rem);
+}
+
+.brand-auth-form {
+    width: min(100%, 27rem);
+    margin: auto;
+    padding-block: 2.5rem;
+}
+
+.brand-auth-form h1 {
+    font-size: clamp(2.8rem, 4vw, 4.1rem);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+}
+
+.brand-auth :is(input:not([type='checkbox']), button[type='submit']) {
+    min-height: 3rem;
+}
+
+.brand-auth input:not([type='checkbox']) {
+    border-color: #d9cbbd;
+    background: #fffdfa;
+    font-size: 1rem;
+}
+
+.brand-auth button[type='submit'] {
+    background: #735040;
+    color: #fffdf8;
+}
+
+.brand-auth button[type='submit']:hover {
+    background: #593d31;
+}
+
+.brand-auth :is(a, button, input):focus-visible,
+.brand-app :is(a, button, input):focus-visible,
+.brand-entry :is(a, button):focus-visible {
+    outline: 2px solid #865a49;
+    outline-offset: 3px;
+}
+
+.brand-app {
+    --background: 36 35% 97%;
+    --foreground: 18 14% 19%;
+    --card: 38 45% 99%;
+    --card-foreground: 18 14% 19%;
+    --primary: 18 28% 34%;
+    --primary-foreground: 40 100% 99%;
+    --secondary: 32 28% 92%;
+    --secondary-foreground: 18 14% 19%;
+    --muted: 34 24% 93%;
+    --muted-foreground: 24 10% 38%;
+    --accent: 29 30% 91%;
+    --accent-foreground: 18 14% 19%;
+    --border: 30 22% 83%;
+    --input: 30 22% 83%;
+    --ring: 19 30% 42%;
+    --sidebar-background: 34 35% 95%;
+    --sidebar-foreground: 19 15% 25%;
+    --sidebar-accent: 31 28% 88%;
+    --sidebar-accent-foreground: 18 19% 25%;
+    --sidebar-border: 31 20% 81%;
+    min-height: 100svh;
+    background: #f8f4ee;
+}
+
+.brand-app [data-sidebar='sidebar'],
+[data-sidebar='sidebar'][data-mobile='true'] {
+    background: #f4ede4;
+    color: #443830;
+}
+
+.brand-app [data-sidebar='sidebar'] [data-active='true'],
+[data-sidebar='sidebar'][data-mobile='true'] [data-active='true'] {
+    background: #e5d5c6;
+    color: #493429;
+    font-weight: 600;
+}
+
+.brand-workspace-content {
+    background: #fbf8f3;
+}
+
+.brand-workspace-content > :not(header) {
+    position: relative;
+}
+
+.brand-workspace-content :is(h1, h2):not(.font-mono) {
+    text-wrap: balance;
+}
+
+.brand-workspace-content h1:not(.font-mono) {
+    font-family: 'Wedding Editorial', Georgia, serif;
+    font-size: clamp(2.2rem, 3vw, 3rem);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+}
+
+.brand-workspace-content h2:not(.font-mono) {
+    font-family: 'Wedding Editorial', Georgia, serif;
+    font-size: clamp(1.55rem, 2vw, 1.85rem);
+    font-weight: 500;
+    line-height: 1.15;
+}
+
+.brand-workspace-header {
+    background: #fffdfa;
+}
+
+.brand-workspace-header [data-slot='breadcrumb-link'] {
+    color: #765d4d;
+}
+
+.brand-app [data-sidebar='sidebar'] [data-sidebar='footer'] {
+    border-top: 1px solid #ddcfc0;
+}
+
+.dark .brand-auth,
+.dark .brand-entry {
+    --brand-ink: #f5e9dd;
+    --brand-muted: #dbc8b9;
+    --brand-copper: #e1b99d;
+    --brand-paper: #261f1b;
+}
+
+.dark .brand-auth-story {
+    background: radial-gradient(circle at 78% 22%, #614a3e 0, transparent 35%), linear-gradient(145deg, #45352d, #332923 70%, #4e3a2e);
+}
+
+.dark .brand-auth-story p,
+.dark .brand-auth-form p,
+.dark .brand-auth-main > p {
+    color: #e3d0c0;
+}
+
+.dark .brand-auth-main {
+    background: #261f1b;
+}
+
+.dark .brand-auth input:not([type='checkbox']) {
+    border-color: #765f50;
+    background: #382e29;
+    color: #fff6ed;
+}
+
+.dark .brand-auth input::placeholder {
+    color: #c8b5a4;
+}
+
+.dark .brand-entry {
+    background: #261f1b;
+}
+
+.dark .brand-entry main {
+    border-color: #765f50;
+    background: #382e29;
+}
+
+.dark .brand-entry main p:not(.brand-eyebrow) {
+    color: #e3d0c0;
+}
+
+.dark .brand-app {
+    --background: 20 14% 14%;
+    --foreground: 34 37% 92%;
+    --card: 20 14% 16%;
+    --card-foreground: 34 37% 92%;
+    --primary: 26 39% 72%;
+    --primary-foreground: 20 18% 15%;
+    --secondary: 22 15% 23%;
+    --secondary-foreground: 34 37% 92%;
+    --muted: 22 13% 23%;
+    --muted-foreground: 30 24% 73%;
+    --accent: 23 19% 28%;
+    --accent-foreground: 34 37% 92%;
+    --border: 23 16% 31%;
+    --input: 23 16% 31%;
+    --ring: 28 35% 73%;
+    --sidebar-background: 20 16% 17%;
+    --sidebar-foreground: 34 37% 92%;
+    --sidebar-accent: 22 20% 29%;
+    --sidebar-accent-foreground: 34 37% 92%;
+    --sidebar-border: 23 16% 31%;
+    background: #211c19;
+    color: #f2e7dc;
+}
+
+.dark .brand-app [data-sidebar='sidebar'],
+.dark [data-sidebar='sidebar'][data-mobile='true'] {
+    background: #2b231e;
+    color: #f2e7dc;
+}
+
+.dark .brand-app [data-sidebar='sidebar'] [data-active='true'],
+.dark [data-sidebar='sidebar'][data-mobile='true'] [data-active='true'] {
+    background: #594538;
+    color: #fff2e6;
+}
+
+.dark .brand-workspace-content {
+    background: #261f1b;
+}
+
+.dark .brand-workspace-header {
+    border-color: #5b4a3e;
+    background: #2c241f;
+}
+
+.dark .brand-workspace-header [data-slot='breadcrumb-link'],
+.dark .brand-nav-label {
+    color: #d7b69b;
+}
+
+.dark .brand-workspace-header button,
+.dark .brand-logo-tagline,
+.dark .brand-sidebar-note svg {
+    color: #d7b69b;
+}
+
+.dark .brand-logo-mark {
+    border-color: #806451;
+    background: #3e3028;
+    color: #ead0b8;
+}
+
+.dark .brand-sidebar-note {
+    border-color: #725946;
+    background: #382b24;
+    color: #e2cbbb;
+}
+
+@media (max-width: 900px) {
+    .brand-auth-shell {
+        grid-template-columns: minmax(0, 0.78fr) minmax(0, 1fr);
+    }
+
+    .brand-auth-story {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 720px) {
+    .brand-auth-shell {
+        display: block;
+    }
+
+    .brand-auth-story {
+        min-height: 0;
+        padding: 1.5rem 1.5rem 2rem;
+    }
+
+    .brand-auth-story h2 {
+        max-width: 17ch;
+        font-size: clamp(2.7rem, 10vw, 4rem);
+    }
+
+    .brand-auth-story::after,
+    .brand-auth-story .brand-story-footer {
+        display: none;
+    }
+
+    .brand-auth-main {
+        min-height: 0;
+        padding: 1.25rem 1.5rem 2.5rem;
+    }
+
+    .brand-auth-form {
+        padding-block: 1.5rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brand-auth *,
+    .brand-app * {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}

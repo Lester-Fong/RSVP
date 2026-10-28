@@ -32,6 +32,7 @@ class WeddingInvitationTest extends TestCase
 
         $this->get(route('accounts.weddings.preview', [$wedding->account_id, $wedding]))
             ->assertInertia(fn (Assert $page) => $page
+                ->where('accountId', $wedding->account_id)->where('weddingId', $wedding->id)
                 ->where('customization.introduction_message', 'Joyfully invite you to celebrate their wedding')
                 ->where('customization.sections.closing', true));
         $this->assertDatabaseCount('website_drafts', 0);

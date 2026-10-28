@@ -1,6 +1,26 @@
 # Wedding RSVP
 
-Wedding RSVP SaaS built with the official Laravel Vue starter kit. Current functionality includes customer workspaces, wedding detail management, and a private Modern Classic invitation editor with saved drafts. Public publishing, guest management, and RSVP features remain deferred; owner milestone acceptance is tracked in `docs/checklist.md`.
+Wedding website service built with the official Laravel Vue starter kit. Modern Classic, guest management and personal RSVP are implemented; Enchanted CMS, immutable publication and hummingbird refinements run behind controlled local/testing gates. Current acceptance and release boundaries are tracked in `docs/checklist.md` and `docs/handoff.md`.
+
+## Windows manual testing — one origin
+
+Authenticated customer CMS integration (D-057): use the existing `dev.cmd` profile below, register at `/register`, create a wedding and open Invitation. New/unconfigured weddings open the full Enchanted editor; saved Modern Classic/v1 remains unchanged. Save Draft before private preview or Publish; edits stay private until Republish. The supplied owner route is `/accounts/3/weddings/3/invitation/edit` and requires its own account membership. [Complete walkthrough, verification and separately approved normal-MySQL setup](docs/tasks/cms_customer_workflow_integration.md). Do not copy synthetic data into MySQL or automatically migrate/seed it.
+
+From this repository, after restarting Windows:
+
+```powershell
+.\dev.cmd
+```
+
+Keep the terminal open; Ctrl+C stops the preview and Vite started by the launcher. No PowerShell execution-policy change, separate `npm run dev`, migration, seeding or database recreation is needed. The saved private profile resumes the existing synthetic SQLite database/uploads and serves **http://127.0.0.1:8000**, with live current-source Vite internally on 5173. If 8000 is occupied, stop that existing server explicitly; no fallback port is used.
+
+- Login: http://127.0.0.1:8000/login (synthetic owner `editor-preview@example.test`; unchanged password in the private credentials file printed by startup).
+- CMS: http://127.0.0.1:8000/accounts/1/weddings/1/cms-preview.
+- Published website: http://127.0.0.1:8000/w/synthetic-editor-preview.
+
+**Current MySQL status (2026-10-25):** An unsafe Laravel test invocation accidentally applied the 18 existing migrations to `wedding_rsvp` after the earlier DEV-ENV read showed only an empty ledger. Read-only verification found 20 application tables and zero `users`, `accounts`, `weddings`, or `guests` rows. No seed/import or rollback followed. This was not owner-approved initialization; pause further MySQL writes pending owner review. See `docs/tasks/dev_env_single_origin.md#test-runner-incident-2026-10-25` and RF-032. The retained preview remains separate SQLite and does not change `.env` or MySQL. Do not run tests or fresh-install instructions against this workspace's MySQL connection.
+
+[DEV-ENV diagnosis, first-time profile selection, data/key limitations and exact verification](docs/tasks/dev_env_single_origin.md). Missing retained temporary files fail closed; ordinary restart never manufactures new data. Use a private browser context when switching database profiles. All production/security/5D/DEL-07b acceptance gates remain unchanged.
 
 ## Stack
 
@@ -35,7 +55,7 @@ PHP 8.2+ with `bcmath`, `ctype`, `fileinfo`, `json`, `mbstring`, `openssl`, `PDO
 
     Use an account permitted to create this database. The project does not create databases or assume a blank root password.
 
-4. Generate an application key if this is a fresh environment, then run default migrations:
+4. Generate an application key if this is a fresh environment. Run migrations only against a newly created disposable database after confirming the target and receiving the required owner approval. The current `wedding_rsvp` schema is under owner review; do not run migrations against it:
 
     ```powershell
     php artisan key:generate
@@ -63,6 +83,14 @@ The project's `App\Console\Commands\Serve` extends Laravel's standard developmen
 
 ## Build, check, and test
 
+### GitHub Actions (DEL-10.2)
+
+`tests.yml` and `lint.yml` run for pull requests targeting `master` (including drafts), and pushes to `master` or `integration/**`. Both use PHP 8.2, Node 22, `composer install`/`npm ci` from the committed lockfiles, read-only repository permissions and checkout without persisted credentials. They do not need production secrets, run a MySQL service, deploy or push formatter changes.
+
+The test job sets the process-only testing/in-memory SQLite, blank database URLs, array cache/session and temporary config/routes/storage paths before any Laravel boot. It generates an ephemeral CI key, verifies the existing bootstrap/resolved-connection guard plus actual in-memory PDO, and checks GD/EXIF support before tests. PHP prerequisites are installed only on the disposable runner. No `.env` copy, key-writing Artisan command, Ziggy regeneration or application migration is needed. The full PHP suite runs with disposable MySQL opt-ins disabled; their skips remain unverified engine coverage. Fifteen explicitly listed Node contract/renderer cases run alongside the build; browser/physical-device suites remain separate prerequisites, not silent CI passes.
+
+The quality job uses `php vendor/bin/pint --test --format agent`, `npx --no-install eslint . --max-warnings=0`, TypeScript checks, `npm run format:check` and workflow-only Prettier `--check`; it asserts tracked files stayed unchanged. Do not substitute the local fix-style `npm run lint`/`npm run format`, mask exit codes or reformat unrelated files to make CI green. A failing application assertion, dependency or unrelated style issue must be reported for its own scoped approval. See the [canonical DEL-10 execution record and actual run evidence](docs/tasks/premium_delight_experience.md#del-101102--execution-record).
+
 ```powershell
 npm.cmd run build
 npm.cmd run typecheck
@@ -73,20 +101,42 @@ vendor\bin\pint --test
 
 For an auto-format pass, run `vendor\bin\pint` and `npm.cmd run format`.
 
-Laravel tests must use the isolated SQLite configuration in `phpunit.xml`, never the development MySQL database. In Codex's current Windows environment, load SQLite extensions through the temporary PHP scan directory and set process-only overrides for `APP_ENV=testing`, `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`, `CACHE_STORE=array`, `SESSION_DRIVER=array`, and `SESSION_PATH=/`; point `APP_CONFIG_CACHE` and `APP_ROUTES_CACHE` at unused temporary paths to bypass local caches. PHPUnit also forces array caching in both environment and server-variable adapters, preventing an inherited `CACHE_STORE=file` from sharing development limiter state. Use temporary storage and unused configuration-cache paths when testing environment overrides. See `docs/handoff.md` for verification context. The renderer tests use existing Vue/TypeScript packages and Node's built-in test runner; no additional test dependency is required.
+Laravel tests must use isolated SQLite and the complete process-only overrides in AGENTS.md, never `.env` MySQL. `phpunit.xml` forces SQLite; `tests/bootstrap.php` fails closed unless the test environment is isolated, applies a unique uncached Laravel config path, and `Tests\TestCase` checks the resolved connection before fixture-writing traits run. Do not bypass `phpunit.xml` or this bootstrap. Load extensions through the approved temporary PHP scan directory and point storage/config/route caches at isolated temporary paths. Renderer/browser tests use existing packages; do not add dependencies for verification.
+
+For a focused test selection in PowerShell, set the process environment first (the temporary PHP scan directory below is the approved Windows extension-loading directory for this checkout):
+
+```powershell
+$env:APP_ENV='testing'
+$env:DB_CONNECTION='sqlite'
+$env:DB_DATABASE=':memory:'
+$env:DB_URL=''
+$env:DATABASE_URL=''
+$env:CACHE_STORE='array'
+$env:SESSION_DRIVER='array'
+$env:SESSION_PATH='/'
+$env:APP_CONFIG_CACHE=Join-Path $env:TEMP ('rsvp-tests-'+[guid]::NewGuid().ToString('N')+'.php')
+$env:APP_ROUTES_CACHE=Join-Path $env:TEMP ('rsvp-tests-routes-'+[guid]::NewGuid().ToString('N')+'.php')
+$env:PHP_INI_SCAN_DIR=Join-Path $env:TEMP 'rsvp-cms-editor-LrKACO\ini'
+php artisan test --compact tests/Feature/PersonalRsvpHttpTest.php
+```
 
 ### Optional MySQL concurrency tests
 
-These cases require an existing, dedicated disposable database named `wedding_rsvp_cms_test` (optionally followed by `_` and a lowercase alphanumeric/underscore suffix), with the project migrations already applied and a test user permitted to inspect `information_schema.INNODB_TRX`. They use the configured MySQL host/credentials with the explicitly selected test database, independent request processes, and real InnoDB lock waits.
+These cases require an existing, dedicated disposable database named `wedding_rsvp_cms_test` (optionally followed by `_` and a lowercase alphanumeric/underscore suffix), with the project migrations already applied and a separate test user permitted to inspect `information_schema.INNODB_TRX`. They keep PHPUnit's default connection on SQLite and use dedicated `CMS_MYSQL_TEST_HOST`, `CMS_MYSQL_TEST_PORT`, `CMS_MYSQL_TEST_USERNAME`, and `CMS_MYSQL_TEST_PASSWORD` variables for the named test connections and worker processes. The helper rejects `wedding_rsvp`, non-loopback targets and reused application credentials. No schema is provisioned or reset by these tests.
 
 After setting the isolated testing process overrides above:
 
 ```powershell
+$env:CMS_MYSQL_TEST_ENABLED='true'
+$env:CMS_MYSQL_TEST_HOST='127.0.0.1'
+$env:CMS_MYSQL_TEST_PORT='3306'
 $env:CMS_MYSQL_TEST_DATABASE='wedding_rsvp_cms_test'
+$env:CMS_MYSQL_TEST_USERNAME='<dedicated-disposable-test-user>'
+$env:CMS_MYSQL_TEST_PASSWORD='<dedicated-test-user-password>'
 php artisan test --compact --group=mysql-concurrency
 ```
 
-The tests refuse `wedding_rsvp`, never create/drop/reset databases or provision schema, and clean up only their own fixture records. Without a configured/reachable prepared test database they are skipped, not verified. Creating or resetting a disposable database requires explicit owner approval separately from running the tests.
+The tests refuse `wedding_rsvp`, never create/drop/reset databases or provision schema, and clean up only their own fixture records. Without all explicit `CMS_MYSQL_TEST_*` values and a reachable prepared test database they are skipped, not verified. The database must be provisioned separately with a dedicated non-application user; approval to run tests is not permission to provision or reset it.
 
 ## Wedding hero photos (Milestone 2C.1)
 
@@ -136,7 +186,13 @@ Open an existing active personalized link for a published wedding. The separate 
 
 The invitation GET remains stateless. Same-origin CSRF setup uses a token-free URL, followed by an ordinary CSRF-protected submission. Privacy headers/redaction remain in effect, but external access logs and request/response capture still require deployment protection. Use a persistent shared limiter cache in production. RSVP is limited to 20/minute per hashed invitation with a separate 120/minute/IP abuse guard; CSRF setup remains independently 60/minute/IP. Errors display the actual Retry-After interval. Browser HTTP tests must use `CACHE_STORE=file` with a fresh temporary `LARAVEL_STORAGE_PATH`; an array cache would hide cross-request throttling. PHPUnit's own isolated tests use array cache.
 
-Focused check: `php artisan test --compact tests/Feature/GuestRsvpTest.php` with the isolated overrides above. Full frontend regression with the existing isolated browser setup: `node --test --test-concurrency=1 tests/Frontend/ModernClassicInvitation.test.mjs tests/Frontend/ManualQaRegression.test.mjs tests/Frontend/Publication.browser.test.mjs tests/Frontend/GuestManagement.browser.test.mjs tests/Frontend/InvitationLink.browser.test.mjs tests/Frontend/GuestRsvp.browser.test.mjs`. Real HTTP simultaneous requests test stale rejection, not InnoDB concurrency; the eight opt-in MySQL cases plus guest/RSVP races remain pending.
+Focused check: `php artisan test --compact tests/Feature/GuestRsvpTest.php` with the isolated overrides above. Full frontend regression with the existing isolated browser setup: `node --test --test-concurrency=1 tests/Frontend/ModernClassicInvitation.test.mjs tests/Frontend/ManualQaRegression.test.mjs tests/Frontend/Publication.browser.test.mjs tests/Frontend/GuestManagement.browser.test.mjs tests/Frontend/InvitationLink.browser.test.mjs tests/Frontend/GuestRsvp.browser.test.mjs tests/Frontend/Attendance.browser.test.mjs tests/Frontend/PortalUx.browser.test.mjs`. Real HTTP simultaneous requests test stale rejection, not InnoDB concurrency; the eight opt-in MySQL cases plus guest/RSVP races remain pending.
+
+## Attendance monitoring (Milestone 5B)
+
+Open **Wedding overview → Attendance** for wedding-wide totals, individual responses and invitation-group breakdowns. Search/status filters affect results, not summary cards. Group members load on expansion with pagination. Refresh loads latest saved responses; timestamps use your device's time zone. This is read-only: manage names in Guest Management and update responses through active invitation links. No new migration or environment setting is required. Owner acceptance remains pending.
+
+Focused check: `php artisan test --compact tests/Feature/Weddings/WeddingAttendanceTest.php` with the isolated SQLite overrides above. The attendance browser test is included in the full frontend command above, using the existing isolated HTTP and external Playwright/Edge setup; no application dependency was added.
 
 ## Laravel Boost for Codex
 
@@ -151,11 +207,44 @@ The Codex MCP process uses an in-memory cache and bypasses the local cached conf
 - `resources/js/components/`, `layouts/`, `composables/`, `types/`: shared frontend code
 - `resources/css/`, `vite.config.ts`: Tailwind and Vite setup
 
+## Individual RSVP - active development workflow
+
+Individual links and household delegation are active. config/rsvp.php defaults to RSVP_MODE=personal. Only that exact value enables RSVP; any other configured value (including legacy) fails closed. Required personal tables/counters must exist or relevant operations return 503. Legacy /invite/{token}, its RSVP POST and owner group-link actions always return 404, regardless of configuration. There is no mode that restores group authority. See architecture Section 7I and D-022.
+
+Historical setup notes are superseded by the 2026-10-25 DEV-ENV incident: the earlier read-only inventory found only an empty migrations ledger, then an unsafe Laravel test run applied 18 migrations to `wedding_rsvp`. It now has 20 application tables and no user, account, wedding, guest, RSVP, cache or job records. No rollback or repair was performed. Owner review is required before any further MySQL write or normal-MySQL login verification; see [DEV-ENV](docs/tasks/dev_env_single_origin.md#test-runner-incident-2026-10-25). Do not follow setup/migration instructions against this existing schema until that review is complete.
+
+Use the canonical local origin http://127.0.0.1:8000; trusted APP_URL must match the served host/port for copied links. Recovery URLs exist only after explicit authorized actions and are cleared from component memory. No raw tokens belong in normal props/history/logs. External access-log/APM exclusions and key/backup protection remain release requirements.
+
+Run all browser regressions against a separately prepared disposable SQLite server with QA_ISOLATED_SQLITE=1, QA_RSVP_MODE=personal, QA_BASE_URL, QA_PLAYWRIGHT_MODULE, QA_BROWSER_EXECUTABLE, then node --test --test-concurrency=1 tests/Frontend/\*.test.mjs. Verify target isolation; flags alone do not prove it. Tests never reset the development database. See [handoff](docs/handoff.md) for exact verification and owner QA.
+
+## Isolated CMS drafts and controlled publishing (DEL-03b.1)
+
+The opt-in local/testing workflow supports persistent CMS-v2 drafts, saved private preview and controlled Enchanted publication through the existing wedding publisher. Both `CMS_EDITOR_PREVIEW_ENABLED` and `CMS_V2_PUBLISHING_ENABLED` default off; production always denies premium activation even if these flags are set. Missing required schema fails closed. Do not enable these flags against the unmigrated development MySQL database.
+
+```powershell
+npm.cmd run build
+node tests/Frontend/cms-editor-preview.mjs
+```
+
+The Windows harness uses existing `C:/php` GD/EXIF/SQLite extensions via process-only configuration. It verifies a new temporary SQLite database/storage root before migrating/seeding **only that disposable target**, starts an independent loopback PHP host, and prints its preview URL and `preview.json` path. That file contains the synthetic owner's login. Use a private browser window, sign in, and open the printed URL. The normal `.env`, Vite hot file and development database are unchanged. Ctrl+C stops this host; rerunning creates a fresh isolated workspace.
+
+Uploads are private assets stored in that temporary workspace. Explicit Save Draft persists complete source and assignments across reload within the same target; unsaved edits stay local. Removing a section image keeps its asset in the private library. If an upload is interrupted, reopen Photos before retrying because the server may have committed it. Restarting the harness creates a fresh disposable target rather than reopening the previous database.
+
+For controlled publication QA, launch a new target with `$env:QA_CMS_PUBLISHING='1'` before `node tests/Frontend/cms-editor-preview.mjs`. Omit/unset this variable for the default private-editor-only target. Save, review the saved website and canonical facts/timezone, then confirm Publish directly in the editor. Republish appears after saved changes; dirty/pending-save state cannot publish. Wedding overview still provides status and Unpublish. View the public link in a private window. Later saved edits stay private until explicit Republish; Unpublish denies the page and current media while retaining source/history. DEL-04 supports personal Enchanted RSVP for the exact validated template/version under these controlled local/testing gates. Publication never creates/rotates/revokes credentials; authorized guests use existing 5C permissions and response storage. Production remains hard denied. [Contracts, exact verification and walkthrough](docs/tasks/del03a_draft_persistence_contract.md#9-del-03b--immutable-publishing-and-public-wedding-website).
+
+For its actual browser tests set `QA_CMS_EDITOR_INFO` to that preview.json, `QA_PLAYWRIGHT_MODULE` to an existing Playwright/Playwright Core module and `QA_BROWSER_EXECUTABLE` to the installed browser, then run `node --test tests/Frontend/CmsEditor.browser.test.mjs`. The broader existing suite additionally requires the isolated-host flags above; set `QA_FLORAL_ARTIFACTS` to a temporary output folder to preserve earlier Floral screenshot evidence. Flags do not replace target verification. No MySQL provisioning/test authorization follows from this command.
+
+The publication-enabled target additionally supports `node --test tests/Frontend/CmsPublication.browser.test.mjs`. On a separate **fresh** publication-enabled target, `node --test tests/Frontend/CmsPolish.browser.test.mjs` covers empty initial media, editor publishing and delayed-resource/reduced-motion loading. Its initial-empty check must precede test uploads. [DEL-03b.1 readiness contract and exact commands](docs/tasks/del03a_draft_persistence_contract.md#10-del-03b1--focused-preview-publishing-and-loader-polish). Test-only InnoDB cases are in `CmsPublicationMySqlTest`; they require the verified prepared target and PROCESS inspection described above and never create/reset schema themselves. Windows build QA used the previously approved temporary matching Rollup WASM parser without project dependency changes; its exact process-only invocation is in the DEL-03b evidence.
+
+For a disposable DEL-04 walkthrough, set both `$env:QA_CMS_PUBLISHING='1'` and `$env:QA_CMS_PERSONAL='1'` before starting the preview harness. Synthetic Maya represents Nico; Lia is independent; Mateo has no initial credential. Login/password/guest URLs exist only in the temporary preview.json output. Gallery/library remain empty and all answers initially Pending. Default launches stay private-editor-only without personal fixtures. Run `node --test --test-concurrency=1 tests/Frontend/EnchantedPersonal.browser.test.mjs` against a separate fresh personal-enabled target using QA_CMS_EDITOR_INFO and the existing browser prerequisites. No-JS renders saved states/guidance; saving requires JavaScript as in 5C. [DEL-04 exact evidence and owner steps](docs/tasks/del03a_draft_persistence_contract.md#11-del-04--personalized-enchanted-rsvp-integration).
+
+For the database-free DEL-07a artwork/motion showcase, run `node tests/Frontend/enchanted-editorial-preview.mjs` and open `http://127.0.0.1:5196/enchanted-editorial.html?case=hummingbird`. This existing loopback fixture exposes the same shared bird with five heading controls, a finite flower flight, pause/resume and reduced-motion fallback; it does not create an application route or CMS setting. On Windows, retain the previously approved temporary WASM loader option when native Rollup is blocked. [Design, tests, owner evidence and current running URL](docs/tasks/premium_delight_experience.md#del-07a--layered-svg-hummingbird-and-contained-motion-prototype). DEL-07b scroll following remains deferred.
+
 ## Common setup issues
 
 - **`npm` is blocked in PowerShell:** use `npm.cmd` / `npx.cmd`; this does not change machine policy.
 - **MySQL access denied or connection refused:** ensure the MySQL service is running and `.env` contains the correct host, port, username, and password.
-- **Unknown database `wedding_rsvp`:** create it using the SQL above, then run `php artisan migrate`.
+- **Unknown database `wedding_rsvp`:** stop and confirm the active local profile and owner-approved initialization target first. Do not create or migrate `wedding_rsvp` automatically; this existing database is under owner review after the 2026-10-25 incident.
 - **Missing PHP extension:** enable it in the active PHP configuration (`C:\php\php.ini` in the inspected environment) and restart terminal commands.
 - **Tests report `could not find driver` for SQLite:** enable `pdo_sqlite` and `sqlite3` in the active PHP configuration, then rerun `php artisan test`.
 - **Configuration changes appear ignored:** run `php artisan config:clear`.
